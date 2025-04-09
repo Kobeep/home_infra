@@ -1,64 +1,93 @@
 pipeline {
-  agent slave
+    agent any
 
-  parameters {
-    booleanParam(name: 'RUN_CONNECTION_CHECK', defaultValue: true, description: 'Check SSH connectivity to the target host')
-    booleanParam(name: 'COPY_SSH_KEY', defaultValue: true, description: 'Copy SSH public key to the target host')
-    booleanParam(name: 'RUN_ANSIBLE', defaultValue: true, description: 'Run Ansible playbook')
+    parameters {
+        choice(name: 'TARGET_HOST', choices: ['szymonpc', 'kubapc', 'hpserver', 'mainserver'], description: 'Select the target host')
+        choice(name: 'PLAYBOOK', choices: ['hp.yml', 'server.yml'], description: 'Choose the playbook to run')
+    }
 
-    string(name: 'TARGET_HOST', defaultValue: '192.168.1.100', description: 'IP address or hostname of the target server')
-    string(name: 'TARGET_USER', defaultValue: 'ubuntu', description: 'SSH username for the target host')
-    string(name: 'SSH_PUBLIC_KEY_PATH', defaultValue: '~/.ssh/id_rsa.pub', description: 'Path to your SSH public key')
+    environment {
+        INVENTORY_FILE = 'inventories/hosts.yml'
+    }
 
-    string(name: 'ANSIBLE_INVENTORY', defaultValue: 'ansible/inventory/hosts.yml', description: 'Path to your Ansible inventory file')
-    string(name: 'ANSIBLE_PLAYBOOK', defaultValue: 'ansible/playbooks/playbook.yml', description: 'Path to your Ansible playbook')
-  }
+    stages {
+        stage('Parse Inventory') {
+            steps {
+                script {
+                    def inventoryJson = sh(script: """
+                        python3 -c '
+import sys, yaml, json
+with open("${INVENTORY_FILE}") as f:
+    inv = yaml.safe_load(f)
+    print(json.dumps(inv["all"]["hosts"]["${params.TARGET_HOST}"]))
+                        '
+                    """, returnStdout: true).trim()
 
-  stages {
+                    def hostConfig = readJSON text: inventoryJson
 
-    stage('🔌 Check SSH Connection') {
-      when {
-        expression { params.RUN_CONNECTION_CHECK }
-      }
-      steps {
-        script {
-          sh './scripts/01_check_connection.sh ' + params.TARGET_HOST
+                    env.TARGET_IP = hostConfig.ansible_host
+                    env.REMOTE_USER = hostConfig.ansible_user
+                    env.PRIVATE_KEY = hostConfig.ansible_ssh_private_key_file
+                    env.PUBLIC_KEY = "${env.PRIVATE_KEY}.pub"
+
+                    echo "➡ Target: ${params.TARGET_HOST}"
+                    echo "➡ IP: ${env.TARGET_IP}"
+                    echo "➡ User: ${env.REMOTE_USER}"
+                    echo "➡ Key: ${env.PRIVATE_KEY}"
+                }
+            }
         }
-      }
-    }
 
-    stage('🔑 Copy SSH Public Key') {
-      when {
-        expression { params.COPY_SSH_KEY }
-      }
-      steps {
-        script {
-          sh './scripts/02_copy_ssh_key.sh ' + params.TARGET_HOST + ' ' + params.TARGET_USER + ' ' + params.SSH_PUBLIC_KEY_PATH
+        stage('Ensure SSH Key Exists') {
+            steps {
+                script {
+                    def keyExists = sh(script: "[ -f '${env.PRIVATE_KEY}' ] && echo yes || echo no", returnStdout: true).trim()
+
+                    if (keyExists == "no") {
+                        echo "🔑 SSH key not found. Generating..."
+                        sh """
+                            mkdir -p \$(dirname "${env.PRIVATE_KEY}")
+                            ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
+                        """
+                    } else {
+                        echo "✅ SSH key already exists."
+                    }
+                }
+            }
         }
-      }
-    }
 
-    stage('🚀 Run Ansible Playbook') {
-      when {
-        expression { params.RUN_ANSIBLE }
-      }
-      steps {
-        script {
-          sh './scripts/03_run_ansible.sh ' + params.ANSIBLE_INVENTORY + ' ' + params.ANSIBLE_PLAYBOOK
+        stage('Send Public Key') {
+            steps {
+                echo "📤 Sending public key to ${params.TARGET_HOST}..."
+                sh """
+                    ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
+                """
+            }
         }
-      }
-    }
-  }
 
-  post {
-    success {
-      echo '✅ Pipeline completed successfully.'
+        stage('Test SSH Connection') {
+            steps {
+                script {
+                    def result = sh(script: """
+                        ssh -o StrictHostKeyChecking=no -i ${env.PRIVATE_KEY} ${env.REMOTE_USER}@${env.TARGET_IP} 'echo OK'
+                    """, returnStatus: true)
+
+                    if (result != 0) {
+                        error "❌ Cannot connect to ${params.TARGET_HOST} via SSH."
+                    } else {
+                        echo "✅ SSH connection successful."
+                    }
+                }
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                echo "🚀 Running playbook: ${params.PLAYBOOK} on ${params.TARGET_HOST}"
+                sh """
+                    ansible-playbook -i ${INVENTORY_FILE} playbooks/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
+                """
+            }
+        }
     }
-    failure {
-      echo '❌ Pipeline failed.'
-    }
-    always {
-      echo '🏁 Pipeline finished.'
-    }
-  }
 }
