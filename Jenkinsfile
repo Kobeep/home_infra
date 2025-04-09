@@ -11,6 +11,13 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Repo') {
+            steps {
+                echo "📥 Checking out source code..."
+                checkout scm
+            }
+        }
+
         stage('Parse Inventory') {
             steps {
                 script {
