@@ -1,0 +1,17 @@
+---
+- name: Create Dashy namespace
+  kubernetes.core.k8s:
+    name: dashy
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: Deploy Dashy using Helm
+  kubernetes.core.helm:
+    name: dashy
+    chart_ref: lissy93/dashy
+    release_namespace: dashy
+    create_namespace: true
+    values:
+      service:
+        type: NodePort

@@ -1,0 +1,61 @@
+version: '3'
+  services:
+    homeassistant:
+      container_name: homeassistant
+      image: homeassistant/home-assistant:latest
+      volumes:
+        - /srv/homeassistant/config:/config
+        - /etc/localtime:/etc/localtime:ro
+      restart: unless-stopped
+      network_mode: host
+    mosquitto:
+      container_name: mosquitto
+      image: eclipse-mosquitto:latest
+      ports:
+        - "1883:1883"
+        - "9001:9001"
+      volumes:
+        - /srv/homeassistant/mosquitto/config:/mosquitto/config
+        - /srv/homeassistant/mosquitto/data:/mosquitto/data
+        - /srv/homeassistant/mosquitto/log:/mosquitto/log
+      restart: unless-stopped
+    zigbee2mqtt:
+      container_name: zigbee2mqtt
+      image: koenkk/zigbee2mqtt:latest
+      volumes:
+        - /srv/homeassistant/zigbee2mqtt/data:/app/data
+        - /run/udev:/run/udev:ro
+      devices:
+        - /dev/ttyUSB0:/dev/ttyUSB0
+      restart: unless-stopped
+      depends_on:
+        - mosquitto
+    nodered:
+      container_name: nodered
+      image: nodered/node-red:latest
+      ports:
+        - "1880:1880"
+      volumes:
+        - /srv/homeassistant/nodered/data:/data
+      restart: unless-stopped
+    esphome:
+      container_name: esphome
+      image: esphome/esphome:latest
+      volumes:
+        - /srv/homeassistant/esphome/config:/config
+      restart: unless-stopped
+      network_mode: host
+    samba:
+      container_name: samba
+      image: dperson/samba:latest
+      ports:
+        - "137:137"
+        - "138:138"
+        - "139:139"
+        - "445:445"
+      volumes:
+        - /srv/homeassistant/config:/config
+      environment:
+        - USER=homeassistant
+        - PASSWORD=homeassistant
+      restart: unless-stopped
