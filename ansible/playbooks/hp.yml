@@ -1,0 +1,7 @@
+---
+- name: Provision hpserver
+  hosts: hpserver
+  become: true
+  roles:
+    - roles/docker
+    - roles/cicd

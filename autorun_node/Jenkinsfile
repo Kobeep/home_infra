@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    stages {
+        stage('Start slave if offline') {
+            steps {
+                script {
+                    def node = Jenkins.instance.getNode("slave")
+                    def comp = node?.toComputer()
+
+                    if (!comp?.isOnline()) {
+                        echo "Slave is offline – triggering startup..."
+
+                        // uruchomienie lokalne (jeśli masz agent.jar na masterze)
+                        sh '''
+                        nohup java -jar /var/jenkins_home/agent.jar \
+                          -url http://localhost:8080/ \
+                          -secret YOUR_SECRET \
+                          -name slave \
+                          -webSocket \
+                          -workDir "/home/jenkins" &
+                        '''
+                    } else {
+                        echo "Slave is online"
+                    }
+                }
+            }
+        }
+
+        stage('Build on slave') {
+            agent { label 'slave' }
+            steps {
+                echo "Running on slave!"
+            }
+        }
+    }
+}

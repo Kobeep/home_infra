@@ -1,0 +1,21 @@
+---
+- name: Create Home Assistant directory
+  file:
+    path: /srv/homeassistant
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    recurse: true
+
+- name: Copy docker-compose.yml from repo
+  copy:
+    src: files/docker-compose.yml
+    dest: /srv/homeassistant/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+
+- name: Start Home Assistant and addons using Docker Compose
+  community.docker.docker_compose:
+    project_src: /srv/homeassistant/
+    state: present

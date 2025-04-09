@@ -1,0 +1,25 @@
+services:
+  jenkins:
+    build: .
+    image: jenkins_from_file
+    container_name: jenkins_from_file
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins_ssh:/root/.ssh
+    restart: always
+    networks:
+      - web_network
+
+networks:
+  web_network:
+    driver: bridge
+  home_net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  jenkins_ssh:
