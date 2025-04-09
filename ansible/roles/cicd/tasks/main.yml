@@ -1,0 +1,65 @@
+---
+- name: Create directory for Jenkins CI/CD
+  file:
+    path: /srv/cicd
+    state: directory
+    owner: hpserver
+    group: hpserver
+    mode: 0755
+    recurse: true
+
+- name: Copy docker-compose.yml
+  copy:
+    src: docker-compose.yml
+    dest: /srv/cicd/docker-compose.yml
+    owner: hpserver
+    group: hpserver
+    mode: 0644
+
+- name: Copy Jenkins Dockerfile
+  copy:
+    src: Dockerfile
+    dest: /srv/cicd/Dockerfile
+    owner: hpserver
+    group: hpserver
+    mode: 0644
+
+- name: Create directories for config files and volumes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - ./jenkins_home
+    - ./jenkins_ssh
+
+- name: Set ownership and permissions to directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: 1000
+    group: 1000
+    mode: '0755'
+  loop:
+    - ./jenkins_home
+    - ./jenkins_ssh
+
+- name: Check if iptables-persistent is installed
+  apt:
+    name: iptables-persistent
+    state: present
+  become: yes
+
+- name: Launch Jenkins via docker-compose
+  shell: docker compose -f /srv/cicd/docker-compose.yml up -d
+
+- name: Implement iptables
+  template:
+    src: iptables.sh.j2
+    dest: /tmp/iptables_cicd.sh
+    mode: '0755'
+
+- name: Apply rules
+  command: /tmp/iptables_cicd.sh
+  become: yes
