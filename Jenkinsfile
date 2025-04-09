@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        INVENTORY_FILE = 'inventories/hosts.yml'
+        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
     }
 
     stages {
