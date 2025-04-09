@@ -10,8 +10,6 @@ pipeline {
                     if (!comp?.isOnline()) {
                         echo "Slave is offline – triggering startup..."
 
-                        sh 'curl -sO http://localhost:8080/jnlpJars/agent.jar'
-
                         sh '''
                         nohup java -jar /var/jenkins_home/agent.jar \
                           -url http://localhost:8080/ \
