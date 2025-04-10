@@ -3,6 +3,6 @@
   hosts: hpserver
   become: true
   roles:
-    - tools/docker
+    # - tools/docker
     - server/jenkins
     - firewall
