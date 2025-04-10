@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent slave
 
     parameters {
         string(name: 'TARGET_HOST', defaultValue: '', description: 'Target host from inventory')
