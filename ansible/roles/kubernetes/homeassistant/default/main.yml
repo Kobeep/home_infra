@@ -1,0 +1,6 @@
+---
+homeassistant_release_name: homeassistant
+homeassistant_namespace: home-assistant
+homeassistant_chart: homeassistant/home-assistant
+homeassistant_chart_version: "latest"
+homeassistant_values: {}

@@ -1,0 +1,148 @@
+---
+- name: Disable swap
+  command: swapoff -a
+  become: yes
+
+- name: Comment out swap entry in /etc/fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*\\sswap\\s.*)$'
+    replace: '# \\1'
+  become: yes
+
+- name: Load br_netfilter module
+  modprobe:
+    name: br_netfilter
+    state: present
+  become: yes
+
+- name: Ensure net.bridge.bridge-nf-call-iptables is set to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: "1"
+    state: present
+    reload: yes
+  become: yes
+
+- name: Update apt cache (Debian/Ubuntu)
+  apt:
+    update_cache: yes
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install prerequisite packages for Docker (Debian/Ubuntu)
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+    state: present
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker packages
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Add Kubernetes apt-key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+  become: yes
+
+- name: Add Kubernetes repository
+  apt_repository:
+    repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: kubernetes
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Install Kubernetes packages (kubeadm, kubelet, kubectl)
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    update_cache: yes
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Hold Kubernetes packages to prevent accidental upgrades
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: hold
+  become: yes
+  when: ansible_os_family == "Debian"
+
+- name: Initialize Kubernetes cluster using kubeadm (if not already initialized)
+  command: >
+    kubeadm init --pod-network-cidr={{ k8s_pod_network_cidr }}
+    {% if kubernetes_version != "" %} --kubernetes-version={{ kubernetes_version }} {% endif %}
+  args:
+    creates: /etc/kubernetes/admin.conf
+  become: yes
+
+- name: Create .kube directory for root
+  file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+  become: yes
+
+- name: Copy admin.conf to .kube/config (for root)
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+    mode: '0644'
+  become: yes
+
+- name: (Opcjonalnie) Skonfiguruj kubeconfig dla użytkownika nie-root
+  block:
+    - name: Create .kube directory for user {{ ansible_user }}
+      file:
+        path: "/home/{{ ansible_user }}/.kube"
+        state: directory
+        mode: '0755'
+    - name: Copy admin.conf to user's .kube/config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ ansible_user }}/.kube/config"
+        remote_src: yes
+        mode: '0644'
+      become_user: "{{ ansible_user }}"
+  when: ansible_user != "root"
+
+- name: Install Flannel network plugin
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  become: yes
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf

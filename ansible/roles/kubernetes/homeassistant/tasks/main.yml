@@ -1,0 +1,24 @@
+---
+- name: Add Helm repository for Home Assistant
+  community.kubernetes.helm_repository:
+    name: homeassistant
+    repo_url: "https://charts.home-assistant.io"
+  register: ha_repo
+
+- name: Create namespace for Home Assistant if not exists
+  community.kubernetes.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ homeassistant_namespace }}"
+    state: present
+
+- name: Deploy Home Assistant via Helm chart
+  community.kubernetes.helm:
+    name: "{{ homeassistant_release_name }}"
+    chart_ref: "{{ homeassistant_chart }}"
+    version: "{{ homeassistant_chart_version }}"
+    namespace: "{{ homeassistant_namespace }}"
+    values: "{{ lookup('template', 'templates/values.yaml.j2') | from_yaml }}"
+    wait: yes
+    timeout: 300
+  register: ha_deploy

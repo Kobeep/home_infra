@@ -1,0 +1,9 @@
+---
+- name: Deploy Home Assistant and Dashy using Helm charts
+  hosts: mainserver
+  gather_facts: true
+
+  roles:
+    - kubernetes/install
+    - kubernetes/homeassistant
+    - kubernetes/dashy

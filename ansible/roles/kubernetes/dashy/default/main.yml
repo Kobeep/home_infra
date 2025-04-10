@@ -1,0 +1,6 @@
+---
+dashy_release_name: dashy
+dashy_namespace: dashy
+dashy_chart: dashy/dashy
+dashy_chart_version: "latest"
+dashy_values: {}

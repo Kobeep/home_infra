@@ -1,6 +1,6 @@
 ---
 - name: Provision server with Home Assistant, Dashy, and Grafana
-  hosts: server
+  hosts: mainserver
   become: true
   roles:
     - tools/docker
