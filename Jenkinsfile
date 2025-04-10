@@ -66,6 +66,7 @@ with open("${INVENTORY_FILE}") as f:
                       """
                   } else {
                       echo "✅ SSH key already exists."
+                      sh "chmod 600 ${env.PRIVATE_KEY}"
                   }
               }
           }
