@@ -59,22 +59,15 @@ with open("${INVENTORY_FILE}") as f:
                           mkdir -p \$(dirname "${env.PRIVATE_KEY}")
                           ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
                       """
+                      echo "📤 Sending public key to ${params.TARGET_HOST}..."
+                      sh """
+                          sshpass -p "${params.SSH_PASS}" ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
+                      """
                   } else {
                       echo "✅ SSH key already exists."
                   }
               }
           }
-        }
-
-        stage('Send Public Key') {
-            steps {
-                script {
-                    echo "📤 Sending public key to ${params.TARGET_HOST}..."
-                    sh """
-                        sshpass -p "${params.SSH_PASS}" ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
-                    """
-                }
-            }
         }
 
         stage('Test SSH Connection') {
