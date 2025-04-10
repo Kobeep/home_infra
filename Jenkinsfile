@@ -97,6 +97,7 @@ with open("${INVENTORY_FILE}") as f:
             steps {
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
+                    tree
                     ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOKS_DIR}/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
                 """
             }
