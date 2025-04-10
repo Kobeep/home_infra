@@ -3,8 +3,8 @@
   hosts: server
   become: true
   roles:
-    - roles/tools/docker
-    - roles/tools/helm
-    - roles/server/home_assistant
-    - roles/server/dashy
-    - roles/server/grafana
+    - tools/docker
+    - tools/helm
+    - server/home_assistant
+    - server/dashy
+    - server/grafana

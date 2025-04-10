@@ -3,5 +3,5 @@
   hosts: kubapc
   become: true
   roles:
-    - roles/tools/docker
-    - roles/tools/helm
+    - tools/docker
+    - tools/helm

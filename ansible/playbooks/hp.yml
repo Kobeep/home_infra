@@ -3,5 +3,5 @@
   hosts: hpserver
   become: true
   roles:
-    - roles/tools/docker
-    - roles/server/jenkins
+    - tools/docker
+    - server/jenkins
