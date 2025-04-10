@@ -10,14 +10,7 @@ pipeline {
                     if (!comp?.isOnline()) {
                         echo "Slave is offline – triggering startup..."
 
-                        sh '''
-                        nohup java -jar /var/jenkins_home/agent.jar \
-                          -url http://localhost:8080/ \
-                          -secret 5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2 \
-                          -name slave \
-                          -webSocket \
-                          -workDir "/var/jenkins_home" &
-                        '''
+                        sh 'nohup java -jar agent.jar -url http://192.168.0.122:8080/ -secret 5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2 -name slave -webSocket -workDir "/var/jenkins_home" &'
                     } else {
                         echo "Slave is online"
                     }
