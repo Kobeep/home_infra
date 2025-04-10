@@ -56,7 +56,7 @@ with open("${INVENTORY_FILE}") as f:
                     if (keyExists == "no") {
                         echo "🔑 SSH key not found in ${env.PRIVATE_KEY}. Generating..."
                         sh """
-                            mkdir -p \$(dirname "${env.PRIVATE_KEY}")
+                            sudo mkdir -p \$(dirname "${env.PRIVATE_KEY}")
                             ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
                         """
                     } else {
