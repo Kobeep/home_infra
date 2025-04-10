@@ -98,7 +98,7 @@ with open("${INVENTORY_FILE}") as f:
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
                     cd ansible
-                    ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
+                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -K  --limit ${params.TARGET_HOST} || true
                 """
             }
         }
