@@ -58,7 +58,7 @@ pipeline {
         stage('Trigger Deployment Pipeline') {
             steps {
                 script {
-                    build job: "Deployment-Pipeline",
+                    build job: "CD",
                         parameters: [
                             string(name: 'TARGET_HOST', value: env.TARGET_HOST),
                             string(name: 'PLAYBOOK', value: env.PLAYBOOK),
