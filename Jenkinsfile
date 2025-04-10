@@ -97,7 +97,7 @@ with open("${INVENTORY_FILE}") as f:
             steps {
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
-                    ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOKS_DIR}/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
+                    ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOKS_DIR}/${params.PLAYBOOK} --limit ${params.TARGET_HOST} --roles-path=/var/jenkins_home/workspace/home_infra/CD@2/ansible/roles
                 """
             }
         }
