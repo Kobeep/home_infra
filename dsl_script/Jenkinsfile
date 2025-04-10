@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    environment {
+        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
+        PLAYBOOKS_DIR  = 'ansible/playbooks'
+    }
+
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                echo "📥 Checking out repository..."
+                checkout scm
+            }
+        }
+
+        stage('Gather Dynamic Values') {
+            steps {
+                script {
+                    def inv = readYaml file: "${env.INVENTORY_FILE}"
+                    def hosts = inv.all.hosts.keySet().toList()
+
+                    def playbooksShell = sh(
+                        script: "ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename",
+                        returnStdout: true
+                    ).trim()
+                    def playbooks = playbooksShell.tokenize("\n")
+
+                    def userSelection = input(
+                        message: "Select target host, playbook and provide SSH password:",
+                        parameters: [
+                            [
+                                $class: 'ChoiceParameterDefinition',
+                                choices: hosts.join("\n"),
+                                description: 'Choose the target host',
+                                name: 'TARGET_HOST'
+                            ],
+                            [
+                                $class: 'ChoiceParameterDefinition',
+                                choices: playbooks.join("\n"),
+                                description: 'Choose the playbook to run',
+                                name: 'PLAYBOOK'
+                            ],
+                            password(name: 'SSH_PASS', defaultValue: '', description: 'Enter the SSH password for the target host')
+                        ]
+                    )
+
+                    env.TARGET_HOST = userSelection.TARGET_HOST
+                    env.PLAYBOOK    = userSelection.PLAYBOOK
+                    env.SSH_PASS    = userSelection.SSH_PASS
+
+                    echo "Selected target host: ${env.TARGET_HOST}"
+                    echo "Selected playbook: ${env.PLAYBOOK}"
+                }
+            }
+        }
+
+        stage('Trigger Deployment Pipeline') {
+            steps {
+                script {
+                    build job: "Deployment-Pipeline",
+                        parameters: [
+                            string(name: 'TARGET_HOST', value: env.TARGET_HOST),
+                            string(name: 'PLAYBOOK', value: env.PLAYBOOK),
+                            password(name: 'SSH_PASS', value: env.SSH_PASS)
+                        ]
+                }
+            }
+        }
+    }
+}
