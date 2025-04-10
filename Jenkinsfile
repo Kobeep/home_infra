@@ -8,8 +8,8 @@ pipeline {
     }
 
     environment {
-        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-        PLAYBOOKS_DIR  = 'ansible/playbooks'
+        INVENTORY_FILE = 'inventories/hosts.yml'
+        PLAYBOOKS_DIR  = 'playbooks'
         SSH_BASE_DIR   = '/var/jenkins_home/.ssh'
     }
 
