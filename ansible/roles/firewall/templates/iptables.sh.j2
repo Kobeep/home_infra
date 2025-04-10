@@ -1,15 +1,13 @@
 #!/bin/bash
 
-# Wyczyść stare reguły w DOCKER chain
 iptables -F DOCKER
 
-# Zezwól na SSH (port 22) z dowolnego IP
 iptables -A DOCKER -p tcp --dport 22 -j ACCEPT
 
-# Zezwól tylko wybranym IP na port 8080 (Jenkins)
 {% for ip in cicd_allowed_ips %}
 iptables -A DOCKER -s {{ ip }} -p tcp --dport 8080 -j ACCEPT
 {% endfor %}
 
-# Zablokuj wszystko inne na porcie 8080
 iptables -A DOCKER -p tcp --dport 8080 -j DROP
+
+sudo iptables -I INPUT -p tcp --dport 22 -j ACCEPT

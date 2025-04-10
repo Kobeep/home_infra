@@ -1,0 +1,10 @@
+---
+- name: Implement iptables
+  template:
+    src: iptables.sh.j2
+    dest: /tmp/iptables_cicd.sh
+    mode: '0755'
+
+- name: Apply rules
+  command: /tmp/iptables_cicd.sh
+  become: yes

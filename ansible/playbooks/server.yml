@@ -8,3 +8,4 @@
     - server/home_assistant
     - server/dashy
     - server/grafana
+    - firewall
