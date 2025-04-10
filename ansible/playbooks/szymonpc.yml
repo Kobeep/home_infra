@@ -1,0 +1,7 @@
+---
+- name: Provision SzymonPC
+  hosts: szymonpc
+  become: true
+  roles:
+    - roles/tools/docker
+    - roles/tools/helm

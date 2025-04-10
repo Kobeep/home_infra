@@ -1,0 +1,7 @@
+---
+- name: Provision kubapc
+  hosts: kubapc
+  become: true
+  roles:
+    - roles/tools/docker
+    - roles/tools/helm
