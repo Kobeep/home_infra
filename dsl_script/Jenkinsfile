@@ -1,5 +1,5 @@
 pipeline {
-    agent slave
+    agent { label 'slave' }
 
     environment {
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
