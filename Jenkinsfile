@@ -58,6 +58,7 @@ with open("${INVENTORY_FILE}") as f:
                       sh """
                           mkdir -p \$(dirname "${env.PRIVATE_KEY}")
                           ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
+                          chmod 600 "${env.PRIVATE_KEY}"
                       """
                       echo "📤 Sending public key to ${params.TARGET_HOST}..."
                       sh """
