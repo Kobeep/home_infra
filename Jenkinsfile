@@ -8,8 +8,8 @@ pipeline {
     }
 
     environment {
-        INVENTORY_FILE = 'inventories/hosts.yml'
-        PLAYBOOKS_DIR  = 'playbooks'
+        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
+        PLAYBOOKS_DIR  = 'ansible/playbooks'
         SSH_BASE_DIR   = '/var/jenkins_home/.ssh'
     }
 
@@ -98,7 +98,7 @@ with open("${INVENTORY_FILE}") as f:
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
                     cd ansible
-                    ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOKS_DIR}/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
+                    ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} --limit ${params.TARGET_HOST}
                 """
             }
         }
