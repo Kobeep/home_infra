@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     parameters {
-        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target Host')
+        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target host from inventory')
         string(name: 'PLAYBOOK', defaultValue: '', description: 'Playbook to run')
-        password(name: 'SSH_PASS', defaultValue: '', description: 'SSH Password for the target host')
+        password(name: 'SSH_PASS', defaultValue: '', description: 'SSH password for the target host')
     }
 
     environment {
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
         PLAYBOOKS_DIR  = 'ansible/playbooks'
+        SSH_BASE_DIR   = '/root/.ssh'
     }
 
     stages {
@@ -23,7 +24,6 @@ pipeline {
         stage('Parse Inventory') {
             steps {
                 script {
-                    // Fetch the host configuration for the TARGET_HOST from the inventory
                     def inventoryJson = sh(script: """
                         python3 -c '
 import sys, yaml, json
@@ -35,13 +35,15 @@ with open("${INVENTORY_FILE}") as f:
 
                     def hostConfig = readJSON text: inventoryJson
 
-                    // Set values
                     env.TARGET_IP   = hostConfig.ansible_host
                     env.REMOTE_USER = hostConfig.ansible_user
-                    env.PRIVATE_KEY = hostConfig.ansible_ssh_private_key_file
+                    env.PRIVATE_KEY = "${SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
                     env.PUBLIC_KEY  = "${env.PRIVATE_KEY}.pub"
 
-                    echo "Target host: ${params.TARGET_HOST} (IP: ${env.TARGET_IP})"
+                    echo "➡ Host: ${params.TARGET_HOST}"
+                    echo "➡ IP: ${env.TARGET_IP}"
+                    echo "➡ Remote user: ${env.REMOTE_USER}"
+                    echo "➡ Private key: ${env.PRIVATE_KEY}"
                 }
             }
         }
@@ -52,7 +54,7 @@ with open("${INVENTORY_FILE}") as f:
                     def keyExists = sh(script: "[ -f '${env.PRIVATE_KEY}' ] && echo yes || echo no", returnStdout: true).trim()
 
                     if (keyExists == "no") {
-                        echo "🔑 SSH key not found. Generating..."
+                        echo "🔑 SSH key not found in ${env.PRIVATE_KEY}. Generating..."
                         sh """
                             mkdir -p \$(dirname "${env.PRIVATE_KEY}")
                             ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
@@ -78,12 +80,12 @@ with open("${INVENTORY_FILE}") as f:
         stage('Test SSH Connection') {
             steps {
                 script {
-                    def result = sh(script: """
+                    def sshTest = sh(script: """
                         ssh -o StrictHostKeyChecking=no -i ${env.PRIVATE_KEY} ${env.REMOTE_USER}@${env.TARGET_IP} 'echo OK'
                     """, returnStatus: true)
 
-                    if (result != 0) {
-                        error "❌ ERROR: Cannot connect to ${params.TARGET_HOST} via SSH."
+                    if (sshTest != 0) {
+                        error "❌ ERROR: Unable to establish SSH connection to ${params.TARGET_HOST}."
                     } else {
                         echo "✅ SSH connection successful."
                     }
