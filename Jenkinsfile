@@ -81,6 +81,9 @@ with open("${INVENTORY_FILE}") as f:
 
                     if (sshTest != 0) {
                         error "❌ ERROR: Unable to establish SSH connection to ${params.TARGET_HOST}."
+                        sh """
+                          rm -rfv /var/jenkins_home/.ssh/${params.TARGET_HOST}
+                        """
                     } else {
                         echo "✅ SSH connection successful."
                     }
