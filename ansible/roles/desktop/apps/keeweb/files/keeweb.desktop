@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=KeeWeb
+GenericName=Text Editor
+Comment=KeeWeb - keypass electron client
+Exec=/opt/keeweb/keeweb --disable-seccomp-filter-sandbox %F
+Terminal=false
+MimeType=text/plain;
+Icon=/opt/keeweb/128x128.png
+Categories=TextEditor;Development;
+StartupNotify=true
+Actions=Window;Document;

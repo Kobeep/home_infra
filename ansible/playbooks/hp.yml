@@ -5,4 +5,4 @@
   roles:
     - tools/docker
     - server/jenkins
-    - firewall
+    - server/firewall

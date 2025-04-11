@@ -1,0 +1,124 @@
+---
+# Task 1: Tworzenie lokalnych katalogów na pliki konfiguracyjne i dane
+- name: Create directories for config files and volumes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - ./html
+    - ./nginx_web1_config
+    - ./nginx_web2_config
+    - ./jenkins_home
+    - ./jenkins_ssh
+    - ./homeassistant_config
+    - ./custom_components
+    - ./media
+    - ./mosquitto_data
+    - ./mosquitto_config
+    - ./nginx_load_balancer
+
+- name: Set ownership and permissions to directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: 1000
+    group: 1000
+    mode: '0755'
+  loop:
+    - ./html
+    - ./nginx_web1_config
+    - ./nginx_web2_config
+    - ./jenkins_home
+    - ./jenkins_ssh
+    - ./homeassistant_config
+    - ./custom_components
+    - ./media
+    - ./mosquitto_data
+    - ./mosquitto_config
+    - ./nginx_load_balancer
+
+# Task 2: Przesyłanie pliku index.html do katalogu dla serwerów web
+- name: Deploy index.html
+  template:
+    src: index.html.j2
+    dest: ./html/index.html
+
+# Task 3: Przesyłanie konfiguracji dla Nginx (serwer 1)
+- name: Deploy nginx1.conf
+  template:
+    src: nginx1.conf.j2
+    dest: ./nginx_web1_config/nginx.conf
+
+# Task 4: Przesyłanie konfiguracji dla Nginx (serwer 2)
+- name: Deploy nginx2.conf
+  template:
+    src: nginx2.conf.j2
+    dest: ./nginx_web2_config/nginx.conf
+
+# Task 5: Przesyłanie konfiguracji dla Load Balancera
+- name: Deploy nginx_load_balancer.conf
+  template:
+    src: load_balancer.conf.j2
+    dest: ./nginx_load_balancer/nginx.conf
+
+# Task 6: Przesyłanie ogólnej konfiguracji Nginx (general.conf)
+- name: Deploy general.conf for Nginx
+  template:
+    src: general.conf.j2
+    dest: ./nginx_web1_config/general.conf
+
+# Task 7: Przesyłanie konfiguracji bezpieczeństwa Nginx (security.conf)
+- name: Deploy security.conf for Nginx
+  template:
+    src: security.conf.j2
+    dest: ./nginx_web1_config/security.conf
+
+- name: Deploy mosquitto.conf for mqtt
+  template:
+    src: mosquitto.conf.j2
+    dest: ./mosquitto_config/mosquitto.conf
+# Task 8: Przesyłanie ogólnej konfiguracji Nginx do serwera 2 (general.conf)
+- name: Deploy general.conf for Nginx (web2)
+  template:
+    src: general.conf.j2
+    dest: ./nginx_web2_config/general.conf
+
+# Task 9: Przesyłanie konfiguracji bezpieczeństwa Nginx do serwera 2 (security.conf)
+- name: Deploy security.conf for Nginx (web2)
+  template:
+    src: security.conf.j2
+    dest: ./nginx_web2_config/security.conf
+
+# Task 10: Przesyłanie pliku docker-compose.yml
+- name: Deploy docker-compose.yml
+  copy:
+    src: docker-compose.yml
+    dest: ./docker-compose.yml
+
+- name: Deploy docker-compose.yml
+  copy:
+    src: dashy-config.yml
+    dest: ./dashy-config.yml
+
+- name: Deploy Dockerfile
+  copy:
+    src: Dockerfile
+    dest: ./Dockerfile
+
+# Task 11: Uruchamianie kontenerów za pomocą Docker Compose
+- name: Run Docker Compose
+  command: docker-compose up -d
+  args:
+    chdir: .
+
+# Task 12: Upewnienie się, że kontenery są uruchomione
+- name: Check containers status
+  command: docker-compose ps
+  args:
+    chdir: .
+  register: docker_status
+
+- debug:
+    msg: "{{ docker_status.stdout_lines }}"

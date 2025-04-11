@@ -1,0 +1,14 @@
+---
+install_path: "/opt/nginx"
+
+nginx_sites:
+  - source_url: "http://localhost:8080"
+    destination_url: "web.kobeeq.eu"
+    cert:
+      crt_path: "/etc/ssl/cert.crt"
+      key_path: "/etc/ssl/cert.key"
+
+nginx_error_page:
+  cert:
+    crt_path: "/etc/ssl/cert.crt"
+    key_path: "/etc/ssl/cert.key"

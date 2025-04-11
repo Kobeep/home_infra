@@ -1,0 +1,87 @@
+version: '3.9'
+services:
+  dashy:
+    image: lissy93/dashy:latest
+    container_name: dashy
+    ports:
+      - "4000:8080" # Dashy dostępny na porcie 8081
+    volumes:
+      - ./dashy-config.yml:/app/user-data/conf.yml  # Plik konfiguracyjny Dashy
+    restart: unless-stopped
+    networks:
+      - web_network
+    healthcheck:
+      test: ['CMD', 'node', '/app/services/healthcheck']
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  jenkins:
+    build: .
+    image: jenkins_own
+    container_name: jenkins_own
+    ports:
+      - "8080:80"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins_ssh:/root/.ssh
+    restart: always
+    networks:
+      - web_network
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: home_assistant
+    volumes:
+      - ./homeassistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - ./custom_components:/config/custom_components
+      - ./media:/media
+    environment:
+      - TZ=Europe/Warsaw
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - "8123:8123"
+    restart: unless-stopped
+    networks:
+      - home_net
+      - web_network
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0 # Zigbee USB
+      - /dev/ttyACM0:/dev/ttyACM0 # Z-Wave USB
+    privileged: true
+
+  # MQTT Broker
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt_broker
+    restart: unless-stopped
+    ports:
+      - "1883:1883" # Port MQTT
+      - "9001:9001" # Port WebSocket
+    volumes:
+      - ./mosquitto_data:/mosquitto/data
+      - ./mosquitto_config:/mosquitto/config
+    environment:
+      - TZ=Europe/Warsaw
+    networks:
+      - home_net
+
+networks:
+  web_network:
+    driver: bridge
+  home_net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  jenkins_ssh:
+  html:
+  homeassistant_config:
+  custom_components:
+  media:
+  mosquitto_data:
+  mosquitto_config:

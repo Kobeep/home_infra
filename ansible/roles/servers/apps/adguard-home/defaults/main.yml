@@ -1,0 +1,16 @@
+---
+install_path: "/opt/adguardhome"
+
+adguard_home_clean: false
+
+adguard_home_user: kobeep
+adguard_home_password: KobeandMike1
+adguard_home_templates_path: templates
+
+private_dns_entries:
+  - source: Homeassistant.kobeeq.eu
+    destination: 192.168.0.122
+    port: 8123
+  - source: Jenkins.kobeeq.eu
+    destination: 192.168.0.122
+    port: 8080

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kobee Dashboard</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            margin-bottom: 50px;
+            font-size: 3rem;
+            color: #f5ba42;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+        .box {
+            width: 200px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1e1e1e;
+            border: 2px solid #f5ba42;
+            border-radius: 15px;
+            color: #f5ba42;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        .box:hover {
+            transform: translateY(-10px) scale(1.05);
+            background-color: #f5ba42;
+            color: #121212;
+            box-shadow: 0 12px 24px rgba(255, 186, 66, 0.6);
+        }
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kobee Dashboard</h1>
+
+    <div class="container">
+        <!-- Jenkins Box -->
+        <div class="box" onclick="window.location.href='http://192.168.0.122:8080';">
+            Jenkins
+        </div>
+        <!-- Home Assistant Box -->
+        <div class="box" onclick="window.location.href='http://192.168.0.122:8123';">
+            Home Assistant
+        </div>
+    </div>
+
+    <script>
+        // Add any additional animations or logic here if needed
+    </script>
+
+</body>
+</html>

@@ -1,7 +1,0 @@
----
-- name: Provision kubapc
-  hosts: kubapc
-  become: true
-  roles:
-    - tools/docker
-    - tools/helm

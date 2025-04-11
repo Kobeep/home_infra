@@ -1,0 +1,34 @@
+appConfig:
+  title: "My Dashboard"
+  description: "Quick access to my services"
+  navLinks:
+    - title: "Jenkins"
+      path: "http://192.168.0.122:80"
+      icon: "fa-tools"
+    - title: "Home Assistant"
+      path: "http://192.168.0.122:8123"
+      icon: "fa-home"
+  widgets:
+    - name: "Service Status"
+      type: "Status"
+      data:
+        - title: "Jenkins"
+          url: "http://jenkins:8080/login"
+          status: 200
+          refreshInterval: 30
+        - title: "Home Assistant"
+          url: "http://homeassistant:8123"
+          status: 200
+          refreshInterval: 30
+sections:
+  - name: "Services"
+    icon: "fa-server"
+    items:
+      - title: "Jenkins"
+        description: "CI/CD Automation"
+        icon: "fa-tools"
+        url: "http://192.168.0.122:8080"
+      - title: "Home Assistant"
+        description: "Home Automation System"
+        icon: "fa-home"
+        url: "http://192.168.0.122:8123"

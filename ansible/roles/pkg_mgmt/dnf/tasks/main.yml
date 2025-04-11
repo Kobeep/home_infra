@@ -1,0 +1,15 @@
+---
+- import_tasks: repos.yml
+
+- name: "[DNF] Install Apps"
+  dnf:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "[{{ generic_pkgs }}]"
+    - "[{{ dnf_pkgs }}]"
+    - "[{{ dnf_gui_pkgs }}]"
+
+- import_tasks: update.yml
+  tags:
+    - update

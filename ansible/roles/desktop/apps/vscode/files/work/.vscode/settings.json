@@ -1,0 +1,27 @@
+// path .vscode/settings.json
+{
+  "terminal.integrated.defaultProfile.linux": "zshWORK_VAR",
+  "terminal.integrated.profiles.linux" :{
+    "bash": {
+      "path": "bash",
+      "icon": "terminal-bash"
+    },
+    "zshWORK_VAR": {
+      "path": "zsh",
+      "icon": "github",
+      "env": {
+        "WORK_PROFILE": "WORK_VAR"
+      }
+    },
+    "zsh": {
+      "path": "zsh",
+      "icon": "terminal"
+    }
+  },
+  "vs-kubernetes": {
+    "vs-kubernetes.knownKubeconfigs": [
+      "/home/kobeep/.work_profiles/WORK_VAR/.kube/config"
+    ],
+    "vs-kubernetes.kubeconfig": "/home/kobeep/.work_profiles/WORK_VAR/.kube/config"
+  }
+}
