@@ -105,7 +105,7 @@ print(json.dumps(host_config))
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
                     cd ansible
-                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -K --limit ${params.TARGET_HOST} || true
+                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -u ${params.TARGET_HOST} -K --limit ${params.TARGET_HOST} || true
                 """
             }
         }
