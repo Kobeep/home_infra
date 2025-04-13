@@ -15,7 +15,7 @@
     - pkg_mgmt/flatpak
     - desktop/apps/google_chrome
     - desktop/apps/keeweb
-    - apps/docker
+    - tools/docker
     - apps/qemu
     - desktop/apps/terminator
     - apps/vagrant
