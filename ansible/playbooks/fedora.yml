@@ -26,3 +26,9 @@
     - desktop/apps/vscode
     - desktop/apps/x11docker
     - desktop/fedora
+
+- name: Include a playbook for generic-core provisioning
+  import_playbook: generic-core.yml
+
+- name: Include a playbook for generic provisioning
+  import_playbook: generic.yml
