@@ -17,15 +17,30 @@ pipeline {
         stage('Gather Dynamic Values') {
             steps {
                 script {
+                    // Wczytanie pliku YAML
                     def inv = readYaml file: "${env.INVENTORY_FILE}"
-                    def hosts = inv.all.hosts.keySet().toList()
+                    def hosts = []
 
+                    // Iteracja po grupach (np. windows, linux) w sekcji children
+                    inv.all.children.each { groupName, groupData ->
+                        if (groupData.containsKey("hosts")) {
+                            hosts.addAll(groupData.hosts.keySet())
+                        }
+                    }
+
+                    // Sprawdzamy, czy znaleziono jakiekolwiek hosty
+                    if (hosts.isEmpty()) {
+                        error "No hosts found in the inventory file."
+                    }
+
+                    // Pobranie listy playbooków
                     def playbooksShell = sh(
                         script: "ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename",
                         returnStdout: true
                     ).trim()
                     def playbooks = playbooksShell.tokenize("\n")
 
+                    // Wyświetlenie wyboru hosta, playbooka i hasła
                     def userSelection = input(
                         message: "Select target host, playbook and provide SSH password:",
                         parameters: [
