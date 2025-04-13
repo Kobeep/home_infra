@@ -5,7 +5,7 @@
   roles:
     - tools/docker
     - tools/helm
-    - server/home_assistant
-    - server/dashy
-    - server/grafana
-    - server/firewall
+    # - server/home_assistant
+    # - server/dashy
+    # - server/grafana
+    # - server/firewall
