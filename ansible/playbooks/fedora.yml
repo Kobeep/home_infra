@@ -7,11 +7,9 @@
     - "{{ hosts_to_deploy | default('local') }}"
   become: true
   pre_tasks:
-    - name: Ensure python3-libdnf5 is installed
-      become: true
-      dnf:
-        name: python3-libdnf5
-        state: present
+    - name: Ensure python3-libdnf5 is installed using raw module
+      raw: "dnf install -y python3-libdnf5"
+      when: ansible_distribution == "Fedora"
   roles:
     - pkg_mgmt/dnf
     - pkg_mgmt/flatpak
