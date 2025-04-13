@@ -24,12 +24,21 @@ pipeline {
         stage('Parse Inventory') {
             steps {
                 script {
+                    // Uruchamiamy skrypt Pythona, który przechodzi przez struktury children
                     def inventoryJson = sh(script: """
                         python3 -c '
 import sys, yaml, json
+target = "${params.TARGET_HOST}"
 with open("${INVENTORY_FILE}") as f:
     inv = yaml.safe_load(f)
-    print(json.dumps(inv["all"]["hosts"]["${params.TARGET_HOST}"]))
+host_config = None
+for group in inv["all"]["children"].values():
+    if "hosts" in group and target in group["hosts"]:
+        host_config = group["hosts"][target]
+        break
+if host_config is None:
+    sys.exit("Host not found: " + target)
+print(json.dumps(host_config))
                         '
                     """, returnStdout: true).trim()
 
@@ -49,27 +58,27 @@ with open("${INVENTORY_FILE}") as f:
         }
 
         stage('Ensure SSH Key Exists') {
-          steps {
-              script {
-                  def keyExists = sh(script: "[ -f '${env.PRIVATE_KEY}' ] && echo yes || echo no", returnStdout: true).trim()
+            steps {
+                script {
+                    def keyExists = sh(script: "[ -f '${env.PRIVATE_KEY}' ] && echo yes || echo no", returnStdout: true).trim()
 
-                  if (keyExists == "no") {
-                      echo "🔑 SSH key not found in ${env.PRIVATE_KEY}. Generating..."
-                      sh """
-                          mkdir -p \$(dirname "${env.PRIVATE_KEY}")
-                          ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
-                          chmod 600 "${env.PRIVATE_KEY}"
-                      """
-                      echo "📤 Sending public key to ${params.TARGET_HOST}..."
-                      sh """
-                          sshpass -p "${params.SSH_PASS}" ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
-                      """
-                  } else {
-                      echo "✅ SSH key already exists."
-                      sh "chmod 600 ${env.PRIVATE_KEY}"
-                  }
-              }
-          }
+                    if (keyExists == "no") {
+                        echo "🔑 SSH key not found in ${env.PRIVATE_KEY}. Generating..."
+                        sh """
+                            mkdir -p \$(dirname "${env.PRIVATE_KEY}")
+                            ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
+                            chmod 600 "${env.PRIVATE_KEY}"
+                        """
+                        echo "📤 Sending public key to ${params.TARGET_HOST}..."
+                        sh """
+                            sshpass -p "${params.SSH_PASS}" ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
+                        """
+                    } else {
+                        echo "✅ SSH key already exists."
+                        sh "chmod 600 ${env.PRIVATE_KEY}"
+                    }
+                }
+            }
         }
 
         stage('Test SSH Connection') {
@@ -96,7 +105,7 @@ with open("${INVENTORY_FILE}") as f:
                 echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
                     cd ansible
-                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -K  --limit ${params.TARGET_HOST} || true
+                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -K --limit ${params.TARGET_HOST} || true
                 """
             }
         }
