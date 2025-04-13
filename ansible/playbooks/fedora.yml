@@ -6,6 +6,12 @@
   hosts:
     - "{{ hosts_to_deploy | default('local') }}"
   become: true
+  pre_tasks:
+    - name: Ensure python3-libdnf5 is installed
+      become: true
+      dnf:
+        name: python3-libdnf5
+        state: present
   roles:
     - pkg_mgmt/dnf
     - pkg_mgmt/flatpak
