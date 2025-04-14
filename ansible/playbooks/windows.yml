@@ -1,30 +1,26 @@
 ---
-- name: Install Applications and Drivers on Windows
+- name: Install applications using Chocolatey
   hosts: windows
-  gather_facts: no
+  gather_facts: yes
   tasks:
     - name: Ensure Chocolatey is installed
       win_chocolatey:
         state: present
 
-    - name: Install Google Chrome via Chocolatey
+    - name: Install applications
       win_chocolatey:
-        name: googlechrome
+        name: "{{ item }}"
         state: present
-
-    - name: Install 7zip via Chocolatey
-      win_chocolatey:
-        name: 7zip
-        state: present
-
-    # Example: Installing a driver if it is available as a Chocolatey package
-    - name: Install XYZ Driver using Chocolatey
-      win_chocolatey:
-        name: xyz-driver
-        state: present
-
-    # Alternatively, to install a driver from an MSI package, you can use win_package:
-    # - name: Install XYZ Driver from MSI package
-    #   win_package:
-    #     path: "C:\\path\\to\\driver.msi"
-    #     state: present
+      loop:
+        - googlechrome
+        - battlenet
+        - curseforge
+        - eaapp
+        - epicgameslauncher
+        - metatft
+        - riotclient
+        - steam
+        - ubisoftconnect
+        - discord
+        - spotify
+        - vlc
