@@ -2,8 +2,8 @@ pipeline {
     agent { label 'slave' }
 
     parameters {
-        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target host from inventory')
-        string(name: 'PLAYBOOK', defaultValue: '', description: 'Playbook to run')
+        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target Linux host from inventory')
+        string(name: 'PLAYBOOK', defaultValue: '', description: 'Playbook to run on Linux')
         password(name: 'SSH_PASS', defaultValue: '', description: 'SSH password for the target host')
     }
 
@@ -16,28 +16,28 @@ pipeline {
     stages {
         stage('Checkout Repository') {
             steps {
-                echo "📥 Checking out repository for deployment..."
+                echo "📥 Checking out repository for Linux deployment..."
                 checkout scm
             }
         }
 
-        stage('Parse Inventory') {
+        stage('Parse Linux Inventory') {
             steps {
                 script {
-                    // Uruchamiamy skrypt Pythona, który przechodzi przez struktury children
+                    // Execute Python script to parse the inventory for the given Linux host
                     def inventoryJson = sh(script: """
                         python3 -c '
 import sys, yaml, json
 target = "${params.TARGET_HOST}"
-with open("${INVENTORY_FILE}") as f:
+with open("${env.INVENTORY_FILE}") as f:
     inv = yaml.safe_load(f)
 host_config = None
-for group in inv["all"]["children"].values():
+if "linux" in inv["all"]["children"]:
+    group = inv["all"]["children"]["linux"]
     if "hosts" in group and target in group["hosts"]:
         host_config = group["hosts"][target]
-        break
 if host_config is None:
-    sys.exit("Host not found: " + target)
+    sys.exit("Host not found in linux group: " + target)
 print(json.dumps(host_config))
                         '
                     """, returnStdout: true).trim()
@@ -46,13 +46,12 @@ print(json.dumps(host_config))
 
                     env.TARGET_IP   = hostConfig.ansible_host
                     env.REMOTE_USER = hostConfig.ansible_user
-                    env.PRIVATE_KEY = "${SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
+                    env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
                     env.PUBLIC_KEY  = "${env.PRIVATE_KEY}.pub"
 
-                    echo "➡ Host: ${params.TARGET_HOST}"
+                    echo "➡ Linux Host: ${params.TARGET_HOST}"
                     echo "➡ IP: ${env.TARGET_IP}"
                     echo "➡ Remote user: ${env.REMOTE_USER}"
-                    echo "➡ Private key: ${env.PRIVATE_KEY}"
                 }
             }
         }
@@ -90,9 +89,7 @@ print(json.dumps(host_config))
 
                     if (sshTest != 0) {
                         error "❌ ERROR: Unable to establish SSH connection to ${params.TARGET_HOST}."
-                        sh """
-                          rm -rfv /var/jenkins_home/.ssh/${params.TARGET_HOST}
-                        """
+                        sh "rm -rfv ${env.SSH_BASE_DIR}/${params.TARGET_HOST}"
                     } else {
                         echo "✅ SSH connection successful."
                     }
@@ -102,12 +99,18 @@ print(json.dumps(host_config))
 
         stage('Run Ansible Playbook') {
             steps {
-                echo "🚀 Running playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
+                echo "🚀 Running Linux playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
                 sh """
-                    cd ansible
-                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ./inventories/hosts.yml ./playbooks/${params.PLAYBOOK} -e "hosts_to_deploy=${params.TARGET_HOST}" -K --limit ${params.TARGET_HOST} || true
+                    cd ${env.PLAYBOOKS_DIR}
+                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ../inventories/hosts.yml ${params.PLAYBOOK} -K --limit ${params.TARGET_HOST} -e "hosts_to_deploy=${params.TARGET_HOST}"
                 """
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Linux deployment finished."
         }
     }
 }
