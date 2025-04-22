@@ -3,16 +3,20 @@
   hosts: server
   become: true
   vars:
-    k3s_version: v1.26.5+k3s1
+    kubeconfig_dest: "/root/.kube/config"
+
   tasks:
-    - name: Install prerequisites
+    - name: Install prerequisites (curl, apt-transport-https)
       apt:
-        name: [curl, apt-transport-https]
+        name:
+          - curl
+          - apt-transport-https
+        state: present
         update_cache: yes
 
-    - name: Install K3s
+    - name: Install K3s via official install script
       shell: |
-        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -
+        curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644" sh -
       args:
         creates: /usr/local/bin/k3s
 
@@ -25,19 +29,13 @@
     - name: Copy kubeconfig to root
       copy:
         src: /etc/rancher/k3s/k3s.yaml
-        dest: /root/.kube/config
+        dest: "{{ kubeconfig_dest }}"
+        owner: root
+        group: root
         mode: '0600'
+        remote_src: yes
 
-    - name: Ensure kubectl is available
+    - name: Install kubectl (k3s ships its own, but this makes it available in PATH)
       apt:
         name: kubectl
         state: present
-
-    - name: Ensure Helm repositories are added
-      shell: |
-        helm repo add stable https://charts.helm.sh/stable
-        helm repo add home-assistant https://home-assistant.github.io/helm-charts
-        helm repo add dashy https://lissy93.github.io/charts
-        helm repo update
-      args:
-        creates: /root/.cache/helm/repository/repositories.yaml
