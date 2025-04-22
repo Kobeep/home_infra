@@ -12,14 +12,6 @@
     - apps/oh_my_zsh
 
   tasks:
-    - name: Ensure .kube directory exists
-      file:
-        path: /root/.kube
-        state: directory
-        owner: root
-        group: root
-        mode: '0700'
-
     - name: Deploy Home Assistant role
       include_role:
         name: server/home_assistant

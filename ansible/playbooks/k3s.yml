@@ -26,6 +26,14 @@
         enabled: true
         state: started
 
+    - name: Ensure remote ~/.kube directory exists
+      file:
+        path: /root/.kube
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
     - name: Copy kubeconfig to root
       copy:
         src: /etc/rancher/k3s/k3s.yaml
