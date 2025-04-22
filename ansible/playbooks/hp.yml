@@ -7,5 +7,4 @@
     - apps/helm
     - apps/kubectl
     - server/jenkins
-    - server/firewall
     - apps/oh_my_zsh
