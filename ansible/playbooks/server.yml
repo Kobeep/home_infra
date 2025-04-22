@@ -5,7 +5,11 @@
   roles:
     - tools/docker
     - tools/helm
+    - tools/kubectl
     # - server/home_assistant
     # - server/dashy
     # - server/grafana
     # - server/firewall
+
+- name: Include a playbook for generic provisioning
+  import_playbook: k3s.yml
