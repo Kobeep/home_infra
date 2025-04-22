@@ -8,12 +8,3 @@
     curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
   args:
     creates: /usr/local/bin/helm
-
-- name: Install k9s (terminal UI for K8s)
-  shell: |
-    curl -sLo k9s.tar.gz https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz
-    tar -xzf k9s.tar.gz k9s
-    mv k9s /usr/local/bin/k9s
-    rm k9s.tar.gz
-  args:
-    creates: /usr/local/bin/k9s

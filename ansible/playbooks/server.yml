@@ -8,7 +8,7 @@
   roles:
     - tools/docker
     - tools/helm
-    - apps/kubectl
+    - tools/kubectl
     - apps/oh_my_zsh
 
   tasks:
