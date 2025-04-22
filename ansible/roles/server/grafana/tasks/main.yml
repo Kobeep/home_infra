@@ -7,8 +7,6 @@
   shell: |
     helm repo add grafana https://grafana.github.io/helm-charts || true
     helm repo update
-  args:
-    warn: false
 
 - name: Deploy Grafana via Helm CLI
   shell: |

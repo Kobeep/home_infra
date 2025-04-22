@@ -7,8 +7,6 @@
   shell: |
     helm repo add dashy https://lissy93.github.io/charts || true
     helm repo update
-  args:
-    warn: false
 
 - name: Deploy Dashy via Helm CLI
   shell: |

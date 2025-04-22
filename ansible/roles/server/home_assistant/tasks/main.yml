@@ -7,8 +7,6 @@
   shell: |
     helm repo add home-assistant https://home-assistant.github.io/helm-charts || true
     helm repo update
-  args:
-    warn: false
 
 - name: Deploy Home Assistant via Helm CLI
   shell: |
