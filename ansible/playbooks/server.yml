@@ -10,19 +10,7 @@
     - apps/helm
     - apps/kubectl
     - apps/oh_my_zsh
-
-- name: Deploy Home Assistant
-  import_role:
-    name: server/home_assistant
-
-- name: Deploy Dashy
-  import_role:
-    name: server/dashy
-
-- name: Deploy Grafana
-  import_role:
-    name: server/grafana
-
-- name: Configure Firewall
-  import_role:
-    name: server/firewall
+    - server/home_assistant
+    - server/dashy
+    - server/grafana
+    - server/firewall
