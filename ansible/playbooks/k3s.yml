@@ -42,8 +42,3 @@
         group: root
         mode: '0600'
         remote_src: yes
-
-    - name: Install kubectl (k3s ships its own, but this makes it available in PATH)
-      apt:
-        name: kubectl
-        state: present
