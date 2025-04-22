@@ -1,16 +1,29 @@
 ---
-- name: Deploy Kubernetes cluster (k3s)
-  import_playbook: k3s.yml
+- import_playbook: k3s.yml
 
-- name: Provision server with Home Assistant, Dashy, and Grafana
+- name: Provision server with base tools and applications
   hosts: server
   become: true
+
   roles:
     - tools/docker
     - apps/helm
     - apps/kubectl
     - apps/oh_my_zsh
-    - server/home_assistant
-    - server/dashy
-    - server/grafana
-    - server/firewall
+
+  tasks:
+    - name: Deploy Home Assistant role
+      include_role:
+        name: server/home_assistant
+
+    - name: Deploy Dashy role
+      include_role:
+        name: server/dashy
+
+    - name: Deploy Grafana role
+      include_role:
+        name: server/grafana
+
+    - name: Configure firewall rules
+      include_role:
+        name: server/firewall
