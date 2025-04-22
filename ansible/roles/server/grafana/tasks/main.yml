@@ -3,6 +3,13 @@
   shell: |
     kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
 
+- name: Add Grafana Helm repo
+  shell: |
+    helm repo add grafana https://grafana.github.io/helm-charts || true
+    helm repo update
+  args:
+    warn: false
+
 - name: Deploy Grafana via Helm CLI
   shell: |
     helm --kubeconfig /root/.kube/config upgrade --install grafana stable/grafana \

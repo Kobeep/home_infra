@@ -3,6 +3,13 @@
   shell: |
     kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
 
+- name: Add Dashy Helm repo
+  shell: |
+    helm repo add dashy https://lissy93.github.io/charts || true
+    helm repo update
+  args:
+    warn: false
+
 - name: Deploy Dashy via Helm CLI
   shell: |
     helm --kubeconfig /root/.kube/config upgrade --install dashy dashy/dashy \

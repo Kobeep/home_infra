@@ -3,6 +3,13 @@
   shell: |
     kubectl --kubeconfig /root/.kube/config create namespace home || true
 
+- name: Add Home Assistant Helm repo
+  shell: |
+    helm repo add home-assistant https://home-assistant.github.io/helm-charts || true
+    helm repo update
+  args:
+    warn: false
+
 - name: Deploy Home Assistant via Helm CLI
   shell: |
     helm --kubeconfig /root/.kube/config upgrade --install home-assistant home-assistant/home-assistant \
