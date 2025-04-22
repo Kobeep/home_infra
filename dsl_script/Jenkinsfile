@@ -1,6 +1,11 @@
 pipeline {
     agent { label 'slave' }
 
+    // Only the target OS is chosen at the start.
+    parameters {
+        choice(name: 'TARGET_OS', choices: ['windows', 'linux'], description: 'Select target OS (windows or linux)')
+    }
+
     environment {
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
         PLAYBOOKS_DIR  = 'ansible/playbooks'
@@ -14,40 +19,47 @@ pipeline {
             }
         }
 
-        stage('Gather Dynamic Values') {
+        // Stage for dynamically selecting the target host, playbook, and providing the password.
+        stage('Select Deployment Options') {
             steps {
                 script {
-                    // Wczytanie pliku YAML
+                    // Read the YAML inventory file.
                     def inv = readYaml file: "${env.INVENTORY_FILE}"
                     def hosts = []
 
-                    // Iteracja po grupach (np. windows, linux) w sekcji children
-                    inv.all.children.each { groupName, groupData ->
-                        if (groupData.containsKey("hosts")) {
-                            hosts.addAll(groupData.hosts.keySet())
+                    // Build the list of hosts based on the selected TARGET_OS.
+                    if (params.TARGET_OS == 'windows') {
+                        if (inv.all.children.windows?.hosts) {
+                            hosts = inv.all.children.windows.hosts.keySet().toList()
+                        }
+                    } else {
+                        if (inv.all.children.linux?.hosts) {
+                            hosts = inv.all.children.linux.hosts.keySet().toList()
                         }
                     }
 
-                    // Sprawdzamy, czy znaleziono jakiekolwiek hosty
                     if (hosts.isEmpty()) {
-                        error "No hosts found in the inventory file."
+                        error "No hosts found for group ${params.TARGET_OS} in inventory."
                     }
 
-                    // Pobranie listy playbooków
+                    // Retrieve the list of playbook files from the PLAYBOOKS_DIR.
                     def playbooksShell = sh(
                         script: "ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename",
                         returnStdout: true
                     ).trim()
                     def playbooks = playbooksShell.tokenize("\n")
+                    if (playbooks.isEmpty()) {
+                        error "No playbooks found in directory ${env.PLAYBOOKS_DIR}"
+                    }
 
-                    // Wyświetlenie wyboru hosta, playbooka i hasła
+                    // Dynamically prompt for selection of target host, playbook, and password.
                     def userSelection = input(
-                        message: "Select target host, playbook and provide SSH password:",
+                        message: "Select target host, playbook and provide the password for ${params.TARGET_OS}:",
                         parameters: [
                             [
                                 $class: 'ChoiceParameterDefinition',
                                 choices: hosts.join("\n"),
-                                description: 'Choose the target host',
+                                description: 'Choose the target host from the inventory',
                                 name: 'TARGET_HOST'
                             ],
                             [
@@ -56,31 +68,51 @@ pipeline {
                                 description: 'Choose the playbook to run',
                                 name: 'PLAYBOOK'
                             ],
-                            password(name: 'SSH_PASS', defaultValue: '', description: 'Enter the SSH password for the target host')
+                            password(name: 'AUTH_PASS', defaultValue: '', description: 'Enter the password for the target host (WinRM for Windows / SSH for Linux)')
                         ]
                     )
 
+                    // Save the user selections as environment variables.
                     env.TARGET_HOST = userSelection.TARGET_HOST
                     env.PLAYBOOK    = userSelection.PLAYBOOK
-                    env.SSH_PASS    = userSelection.SSH_PASS
+                    // The entered password from input is stored in userSelection.AUTH_PASS.
+                    env.AUTH_PASS   = userSelection.AUTH_PASS
 
-                    echo "Selected target host: ${env.TARGET_HOST}"
+                    echo "Selected host: ${env.TARGET_HOST}"
                     echo "Selected playbook: ${env.PLAYBOOK}"
                 }
             }
         }
 
-        stage('Trigger Deployment Pipeline') {
+        // Stage for triggering the proper downstream job based on the target OS.
+        stage('Trigger Downstream Deployment') {
             steps {
                 script {
-                    build job: "CD",
-                        parameters: [
-                            string(name: 'TARGET_HOST', value: env.TARGET_HOST),
-                            string(name: 'PLAYBOOK', value: env.PLAYBOOK),
-                            password(name: 'SSH_PASS', value: env.SSH_PASS)
-                        ]
+                    if (params.TARGET_OS == 'windows') {
+                        // Trigger downstream Windows job.
+                        build job: "CD-Windows",
+                              parameters: [
+                                  string(name: 'TARGET_HOST', value: env.TARGET_HOST),
+                                  string(name: 'PLAYBOOK', value: env.PLAYBOOK),
+                                  password(name: 'WINRM_PASS', value: env.AUTH_PASS)
+                              ]
+                    } else {
+                        // Trigger downstream Linux job.
+                        build job: "CD-Linux",
+                              parameters: [
+                                  string(name: 'TARGET_HOST', value: env.TARGET_HOST),
+                                  string(name: 'PLAYBOOK', value: env.PLAYBOOK),
+                                  password(name: 'SSH_PASS', value: env.AUTH_PASS)
+                              ]
+                    }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Upstream Pipeline finished."
         }
     }
 }
