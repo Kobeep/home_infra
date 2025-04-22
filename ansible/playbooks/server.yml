@@ -7,10 +7,22 @@
     - apps/helm
     - apps/kubectl
     - apps/oh_my_zsh
-    # - server/home_assistant
-    # - server/dashy
-    # - server/grafana
-    # - server/firewall
 
-- name: Include a playbook for generic provisioning
+- name: Deploy Kubernetes cluster (k3s)
   import_playbook: k3s.yml
+
+- name: Deploy Home Assistant
+  import_role:
+    name: server/home_assistant
+
+- name: Deploy Dashy
+  import_role:
+    name: server/dashy
+
+- name: Deploy Grafana
+  import_role:
+    name: server/grafana
+
+- name: Configure Firewall
+  import_role:
+    name: server/firewall

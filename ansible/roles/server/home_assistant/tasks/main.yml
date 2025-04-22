@@ -1,21 +1,18 @@
 ---
-- name: Create Home Assistant directory
-  file:
-    path: /srv/homeassistant
-    state: directory
-    owner: ubuntu
-    group: ubuntu
-    recurse: true
+- name: Create namespace 'home'
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: home
 
-- name: Copy docker-compose.yml from repo
-  copy:
-    src: files/docker-compose.yml
-    dest: /srv/homeassistant/docker-compose.yml
-    owner: ubuntu
-    group: ubuntu
-    mode: 0644
-
-- name: Start Home Assistant and addons using Docker Compose
-  community.docker.docker_compose:
-    project_src: /srv/homeassistant/
-    state: present
+- name: Deploy Home Assistant via Helm
+  community.kubernetes.helm:
+    name: home-assistant
+    chart: home-assistant/home-assistant
+    namespace: home
+    values:
+      persistence:
+        enabled: true
+        size: 10Gi

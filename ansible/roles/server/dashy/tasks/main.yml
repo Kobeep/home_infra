@@ -1,17 +1,20 @@
 ---
-- name: Create Dashy namespace
-  kubernetes.core.k8s:
-    name: dashy
-    api_version: v1
-    kind: Namespace
-    state: present
+- name: Create namespace 'monitoring'
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring
 
-- name: Deploy Dashy using Helm
-  kubernetes.core.helm:
+- name: Deploy Dashy via Helm
+  community.kubernetes.helm:
     name: dashy
-    chart_ref: lissy93/dashy
-    release_namespace: dashy
-    create_namespace: true
+    chart: dashy/dashy
+    namespace: monitoring
     values:
       service:
         type: NodePort
+        port: 80
+      ingress:
+        enabled: false

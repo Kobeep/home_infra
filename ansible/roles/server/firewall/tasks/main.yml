@@ -1,10 +1,21 @@
 ---
-- name: Implement iptables
+- name: Deploy custom iptables rules for Docker and SSH
   template:
-    src: iptables.sh.j2
-    dest: /tmp/iptables_cicd.sh
+    src: iptables_docker.j2
+    dest: /usr/local/bin/iptables_docker.sh
     mode: '0755'
+  vars:
+    cicd_allowed_ips:
+      - 192.168.1.10   # replace with your allowed CI/CD IPs
+      - 203.0.113.42
 
-- name: Apply rules
-  command: /tmp/iptables_cicd.sh
-  become: yes
+- name: Execute Docker chain iptables script
+  shell: /usr/local/bin/iptables_docker.sh
+  args:
+    executable: /bin/bash
+
+- name: Persist iptables rules
+  shell: |
+    iptables-save > /etc/iptables/rules.v4
+  args:
+    creates: /etc/iptables/rules.v4

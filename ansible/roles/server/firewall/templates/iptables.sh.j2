@@ -1,13 +1,15 @@
 #!/bin/bash
 
+# Flush existing Docker rules
 iptables -F DOCKER
 
-iptables -A DOCKER -p tcp --dport 22 -j ACCEPT
+# Allow SSH on port 22
+iptables -I INPUT -p tcp --dport 22 -j ACCEPT
 
+# CI/CD allowed IPs to Docker API or apps on port 8080
 {% for ip in cicd_allowed_ips %}
 iptables -A DOCKER -s {{ ip }} -p tcp --dport 8080 -j ACCEPT
 {% endfor %}
 
+# Drop other Docker requests on port 8080
 iptables -A DOCKER -p tcp --dport 8080 -j DROP
-
-sudo iptables -I INPUT -p tcp --dport 22 -j ACCEPT

@@ -1,0 +1,14 @@
+---
+- name: Deploy Grafana via Helm
+  community.kubernetes.helm:
+    name: grafana
+    chart: stable/grafana
+    namespace: monitoring
+    values:
+      adminUser: admin
+      adminPassword: SuperSecret123
+      service:
+        type: NodePort
+      persistence:
+        enabled: true
+        size: 5Gi
