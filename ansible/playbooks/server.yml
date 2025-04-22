@@ -1,4 +1,7 @@
 ---
+- name: Deploy Kubernetes cluster (k3s)
+  import_playbook: k3s.yml
+
 - name: Provision server with Home Assistant, Dashy, and Grafana
   hosts: server
   become: true
@@ -7,9 +10,6 @@
     - apps/helm
     - apps/kubectl
     - apps/oh_my_zsh
-
-- name: Deploy Kubernetes cluster (k3s)
-  import_playbook: k3s.yml
 
 - name: Deploy Home Assistant
   import_role:
