@@ -110,7 +110,7 @@ print(json.dumps(host_config))
 
     post {
         always {
-            echo "Linux deployment finished."
+            echo "Deployment finished."
         }
     }
 }

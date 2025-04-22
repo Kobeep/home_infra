@@ -4,8 +4,9 @@
   become: true
   roles:
     - tools/docker
-    - tools/helm
-    - tools/kubectl
+    - apps/helm
+    - apps/kubectl
+    - apps/oh_my_zsh
     # - server/home_assistant
     # - server/dashy
     # - server/grafana

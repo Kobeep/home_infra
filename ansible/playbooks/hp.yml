@@ -4,5 +4,8 @@
   become: true
   roles:
     - tools/docker
+    - apps/helm
+    - apps/kubectl
     - server/jenkins
     - server/firewall
+    - apps/oh_my_zsh
