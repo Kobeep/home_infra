@@ -1,20 +1,13 @@
 ---
 - name: Create namespace 'monitoring'
-  k8s:
-    definition:
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: monitoring
+  shell: |
+    kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
 
-- name: Deploy Dashy via Helm
-  community.kubernetes.helm:
-    name: dashy
-    chart: dashy/dashy
-    namespace: monitoring
-    values:
-      service:
-        type: NodePort
-        port: 80
-      ingress:
-        enabled: false
+- name: Deploy Dashy via Helm CLI
+  shell: |
+    helm --kubeconfig /root/.kube/config upgrade --install dashy dashy/dashy \
+      --namespace monitoring \
+      --create-namespace \
+      --set service.type=NodePort \
+      --set service.port=80 \
+      --set ingress.enabled=false

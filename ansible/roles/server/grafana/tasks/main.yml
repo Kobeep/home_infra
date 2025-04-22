@@ -1,14 +1,14 @@
 ---
-- name: Deploy Grafana via Helm
-  community.kubernetes.helm:
-    name: grafana
-    chart: stable/grafana
-    namespace: monitoring
-    values:
-      adminUser: admin
-      adminPassword: SuperSecret123
-      service:
-        type: NodePort
-      persistence:
-        enabled: true
-        size: 5Gi
+- name: Create namespace 'monitoring' (if not exists)
+  shell: |
+    kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
+
+- name: Deploy Grafana via Helm CLI
+  shell: |
+    helm --kubeconfig /root/.kube/config upgrade --install grafana stable/grafana \
+      --namespace monitoring \
+      --set adminUser=admin \
+      --set adminPassword=SuperSecret123 \
+      --set service.type=NodePort \
+      --set persistence.enabled=true \
+      --set persistence.size=5Gi
