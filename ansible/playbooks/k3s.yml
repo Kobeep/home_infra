@@ -2,6 +2,8 @@
 - name: Provision home Kubernetes cluster with Dashy, Home Assistant & Grafana
   hosts: server
   become: true
+  collections:
+    - community.kubernetes   # now we can use 'helm'
   vars:
     k3s_version: v1.26.5+k3s1                   # adjust as desired
     helm_version: v3.12.2                        # adjust as desired
