@@ -19,5 +19,3 @@
       --create-namespace \
       --set PVC.enabled=true \
       --set PVC.size=10Gi
-
-- import_tasks: addons.yml

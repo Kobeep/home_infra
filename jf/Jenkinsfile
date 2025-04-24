@@ -1,0 +1,112 @@
+pipeline {
+    agent any
+
+    environment {
+        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
+        HOST_NAME      = 'server'
+        SSH_BASE_DIR   = '/var/jenkins_home/.ssh'
+        HASS_LOCAL     = 'hass-config'
+        HASS_REMOTE    = '/opt/stacks/home-services/hass-config'
+        DASHY_LOCAL    = 'dashy-config'
+        DASHY_REMOTE   = '/opt/stacks/home-services/dashy/conf.yml'
+        GRAFANA_LOCAL  = 'grafana-config'
+        GRAFANA_REMOTE = '/opt/stacks/home-services/grafana'
+    }
+
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                echo "📥 Checking out repo..."
+                checkout scm
+            }
+        }
+
+        stage('Parse Inventory for server') {
+            steps {
+                script {
+                    def inv = readYaml file: "${env.INVENTORY_FILE}"
+                    def hostConfig = null
+
+                    inv.all.children.each { groupName, groupData ->
+                        if (groupData.hosts?.containsKey(env.HOST_NAME)) {
+                            hostConfig = groupData.hosts[env.HOST_NAME]
+                        }
+                    }
+
+                    if (!hostConfig) {
+                        error "Host '${env.HOST_NAME}' not found in inventory."
+                    }
+
+                    env.REMOTE_HOST = hostConfig.ansible_host
+                    env.REMOTE_USER = hostConfig.ansible_user
+                    env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${env.HOST_NAME}/id_rsa"
+
+                    echo "➡ Parsed inventory: ${env.HOST_NAME}@${env.REMOTE_HOST}"
+                }
+            }
+        }
+
+        stage('Clean old configs') {
+            steps {
+                echo "🗑️ Removing existing local config folders..."
+                sh """
+                  rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+                """
+            }
+        }
+
+        stage('Fetch Configs via SCP') {
+            steps {
+                echo "🔑 Fetching configs from ${env.REMOTE_HOST}..."
+                sshagent(['server-ssh-key']) {
+                    script {
+
+                        sh """
+                          mkdir -p ${HASS_LOCAL}
+                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
+                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${HASS_REMOTE}/. ${HASS_LOCAL}/
+                        """
+
+                        sh """
+                          mkdir -p ${DASHY_LOCAL}
+                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
+                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${DASHY_REMOTE} ${DASHY_LOCAL}/conf.yml
+                        """
+
+                        sh """
+                          mkdir -p ${GRAFANA_LOCAL}
+                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
+                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${GRAFANA_REMOTE}/. ${GRAFANA_LOCAL}/
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Commit & Push to Git') {
+            steps {
+                echo "💾 Committing & pushing configs..."
+                sshagent(['git-ssh-key']) {
+                    sh """
+                      git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+                      if git diff --cached --quiet; then
+                        echo "✅ No changes to commit."
+                      else
+                        git commit -m "Backup configs from server '${env.HOST_NAME}' at \$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+                        git push origin HEAD:main
+                      fi
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Backup pipeline completed successfully."
+        }
+        failure {
+            echo "❌ Backup pipeline failed; check logs for details."
+        }
+    }
+}
