@@ -1,18 +1,18 @@
 ---
-- name: Create namespace 'monitoring'
+- name: Create 'monitoring' namespace
   shell: |
-    kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
+    kubectl --kubeconfig /root/.kube/config get namespace monitoring \
+      || kubectl --kubeconfig /root/.kube/config create namespace monitoring
 
-- name: Add Dashy Helm repo
+- name: Add Dashy Helm repo & update
   shell: |
-    helm repo add dashy https://lissy93.github.io/charts || true
-    helm repo update
+    helm --kubeconfig /root/.kube/config repo add dashy \
+      https://lissy93.github.io/charts || true
+    helm --kubeconfig /root/.kube/config repo update
 
-- name: Deploy Dashy via Helm CLI
+- name: Deploy Dashy
   shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install dashy dashy/dashy \
+    helm --kubeconfig /root/.kube/config upgrade --install dashy \
+      dashy/dashy \
       --namespace monitoring \
-      --create-namespace \
-      --set service.type=NodePort \
-      --set service.port=80 \
-      --set ingress.enabled=false
+      --create-namespace

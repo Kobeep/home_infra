@@ -1,19 +1,22 @@
 ---
-- name: Create namespace 'monitoring' (if not exists)
+- name: Create 'monitoring' namespace
   shell: |
-    kubectl --kubeconfig /root/.kube/config create namespace monitoring || true
+    kubectl --kubeconfig /root/.kube/config get namespace monitoring \
+      || kubectl --kubeconfig /root/.kube/config create namespace monitoring
 
-- name: Add Grafana Helm repo
+- name: Add Grafana Helm repo & update
   shell: |
-    helm repo add grafana https://grafana.github.io/helm-charts || true
-    helm repo update
+    helm --kubeconfig /root/.kube/config repo add grafana \
+      https://grafana.github.io/helm-charts || true
+    helm --kubeconfig /root/.kube/config repo update
 
-- name: Deploy Grafana via Helm CLI
+- name: Deploy Grafana
   shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install grafana stable/grafana \
+    helm --kubeconfig /root/.kube/config upgrade --install grafana \
+      grafana/grafana \
       --namespace monitoring \
+      --create-namespace \
       --set adminUser=admin \
       --set adminPassword=SuperSecret123 \
-      --set service.type=NodePort \
       --set persistence.enabled=true \
       --set persistence.size=5Gi
