@@ -20,5 +20,4 @@
       --set PVC.enabled=true \
       --set PVC.size=10Gi
 
-- name: Include Addons installation
-  import_playbook: addons.yml
+- include: addons.yml
