@@ -1,22 +1,24 @@
 pipeline {
-    agent any
+    agent { label 'slave' }
 
     environment {
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-        HOST_NAME      = 'server'
-        SSH_BASE_DIR   = '/var/jenkins_home/.ssh'
-        HASS_LOCAL     = 'hass-config'
+        HOST_NAME      = 'server'                         // fixed inventory host
+        SSH_BASE       = '/var/jenkins_home/.ssh'         // where keys live
+        // Remote config locations
         HASS_REMOTE    = '/opt/stacks/home-services/hass-config'
-        DASHY_LOCAL    = 'dashy-config'
         DASHY_REMOTE   = '/opt/stacks/home-services/dashy/conf.yml'
-        GRAFANA_LOCAL  = 'grafana-config'
         GRAFANA_REMOTE = '/opt/stacks/home-services/grafana'
+        // Local workspace dirs
+        HASS_LOCAL     = 'hass-config'
+        DASHY_LOCAL    = 'dashy-config'
+        GRAFANA_LOCAL  = 'grafana-config'
     }
 
     stages {
-        stage('Checkout Repository') {
+        stage('Checkout Repo') {
             steps {
-                echo "📥 Checking out repo..."
+                echo "📥 Checking out repository..."
                 checkout scm
             }
         }
@@ -25,88 +27,69 @@ pipeline {
             steps {
                 script {
                     def inv = readYaml file: "${env.INVENTORY_FILE}"
-                    def hostConfig = null
-
-                    inv.all.children.each { groupName, groupData ->
-                        if (groupData.hosts?.containsKey(env.HOST_NAME)) {
-                            hostConfig = groupData.hosts[env.HOST_NAME]
-                        }
-                    }
-
-                    if (!hostConfig) {
-                        error "Host '${env.HOST_NAME}' not found in inventory."
-                    }
-
-                    env.REMOTE_HOST = hostConfig.ansible_host
-                    env.REMOTE_USER = hostConfig.ansible_user
-                    env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${env.HOST_NAME}/id_rsa"
-
-                    echo "➡ Parsed inventory: ${env.HOST_NAME}@${env.REMOTE_HOST}"
+                    def cfg = inv.all.children.values()
+                                .find { it.hosts?.containsKey(env.HOST_NAME) }
+                                ?.hosts[env.HOST_NAME]
+                    if (!cfg) error "Host '${env.HOST_NAME}' not found in inventory"
+                    env.REMOTE_HOST = cfg.ansible_host
+                    env.REMOTE_USER = cfg.ansible_user
+                    echo "➡ Found server at ${env.REMOTE_USER}@${env.REMOTE_HOST}"
                 }
             }
         }
 
         stage('Clean old configs') {
             steps {
-                echo "🗑️ Removing existing local config folders..."
-                sh """
-                  rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
-                """
+                echo "🗑️ Removing old local configs..."
+                sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}"
             }
         }
 
-        stage('Fetch Configs via SCP') {
+        stage('Fetch configs via SCP') {
             steps {
                 echo "🔑 Fetching configs from ${env.REMOTE_HOST}..."
-                sshagent(['server-ssh-key']) {
-                    script {
+                script {
+                    def key = "${SSH_BASE}/${HOST_NAME}/id_rsa"
+                    sh """
+                      set -e
+                      mkdir -p ${HASS_LOCAL}
+                      scp -i ${key} -o StrictHostKeyChecking=no \\
+                          ${env.REMOTE_USER}@${env.REMOTE_HOST}:${HASS_REMOTE}/. \\
+                          ${HASS_LOCAL}/
 
-                        sh """
-                          mkdir -p ${HASS_LOCAL}
-                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
-                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${HASS_REMOTE}/. ${HASS_LOCAL}/
-                        """
+                      mkdir -p ${DASHY_LOCAL}
+                      scp -i ${key} -o StrictHostKeyChecking=no \\
+                          ${env.REMOTE_USER}@${env.REMOTE_HOST}:${DASHY_REMOTE} \\
+                          ${DASHY_LOCAL}/conf.yml
 
-                        sh """
-                          mkdir -p ${DASHY_LOCAL}
-                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
-                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${DASHY_REMOTE} ${DASHY_LOCAL}/conf.yml
-                        """
-
-                        sh """
-                          mkdir -p ${GRAFANA_LOCAL}
-                          scp -i ${env.PRIVATE_KEY} -o StrictHostKeyChecking=no \\
-                              ${env.REMOTE_USER}@${env.REMOTE_HOST}:${GRAFANA_REMOTE}/. ${GRAFANA_LOCAL}/
-                        """
-                    }
+                      mkdir -p ${GRAFANA_LOCAL}
+                      scp -i ${key} -o StrictHostKeyChecking=no \\
+                          ${env.REMOTE_USER}@${env.REMOTE_HOST}:${GRAFANA_REMOTE}/. \\
+                          ${GRAFANA_LOCAL}/
+                    """
                 }
             }
         }
 
         stage('Commit & Push to Git') {
             steps {
-                echo "💾 Committing & pushing configs..."
-                sshagent(['git-ssh-key']) {
-                    sh """
-                      git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
-                      if git diff --cached --quiet; then
-                        echo "✅ No changes to commit."
-                      else
-                        git commit -m "Backup configs from server '${env.HOST_NAME}' at \$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-                        git push origin HEAD:main
-                      fi
-                    """
-                }
+                echo "💾 Committing & pushing configs to Git..."
+                sh """
+                  set -e
+                  git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+                  if git diff --cached --quiet; then
+                    echo "✅ No changes to commit."
+                  else
+                    git commit -m "Backup configs from '${HOST_NAME}' at \$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+                    git push origin HEAD:main
+                  fi
+                """
             }
         }
     }
 
     post {
-        success {
-            echo "✅ Backup pipeline completed successfully."
-        }
-        failure {
-            echo "❌ Backup pipeline failed; check logs for details."
-        }
+        success { echo "✅ Backup pipeline completed." }
+        failure { echo "❌ Backup pipeline failed – check the logs." }
     }
 }
