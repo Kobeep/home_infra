@@ -1,7 +1,7 @@
 ---
 - name: Deploy custom iptables rules for Docker and SSH
   template:
-    src: iptables_docker.j2
+    src: iptables.sh.j2
     dest: /usr/local/bin/iptables_docker.sh
     mode: '0755'
   vars:
