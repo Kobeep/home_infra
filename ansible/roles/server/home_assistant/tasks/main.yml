@@ -1,20 +1,21 @@
 ---
-- name: Create 'home' namespace
+
+- name: Ensure namespace "home" exists
   shell: |
     kubectl --kubeconfig /root/.kube/config get namespace home \
       || kubectl --kubeconfig /root/.kube/config create namespace home
 
-- name: Add Home Assistant Helm repo & update
+- name: Add Home Assistant Helm repo and update
   shell: |
     helm --kubeconfig /root/.kube/config repo add k8s-home-lab \
       https://k8s-home-lab.github.io/helm-charts/ || true
     helm --kubeconfig /root/.kube/config repo update
 
-- name: Deploy Home Assistant
+- name: Deploy Home Assistant via Helm
   shell: |
     helm --kubeconfig /root/.kube/config upgrade --install home-assistant \
       k8s-home-lab/home-assistant \
       --namespace home \
       --create-namespace \
-      --set persistence.enabled=true \
-      --set persistence.size=10Gi
+      --set PVC.enabled=true \
+      --set PVC.size=10Gi
