@@ -6,7 +6,8 @@
     mode: '0755'
   vars:
     cicd_allowed_ips:
-      - 192.168.1.10   # replace with your allowed CI/CD IPs
+      - 192.168.0.122
+      - 192.168.0.54
       - 203.0.113.42
 
 - name: Execute Docker chain iptables script
