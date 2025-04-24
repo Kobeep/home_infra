@@ -43,11 +43,6 @@
         mode: '0600'
         remote_src: yes
 
-    - name: Install kubectl package
-      apt:
-        name: kubectl
-        state: present
-
     - name: Install Helm (download & extract)
       shell: |
         set -e
