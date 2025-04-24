@@ -15,8 +15,22 @@
   args:
     executable: /bin/bash
 
+- name: Ensure /etc/iptables directory exists
+  file:
+    path: /etc/iptables
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Save current iptables rules
+  command: iptables-save
+  register: iptables_rules
+
 - name: Persist iptables rules
-  shell: |
-    iptables-save > /etc/iptables/rules.v4
-  args:
-    creates: /etc/iptables/rules.v4
+  copy:
+    dest: /etc/iptables/rules.v4
+    content: "{{ iptables_rules.stdout }}"
+    owner: root
+    group: root
+    mode: '0644'
