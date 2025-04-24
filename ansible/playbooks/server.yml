@@ -34,3 +34,7 @@
     - name: Configure firewall rules
       include_role:
         name: server/firewall
+
+    - name: Ingress
+      include_role:
+        name: server/ingress
