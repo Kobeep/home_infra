@@ -1,48 +1,46 @@
 ---
-- name: Expose Home, Dashy & Grafana via Traefik Ingress
-  hosts: server
-  become: true
-  tasks:
-    - name: Create Ingress resource for all three services
-      k8s:
-        state: present
-        definition:
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: home-services-ingress
-            namespace: monitoring
-            annotations:
-              kubernetes.io/ingress.class: traefik
-          spec:
-            rules:
-              - host: home.local
-                http:
-                  paths:
-                    - path: /
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: home-assistant
-                          port:
-                            number: 8123
-              - host: dashy.local
-                http:
-                  paths:
-                    - path: /
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: dashy
-                          port:
-                            number: 80
-              - host: grafana.local
-                http:
-                  paths:
-                    - path: /
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: grafana
-                          port:
-                            number: 80
+# roles/server/ingress/tasks/main.yml
+
+- name: Create Traefik Ingress for Home Services
+  k8s:
+    state: present
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: home-services-ingress
+        namespace: monitoring
+        annotations:
+          kubernetes.io/ingress.class: traefik
+      spec:
+        rules:
+          - host: home.local
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: home-assistant
+                      port:
+                        number: 8123
+          - host: dashy.local
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: dashy
+                      port:
+                        number: 80
+          - host: grafana.local
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: grafana
+                      port:
+                        number: 80
