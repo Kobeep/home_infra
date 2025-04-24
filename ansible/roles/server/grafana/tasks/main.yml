@@ -1,22 +1,79 @@
 ---
-- name: Create 'monitoring' namespace
-  shell: |
-    kubectl --kubeconfig /root/.kube/config get namespace monitoring \
-      || kubectl --kubeconfig /root/.kube/config create namespace monitoring
+- name: Ensure namespace 'monitoring' exists
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring
 
-- name: Add Grafana Helm repo & update
-  shell: |
-    helm --kubeconfig /root/.kube/config repo add grafana \
-      https://grafana.github.io/helm-charts || true
-    helm --kubeconfig /root/.kube/config repo update
+- name: Deploy Grafana Deployment
+  k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: grafana
+        namespace: monitoring
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: grafana
+        template:
+          metadata:
+            labels:
+              app: grafana
+          spec:
+            containers:
+              - name: grafana
+                image: grafana/grafana:latest
+                ports:
+                  - containerPort: 3000
+                env:
+                  - name: GF_SECURITY_ADMIN_USER
+                    value: "admin"
+                  - name: GF_SECURITY_ADMIN_PASSWORD
+                    value: "SuperSecret123"
+                volumeMounts:
+                  - name: grafana-storage
+                    mountPath: /var/lib/grafana
+            volumes:
+              - name: grafana-storage
+                persistentVolumeClaim:
+                  claimName: grafana-pvc
 
-- name: Deploy Grafana
-  shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install grafana \
-      grafana/grafana \
-      --namespace monitoring \
-      --create-namespace \
-      --set adminUser=admin \
-      --set adminPassword=SuperSecret123 \
-      --set persistence.enabled=true \
-      --set persistence.size=5Gi
+- name: Create Grafana PVC
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: grafana-pvc
+        namespace: monitoring
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+
+- name: Expose Grafana via NodePort
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: grafana
+        namespace: monitoring
+      spec:
+        type: NodePort
+        selector:
+          app: grafana
+        ports:
+          - port: 80
+            targetPort: 3000
+            nodePort: 30002

@@ -1,18 +1,53 @@
 ---
-- name: Create 'monitoring' namespace
-  shell: |
-    kubectl --kubeconfig /root/.kube/config get namespace monitoring \
-      || kubectl --kubeconfig /root/.kube/config create namespace monitoring
+- name: Ensure namespace 'monitoring' exists
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring
 
-- name: Add Dashy Helm repo & update
-  shell: |
-    helm --kubeconfig /root/.kube/config repo add dashy \
-      https://lissy93.github.io/charts || true
-    helm --kubeconfig /root/.kube/config repo update
+- name: Deploy Dashy Deployment
+  k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: dashy
+        namespace: monitoring
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: dashy
+        template:
+          metadata:
+            labels:
+              app: dashy
+          spec:
+            containers:
+              - name: dashy
+                image: lissy93/dashy:latest
+                ports:
+                  - containerPort: 8080
+                env: []
 
-- name: Deploy Dashy
-  shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install dashy \
-      dashy/dashy \
-      --namespace monitoring \
-      --create-namespace
+- name: Expose Dashy via NodePort
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: dashy
+        namespace: monitoring
+      spec:
+        type: NodePort
+        selector:
+          app: dashy
+        ports:
+          - port: 80
+            targetPort: 8080
+            nodePort: 30001
