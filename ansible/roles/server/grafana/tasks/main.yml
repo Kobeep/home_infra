@@ -78,4 +78,4 @@
             targetPort: 3000
             nodePort: 30002
 
-- include: addons.yml
+- import_tasks: addons.yml

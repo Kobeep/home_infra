@@ -20,4 +20,4 @@
       --set PVC.enabled=true \
       --set PVC.size=10Gi
 
-- include: addons.yml
+- import_tasks: addons.yml
