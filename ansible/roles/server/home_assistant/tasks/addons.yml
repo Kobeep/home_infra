@@ -8,7 +8,6 @@
       --create-namespace \
       --set persistence.enabled=true \
       --set persistence.size=5Gi
-  args: { warn: false }
 
 - name: Add Cetic repo and deploy Node-RED
   shell: |
@@ -19,4 +18,3 @@
       --create-namespace \
       --set persistence.enabled=true \
       --set persistence.size=5Gi
-  args: { warn: false }
