@@ -77,3 +77,6 @@
           - port: 80
             targetPort: 3000
             nodePort: 30002
+
+- name: Include Addons installation
+  import_playbook: addons.yml

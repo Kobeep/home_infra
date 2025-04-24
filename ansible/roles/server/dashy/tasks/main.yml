@@ -18,23 +18,46 @@
         name: dashy
         namespace: monitoring
       spec:
-        replicas: 1
         selector:
-          matchLabels:
-            app: dashy
+          matchLabels: { app: dashy }
         template:
-          metadata:
-            labels:
-              app: dashy
+          metadata: { labels: { app: dashy } }
           spec:
             containers:
               - name: dashy
                 image: lissy93/dashy:latest
-                ports:
-                  - containerPort: 8080
-                env: []
+                ports: [ { containerPort: 8080 } ]
+                volumeMounts:
+                  - name: dashy-config
+                    mountPath: /app/public/conf.yml
+                    subPath: conf.yml
+            volumes:
+              - name: dashy-config
+                configMap:
+                  name: dashy-config
 
-- name: Expose Dashy via NodePort
+- name: Create Dashy config ConfigMap
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: dashy-config
+        namespace: monitoring
+      data:
+        conf.yml: |
+          title: "Home Services"
+          logo: ""
+          services:
+            - name: Jenkins
+              url: "http://192.168.0.122:8080"
+            - name: Grafana
+              url: "http://{{ ansible_default_ipv4.address }}:30002"
+            - name: Home Assistant
+              url: "http://{{ ansible_default_ipv4.address }}:8123"
+
+- name: Expose Dashy via NodePort 30001
   k8s:
     state: present
     definition:
@@ -45,8 +68,7 @@
         namespace: monitoring
       spec:
         type: NodePort
-        selector:
-          app: dashy
+        selector: { app: dashy }
         ports:
           - port: 80
             targetPort: 8080
