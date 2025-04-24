@@ -41,55 +41,65 @@ pipeline {
         stage('Fetch configs via kubectl cp') {
             steps {
               script {
-                sh """
+                sh '''
                   set -e
-                  KEY_PATH="/var/jenkins_home/.ssh/${HOST_NAME}/id_rsa"
+                  KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
 
                   # --- Home Assistant ---
-                  mkdir -p ${HASS_LOCAL}
-                  HA_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                    ${REMOTE_USER}@${REMOTE_HOST} \\
-                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n home get pods -l app=home-assistant -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
+                  mkdir -p "$HASS_LOCAL"
+                  HA_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                    "$REMOTE_USER@$REMOTE_HOST" \
+                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                    kubectl -n home get pod -l app=home-assistant \
+                    -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
                   if [ -n "$HA_POD" ]; then
-                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                      ${REMOTE_USER}@${REMOTE_HOST} \\
-                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n home cp home/$HA_POD:/config -" \\
-                      | tar -xz -C ${HASS_LOCAL}
+                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                      "$REMOTE_USER@$REMOTE_HOST" \
+                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                      kubectl -n home cp home/$HA_POD:/config -" \
+                      | tar -xz -C "$HASS_LOCAL"
                   else
                     echo "⚠️ Home Assistant pod not found; skipping."
                   fi
 
                   # --- Dashy ---
-                  mkdir -p ${DASHY_LOCAL}
-                  DASHY_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                    ${REMOTE_USER}@${REMOTE_HOST} \\
-                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n monitoring get pods -l app=dashy -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
+                  mkdir -p "$DASHY_LOCAL"
+                  DASHY_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                    "$REMOTE_USER@$REMOTE_HOST" \
+                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                    kubectl -n monitoring get pod -l app=dashy \
+                    -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
                   if [ -n "$DASHY_POD" ]; then
-                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                      ${REMOTE_USER}@${REMOTE_HOST} \\
-                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n monitoring cp monitoring/$DASHY_POD:/app/public/conf.yml -" \\
-                      > ${DASHY_LOCAL}/conf.yml
+                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                      "$REMOTE_USER@$REMOTE_HOST" \
+                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                      kubectl -n monitoring cp monitoring/$DASHY_POD:/app/public/conf.yml -" \
+                      > "$DASHY_LOCAL/conf.yml"
                   else
                     echo "⚠️ Dashy pod not found; skipping."
                   fi
 
                   # --- Grafana ---
-                  mkdir -p ${GRAFANA_LOCAL}
-                  GRAFANA_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                    ${REMOTE_USER}@${REMOTE_HOST} \\
-                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n monitoring get pods -l app=grafana -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
+                  mkdir -p "$GRAFANA_LOCAL"
+                  GRAFANA_POD=$(ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                    "$REMOTE_USER@$REMOTE_HOST" \
+                    "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                    kubectl -n monitoring get pod -l app=grafana \
+                    -o jsonpath='{.items[0].metadata.name}'" 2>/dev/null || true)
                   if [ -n "$GRAFANA_POD" ]; then
-                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \\
-                      ${REMOTE_USER}@${REMOTE_HOST} \\
-                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n monitoring cp monitoring/$GRAFANA_POD:/var/lib/grafana -" \\
-                      | tar -xz -C ${GRAFANA_LOCAL}
+                    ssh -i "$KEY_PATH" -o StrictHostKeyChecking=no \
+                      "$REMOTE_USER@$REMOTE_HOST" \
+                      "sudo KUBECONFIG=/etc/rancher/k3s/k3s.yaml \
+                      kubectl -n monitoring cp monitoring/$GRAFANA_POD:/var/lib/grafana -" \
+                      | tar -xz -C "$GRAFANA_LOCAL"
                   else
                     echo "⚠️ Grafana pod not found; skipping."
                   fi
-                """
+                '''
               }
             }
           }
+
 
 
         stage('Commit & Push to Git') {
