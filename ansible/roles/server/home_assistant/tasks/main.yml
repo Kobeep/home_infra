@@ -1,17 +1,25 @@
----
 - name: Create namespace 'home'
-  shell: |
-    kubectl --kubeconfig /root/.kube/config create namespace home || true
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: home
 
-- name: Add Home Assistant Helm repo
+- name: Add k8s-home-lab Helm repo for Home Assistant
   shell: |
-    helm repo add home-assistant https://home-assistant.github.io/helm-charts || true
+    helm repo add k8s-home-lab https://k8s-home-lab.github.io/helm-charts/ || true
     helm repo update
 
 - name: Deploy Home Assistant via Helm CLI
-  shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install home-assistant home-assistant/home-assistant \
-      --namespace home \
-      --create-namespace \
-      --set persistence.enabled=true \
-      --set persistence.size=10Gi
+  shell: >
+    helm --kubeconfig /root/.kube/config
+         upgrade --install home-assistant
+         k8s-home-lab/home-assistant
+         --namespace home
+         --create-namespace
+         --set persistence.enabled=true
+         --set persistence.size=10Gi
+  register: ha_deploy
+  failed_when: ha_deploy.rc != 0
