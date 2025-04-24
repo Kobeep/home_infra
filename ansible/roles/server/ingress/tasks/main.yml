@@ -1,5 +1,4 @@
 ---
-# roles/server/ingress/tasks/main.yml
 
 - name: Create Traefik Ingress for Home Services
   k8s:
