@@ -1,0 +1,46 @@
+pipeline {
+  agent { label 'slave' }
+
+  environment {
+    INVENTORY_FILE    = 'ansible/inventories/hosts.yml'
+    HOST_NAME         = 'server'
+    SSH_BASE          = '/var/jenkins_home/.ssh'
+    REMOTE_KUBECONFIG = '/etc/rancher/k3s/k3s.yaml'
+    HASS_LOCAL        = 'hass-config'
+    DASHY_LOCAL       = 'dashy-config'
+    GRAFANA_LOCAL     = 'grafana-config'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Parse Inventory') {
+      steps {
+        script {
+          def inv = readYaml file: INVENTORY_FILE
+          def hostEntry = inv.all.children.values()
+                             .find { it.hosts?.containsKey(HOST_NAME) }
+                             ?.hosts[HOST_NAME]
+          if (!hostEntry) error "Host '${HOST_NAME}' not in inventory"
+          env.REMOTE_HOST = hostEntry.ansible_host
+          env.REMOTE_USER = hostEntry.ansible_user
+          echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+        }
+      }
+    }
+
+    stage('Restore via Script') {
+      steps {
+        sh 'chmod +x scripts/restore_configs.sh'
+        sh './scripts/restore_configs.sh'
+      }
+    }
+  }
+
+  post {
+    success { echo "✅ Restore completed." }
+    failure { echo "❌ Restore failed — sprawdź logi." }
+  }
+}
