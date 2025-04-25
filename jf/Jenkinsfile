@@ -46,8 +46,7 @@ pipeline {
     stage('Fetch configs via SSH+kubectl') {
       steps {
         script {
-          sh '''
-            #!/usr/bin/env bash
+          sh '''#!/usr/bin/env bash
             set -euxo pipefail
 
             # --- manualny key path wg Twojego 1. punktu ---
