@@ -47,6 +47,8 @@ pipeline {
       steps {
         script {
           sh '''
+            #!/usr/bin/env bash
+            set -euxo pipefail
 
             # --- manualny key path wg Twojego 1. punktu ---
             KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
