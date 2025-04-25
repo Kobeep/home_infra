@@ -40,19 +40,32 @@ pipeline {
 
     stage('Commit & Push') {
       steps {
-        sh '''
-          # ustawiamy usera tylko w tym repo
-          git config user.email "jenkins@localhost"
-          git config user.name  "Jenkins CI"
+        withCredentials([string(
+          credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
+          variable: 'GITHUB_TOKEN'
+        )]) {
+          sh """
+            # ustaw dane autora tylko lokalnie
+            git config user.email "jenkins@localhost"
+            git config user.name  "Jenkins CI"
 
-          git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
-          if git diff --cached --quiet; then
-            echo "✅ No changes to commit."
-          else
-            git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-            git push origin HEAD:main
-          fi
-        '''
+            # Odczytaj oryginalne origin
+            ORIG_URL=\$(git remote get-url origin)
+
+            # Wstrzyknij token do URL-a: https://<token>@github.com/Org/Repo.git
+            AUTH_URL=\${ORIG_URL/https:\\/\\//https:\\/\\/\$GITHUB_TOKEN@}
+
+            git remote set-url origin \$AUTH_URL
+
+            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+            if git diff --cached --quiet; then
+              echo "✅ No changes to commit."
+            else
+              git commit -m "Backup ${HOST_NAME}: \$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+              git push origin HEAD:main
+            fi
+          """
+        }
       }
     }
   }
