@@ -1,4 +1,14 @@
 ---
+- name: Uninstall old Helm release if present
+  shell: >
+    helm --kubeconfig /root/.kube/config uninstall home-assistant -n home
+  ignore_errors: true
+
+- name: Delete old home-assistant resources in home namespace
+  shell: |
+    kubectl --kubeconfig /root/.kube/config delete deployment home-assistant svc home-assistant pvc home-assistant-pvc -n home --ignore-not-found
+  ignore_errors: true
+
 - name: Ensure namespace "home" exists
   k8s:
     state: present
