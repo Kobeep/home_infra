@@ -33,8 +33,8 @@ pipeline {
 
     stage('Restore via Script') {
       steps {
-        sh 'chmod +x scripts/restore_configs.sh'
-        sh './scripts/restore_configs.sh'
+        sh 'chmod +x restore_conf/scripts/restore_configs.sh'
+        sh './restore_conf/scripts/restore_configs.sh'
       }
     }
   }
