@@ -14,17 +14,23 @@
     helm --kubeconfig /root/.kube/config repo add influxdata https://helm.influxdata.com || true
     helm --kubeconfig /root/.kube/config repo update
 
-- name: Deploy InfluxDB via Helm
-  shell: >
-    helm --kubeconfig /root/.kube/config upgrade --install influxdb influxdata/influxdb
-      --namespace monitoring
-      --create-namespace
-      --set persistence.enabled=true
-      --set persistence.size=5Gi
-      --set auth.enabled=true
-      --set auth.adminUser=hauser
-      --set auth.adminPassword=SuperSecretInflux123
-      --set service.type=ClusterIP
+- name: Deploy InfluxDB
+  community.kubernetes.helm:
+    name: influxdb
+    chart_ref: influxdata/influxdb
+    kubeconfig: /root/.kube/config
+    namespace: monitoring
+    create_namespace: yes
+    values:
+      persistence:
+        enabled: true
+        size: 5Gi
+      auth:
+        enabled: true
+        adminUser: hauser
+        adminPassword: SuperSecretInflux123
+      service:
+        type: ClusterIP
 
 - name: Wait for InfluxDB pod to be ready
   k8s_info:
