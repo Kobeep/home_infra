@@ -1,4 +1,4 @@
-2025-04-25 16:14:53.713 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:17:49.850 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -18,7 +18,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:14:56.842 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:17:52.978 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -38,7 +38,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:14:59.962 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:17:56.095 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -58,7 +58,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:03.078 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:17:59.212 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -78,8 +78,8 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:03.550 WARNING (MainThread) [homeassistant.setup] Setup of recorder is taking over 10 seconds.
-2025-04-25 16:15:06.201 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:17:59.679 WARNING (MainThread) [homeassistant.setup] Setup of recorder is taking over 10 seconds.
+2025-04-25 16:18:02.331 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -99,7 +99,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:09.324 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:18:05.452 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -119,7 +119,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:12.444 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:18:08.568 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -139,7 +139,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:15.561 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:18:11.684 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -159,7 +159,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:18.679 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:18:14.803 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -179,7 +179,7 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:21.798 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+2025-04-25 16:18:17.920 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
   File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
     self._setup_connection()
@@ -199,14 +199,13 @@ Traceback (most recent call last):
         "Can't load plugin: %s:%s" % (self.group, name)
     )
 sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-25 16:15:21.799 ERROR (Recorder) [homeassistant.components.recorder.core] Recorder setup failed, recorder shutting down
-2025-04-25 16:15:21.800 ERROR (MainThread) [homeassistant.setup] Setup failed for 'recorder': Integration failed to initialize.
-2025-04-25 16:15:23.223 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'history'. Setup failed for dependencies: ['recorder']
-2025-04-25 16:15:23.223 ERROR (MainThread) [homeassistant.setup] Setup failed for 'history': Could not setup dependencies: recorder
-2025-04-25 16:15:23.223 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'energy'. Setup failed for dependencies: ['history', 'recorder']
-2025-04-25 16:15:23.223 ERROR (MainThread) [homeassistant.setup] Setup failed for 'energy': Could not setup dependencies: history, recorder
-2025-04-25 16:15:23.224 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'logbook'. Setup failed for dependencies: ['recorder']
-2025-04-25 16:15:23.224 ERROR (MainThread) [homeassistant.setup] Setup failed for 'logbook': Could not setup dependencies: recorder
-2025-04-25 16:15:26.370 ERROR (SyncWorker_1) [homeassistant.components.influxdb] InfluxDB database is not accessible due to '404: {"error":"database not found: \"home_assistant\""}'. Please check that the database, username and password are correct and that the specified user has the correct permissions set. Retrying in 60 seconds.
-2025-04-25 16:15:26.941 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'default_config'. Setup failed for dependencies: ['energy', 'history', 'logbook']
-2025-04-25 16:15:26.942 ERROR (MainThread) [homeassistant.setup] Setup failed for 'default_config': Could not setup dependencies: energy, history, logbook
+2025-04-25 16:18:17.921 ERROR (Recorder) [homeassistant.components.recorder.core] Recorder setup failed, recorder shutting down
+2025-04-25 16:18:17.922 ERROR (MainThread) [homeassistant.setup] Setup failed for 'recorder': Integration failed to initialize.
+2025-04-25 16:18:19.372 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'history'. Setup failed for dependencies: ['recorder']
+2025-04-25 16:18:19.372 ERROR (MainThread) [homeassistant.setup] Setup failed for 'history': Could not setup dependencies: recorder
+2025-04-25 16:18:19.372 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'energy'. Setup failed for dependencies: ['history', 'recorder']
+2025-04-25 16:18:19.372 ERROR (MainThread) [homeassistant.setup] Setup failed for 'energy': Could not setup dependencies: history, recorder
+2025-04-25 16:18:19.373 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'logbook'. Setup failed for dependencies: ['recorder']
+2025-04-25 16:18:19.373 ERROR (MainThread) [homeassistant.setup] Setup failed for 'logbook': Could not setup dependencies: recorder
+2025-04-25 16:18:23.009 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'default_config'. Setup failed for dependencies: ['energy', 'history', 'logbook']
+2025-04-25 16:18:23.010 ERROR (MainThread) [homeassistant.setup] Setup failed for 'default_config': Could not setup dependencies: energy, history, logbook
