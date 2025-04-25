@@ -1,0 +1,11 @@
+commit 5a7f534e732a51aad016d93c737271c72a67db88
+tree 62c2ddc66b9af66c7bf5b5098734595368d1e91b
+parent 7c59330d4a3a2346b765d83b0a46bfa840f0639f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:25:59 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:25:59 +0200
+
+    Test
+
+
+:100644 100644 8eb90157786847e391160442455a6f6ba564924a ab2deddc71f80a77bd7106d13bd6bb9830e7826b M	ansible/playbooks/k3s.yml
+:100644 100644 d653920e896a1d179a81107fdb199b33839d892e d25efa1082e32796659ba54e939f5962ef00b353 M	ansible/playbooks/server.yml

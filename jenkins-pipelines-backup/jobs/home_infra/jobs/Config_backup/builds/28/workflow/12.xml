@@ -1,0 +1,35 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<Tag plugin="workflow-support@968.v8f17397e87b_8">
+  <node class="cps.n.StepStartNode" plugin="workflow-cps@4106.v7a_8a_8176d450">
+    <parentIds>
+      <string>11</string>
+    </parentIds>
+    <id>12</id>
+    <descriptorId>org.jenkinsci.plugins.workflow.steps.EnvStep</descriptorId>
+  </node>
+  <actions>
+    <s.a.LogStorageAction/>
+    <cps.a.ArgumentsActionImpl plugin="workflow-cps@4106.v7a_8a_8176d450">
+      <arguments>
+        <entry>
+          <string>overrides</string>
+          <list>
+            <string>HOST_NAME=server</string>
+            <string>SSH_BASE=/var/jenkins_home/.ssh</string>
+            <string>GRAFANA_LOCAL=grafana-config</string>
+            <string>JENKINS_BACKUP=jenkins-pipelines-backup</string>
+            <string>DASHY_LOCAL=dashy-config</string>
+            <string>INVENTORY_FILE=ansible/inventories/hosts.yml</string>
+            <string>HASS_LOCAL=hass-config</string>
+            <string>REMOTE_KUBECONFIG=/etc/rancher/k3s/k3s.yaml</string>
+          </list>
+        </entry>
+      </arguments>
+      <sensitiveVariables/>
+      <isUnmodifiedBySanitization>true</isUnmodifiedBySanitization>
+    </cps.a.ArgumentsActionImpl>
+    <wf.a.TimingAction plugin="workflow-api@1371.ve334280b_d611">
+      <startTime>1745590869877</startTime>
+    </wf.a.TimingAction>
+  </actions>
+</Tag>

@@ -1,0 +1,12 @@
+commit 594f0641bff638fbba51fd5f44980dfa7a76e33d
+tree d3f71fd5525b0f2c1c168a70d04c7775fec4b6e7
+parent 3f9f09dc907b5fdff8a3d96e5a856cf8911009ad
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:28:40 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:28:40 +0200
+
+    fixes
+
+
+:100644 100644 9ce41f72fd3adc9d2e13c5d46da0af5a17d29c10 b4452df98004cc7eedcc772d36aad6c432d7c7cd M	Jenkinsfile
+:100644 100644 5e586812f8487f8e01861525be48b5e9e09bb38b 21dbbc870e8a39b863e4f2d73980cd1ac434005a M	ansible/playbooks/hp.yml
+:100644 100644 5518848eab81f166abf65f754aaea8a4b183605e 0a2bc8d92ccf7ab74081efc1074e453a6f4186c7 M	ansible/playbooks/server.yml

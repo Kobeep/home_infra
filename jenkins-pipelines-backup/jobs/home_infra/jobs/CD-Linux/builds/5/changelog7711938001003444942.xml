@@ -1,0 +1,10 @@
+commit fd35453d671de282b79e871c02bf7691e923be87
+tree 5ea972516f9ccc78d9ad5acea07e7655532ccda6
+parent 594f0641bff638fbba51fd5f44980dfa7a76e33d
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:33:12 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:33:12 +0200
+
+    fix
+
+
+:100644 100644 afaacf35ee912bd28c590990a4b2acbacd4bbffd d26ec7108a8bfaa8e2cc9bf3773fbafd55e9ff42 M	ansible/playbooks/k3s.yml

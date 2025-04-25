@@ -1,0 +1,10 @@
+commit 4dd72f22bd4aa0eefeb70252a374a73223147a39
+tree 7c49a8d9e97112b2c7f3a222d0acebbf9cce9417
+parent 0d6b31f1e9a4da9bba923b622b0ade962171a648
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:33:21 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:33:21 +0200
+
+    Iptables modification
+
+
+:100644 100644 17b22189f077b2efdb0ae1b12948c586253b49b0 039248d6183748f98d9cf0714018cab88c9eb291 M	ansible/roles/server/firewall/tasks/main.yml

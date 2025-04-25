@@ -1,0 +1,21 @@
+commit dccc19335082a7534663f2f9370ef2a1ec212676
+tree efd975be9ac15e4685147566b2329d5b9138ec81
+parent d1d680324c7dab65ae2679d869344595d1b52692
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 11:54:02 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 11:54:02 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 1f96a2edd958bb4430636e373d691737431bcfc5 ca77fe66262b8d243e2ae13c76c2250314b67117 M	Jenkinsfile
+:100644 100644 a7ea151b5f2ab641642468fe036a9c0a9188cb77 a6c3e84f2bb4ed6c5aeec6a96209b23b63d683d2 M	ansible/inventories/hosts.yml
+commit d1d680324c7dab65ae2679d869344595d1b52692
+tree 9d7e42a13dcf0140b28b3695f9de1a476b811102
+parent 91dd0106a5ab7c1e75bdb9ae6b0044a773d739a6
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 11:49:15 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 11:49:15 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 9f5ed2a76213ac2f579f09b4bddea869c4d1e7b0 ceb8bcd4c82261f24a12345df6caa6b696c1f49c M	dsl_script/Jenkinsfile

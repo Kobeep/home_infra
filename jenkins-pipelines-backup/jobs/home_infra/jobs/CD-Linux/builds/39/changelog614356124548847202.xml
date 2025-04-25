@@ -1,0 +1,10 @@
+commit 5088265423239a2b23d9226be0af54ed88d6249f
+tree ee9723fadf8892f14abb27adf9e685ee9db9815c
+parent f4844e09232c253db4f9d8556b20bf3fe1511f1c
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:40:28 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:40:28 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 762166b85b572ba741778640d823fc25f2df1d53 7b45298496c76f771260c92358cb3c3d2a7de813 M	jf/Jenkinsfile

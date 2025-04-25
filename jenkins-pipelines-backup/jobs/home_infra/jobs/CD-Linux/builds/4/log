@@ -1,0 +1,188 @@
+Started by upstream project "[8mha:////4MLJvW8Cr3kCzLk652BI9mTun0G6Wecoe8DEbYt8jljWAAAAuR+LCAAAAAAAAP9b85aBtbiIQTGjNKU4P08vOT+vOD8nVc83PyU1x6OyILUoJzMv2y+/JJUBAhiZGBgqihhk0NSjKDWzXb3RdlLBUSYGJk8GtpzUvPSSDB8G5tKinBIGIZ+sxLJE/ZzEvHT94JKizLx0a6BxUmjGOUNodHsLgAz1EgZD/az8JP2M/NzU+My8tKJEMDc9NS+1KLEkNT4ltSAnvzI3Na8kviCzIBXoqFR9AIOMLRTmAAAA[0mhome_infra/generate_deployment_pipeline" build number [8mha:////4NX2UlKLAipbOIyLs2XoPyCVcq8URwCxi8LB0GoN1iDFAAAAuh+LCAAAAAAAAP9dTjEOwjAQO4rgAYyIhQ80A6IL6sQCUmHhAVWgR5qS3kVpiug3+AYsPILn8AcqOlEvtiXL9vMDo8rBPK+ziik8MVVsMNxxhmbTWHRG02XPHqHDIAC4OZj18n/RKH684rt9BxBsYWyQlM8TGNbOeJgkhbxKYSQpcfBOk1q1ddNe3brj/q5tReBhIQo+ipxLTDWdnfxZhYROekwztIabEsmnVltsT6GIll/LpxKI6AAAAA==[0m65
+originally caused by:
+ Started by user [8mha:////4LV0c4fss49rr014Td9YLQmZolC99XDNLGcWVe3Zkx9/AAAAmB+LCAAAAAAAAP9b85aBtbiIQTGjNKU4P08vOT+vOD8nVc83PyU1x6OyILUoJzMv2y+/JJUBAhiZGBgqihhk0NSjKDWzXb3RdlLBUSYGJk8GtpzUvPSSDB8G5tKinBIGIZ+sxLJE/ZzEvHT94JKizLx0a6BxUmjGOUNodHsLgAyBEgYe/dLi1CL97Pyk1NRCAGlr4Q3BAAAA[0mJakub Pospieszny
+Obtained Jenkinsfile from git https://github.com/Kobeep/home_infra.git
+[8mha:////4Oqi46gXOxDFJzStDgggcBr9NK44NU9jTx0YnDYmZP2kAAAAoh+LCAAAAAAAAP9tjTEOwjAQBM8BClpKHuFItIiK1krDC0x8GCfWnbEdkooX8TX+gCESFVvtrLSa5wtWKcKBo5UdUu8otU4GP9jS5Mixv3geZcdn2TIl9igbHBs2eJyx4YwwR1SwULBGaj0nRzbDRnX6rmuvydanHMu2V1A5c4MHCFXMWcf8hSnC9jqYxPTz/BXAFEIGsfuclm8zQVqFvQAAAA==[0m[Pipeline] Start of Pipeline
+[8mha:////4JNjImVlnCRapMFPcW3mJUSJgBmcbFpIyWC2SlF+U5EdAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycohUghExsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jduZBmjwAAAAA==[0m[Pipeline] node
+Running on [8mha:////4Ib0qBrb3pvFlIUt75DwlRSFQBMVAecyq0lFERFThBgKAAAAnB+LCAAAAAAAAP9b85aBtbiIQTGjNKU4P08vOT+vOD8nVc83PyU1x6OyILUoJzMv2y+/JJUBAhiZGBgqihhk0NSjKDWzXb3RdlLBUSYGJk8GtpzUvPSSDB8G5tKinBIGIZ+sxLJE/ZzEvHT94JKizLx0a6BxUmjGOUNodHsLgAzWEgYB/eT83ILSktQi/eKcxLJUfQCRhsanxQAAAA==[0mslave in /var/jenkins_home/workspace/home_infra/CD-Linux
+[8mha:////4Gs77WVj20iJ9Qb1+vdHhUxkv9Kjunb3WhXEXoGCgBaxAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0gA0xsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jfoP95RwAAAAA==[0m[Pipeline] {
+[8mha:////4PcV+ffXo8T4EeEJrMkJCadInOLhOze5+Q8ydptCqQrRAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0gQkxsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jc09154wAAAAA==[0m[Pipeline] stage
+[8mha:////4PklzpDRmEfB3qE1qslhgsyfLMcuc1cfIb6a12Lc29ZQAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+KOrAycoh0ggUxsUZZOEFIQkgb/d8mKe3EibgadyBQiQlLlmxL1nu+oE4RjhQdby12HpP2vA+jK4lPFLtroIm3dOGaMFGwXNpJkrGnpUrKFhaxClYC1hZ1oOTRZdiIVt1VExS65pxj2Q4CKm8GeAAThZxVzN8yR9jeRpMIf5y/AJj7DGxXvP/86jek7ggRwAAAAA==[0m[Pipeline] { (Declarative: Checkout SCM)
+[8mha:////4IBCV5u858ydI1JCjdEaS2xPZHQdFsOYElonhvI8igBtAAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQTbaWGsbAmNJ0AWEZb8zwLrbuWJvJp3kLiJlZNMMm+a93rDOic4UbLcG+wdZu14DKOti0+U+lugiXu6ck2YKRguzSSpM+cFJRUDS1gDKwEbgzpQdmgLbIVXD9UGhba9lFS/o4DGdQM8gYlqLiqVL8wJdvexy4Q/z18BzLEA29ce4gfg7KmOvAAAAA==[0m[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential 7a5fcd35-3a38-4511-a275-881c11e6625d
+Fetching changes from the remote Git repository
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/home_infra/CD-Linux/.git # timeout=10
+ > git config remote.origin.url https://github.com/Kobeep/home_infra.git # timeout=10
+Fetching upstream changes from https://github.com/Kobeep/home_infra.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+using GIT_ASKPASS to set credentials GitHub Personal Access Token
+ > git fetch --tags --force --progress -- https://github.com/Kobeep/home_infra.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 594f0641bff638fbba51fd5f44980dfa7a76e33d (refs/remotes/origin/main)
+Commit message: "fixes"
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 594f0641bff638fbba51fd5f44980dfa7a76e33d # timeout=10
+ > git rev-list --no-walk 3f9f09dc907b5fdff8a3d96e5a856cf8911009ad # timeout=10
+[8mha:////4BhJ89pi0WwZQy44UBcjgEsLYcNkUsklnnVSP8YCDGrAAAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQTbGRNjZUtoPAGyiLDkfxZYdytP5NW8g8RNrJxkknnTvNcb1jnBiZLl3mDvMGvHYxhtXXyi1N8CTdzTlWvCTMFwaSZJnTkvKKkYWMIaWAnYGNSBskNbYCu8eqg2KLTtpaT6HQU0rhvgCUxUc1GpfGFOsLuPXSb8ef4KYI6xADvU7j9Dg2gqvAAAAA==[0m[Pipeline] }
+[8mha:////4F8prNElwHWQhQBdG+meQncCf6DztLzms4ZMNLOACJDlAAAAoh+LCAAAAAAAAP9tjTEOAiEURD9rLGwtPQRbWRhjZUtoPAGyiLDkfxZYdytP5NW8g8RNrJxkknnTvNcb1jnBiZLl3mDvMGvHYxhtXXyi1N8CTdzTlWvCTMFwaSZJnTkvKKkYWMIaWAnYGNSBskNbYCu8eqg2KLTtpaT6HQU0rhvgCUxUc1GpfGFOsLuPXSb8ef4KYI6xADvU7j9J+wGOvAAAAA==[0m[Pipeline] // stage
+[8mha:////4I0wxP3tAosNXY1Mp8fvIbLNbqdvF35IWqB8JhvpWnTjAAAAph+LCAAAAAAAAP9tjTEOwjAQBM9BKWgpeYQDEh2iorXc8AITG+PEugv2haTiRXyNPxCIRMVWOyut5vmCMic4UPKycdgGzHWQXez91ORAqb1EGmRDZ1kTZopOajdosu44oyZ2MEcUsFCwdFhHygE9w0o15m6qaNBXJ07TtldQBHuDBwg1mdkk/sKYYH3tbSb8ef4KYOwYxI6h2G4+x/INtuQqUcEAAAA=[0m[Pipeline] withEnv
+[8mha:////4GobwxTZ83Ge63fojAfGSppQ1oSB5vfSeJN5K3JBCFlXAAAApR+LCAAAAAAAAP9tjTEOwjAUQ3+DOrAycoiUzoiJNerCCUITQtLo/zZJSSdOxNW4Ay2VmPBg2Zas93pDGQOcKBjuNHYWY2t570czJ54pdDdPmTu68pYwkte80bkhpc9rbShpWFUw2AjYamw9RYsmwU44+ZCVl2iqSwrzdhTArBrgCYWYyUmG9C1TgP19VJHwx/kLgKlPwOrDYvXyLD8BobDcwgAAAA==[0m[Pipeline] {
+[8mha:////4MrB1L6xGbq2/3dhaSEPd2EFwby95/v6MHDZUrXCwfN2AAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUZUVMrFEWThCaEJJG/7dJSjpxIq7GHWipxIQHy7ZkvdcbqhjgRMEwp7GzGFvLej+aObFMobt5yszRlbWEkbxmQmdBSp/XKihpWFWUsOGw1dh6ihZNgh138iFrL9HUlxTm7cihtGqAJxR8JicZ0rdMAfb3UUXCH+cvAKY+Qdk0ix2WZ/UBbwyqm8IAAAA=[0m[Pipeline] withEnv
+[8mha:////4K1MHgUmptcQ8XuBHRkXQTwPzHZWDgxaV7qbPBGLOTyeAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUwIiYukZZOEFoQkgb/V9+UtqJE3E17kBLJSY8WLYl673eUESGE7ETjcXWY6y96ELvpiQG4vYaaBANXURNGClYoeygyNhqqYqShUVZDisJa4t1oOjRJdjIRj90GTS68px42o4Scm/u8IRMTuSkOX3LyLC99SYS/jh/ATB2CfLdfrbD/Cw+y7kUycIAAAA=[0m[Pipeline] {
+[8mha:////4D2wmaGrwqnvfFWf56Hkag8uO6oiMpejbqlTHBs86s9fAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUCDbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxAbNWnxXCAAAA[0m[Pipeline] stage
+[8mha:////4IcmmjSd8nhH5ZFMGKUoh1J1IvSSpTkBiKLSIGIIG273AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUSDAhpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD5WQ+PfCAAAA[0m[Pipeline] { (Checkout Repository)
+[8mha:////4E3e75bYgAYu3y+2wed1WRwrfCp8gmdzguDsnErS8Y7gAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCmgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN7LjSKW+AAAA[0m[Pipeline] echo
+📥 Checking out repository for Linux deployment...
+[8mha:////4N31oG21f7XgWbb7tfNhmcQmQxgvJh/ZvDVH+CF9kEofAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCkSBqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAHz0lO8vgAAAA==[0m[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+using credential 7a5fcd35-3a38-4511-a275-881c11e6625d
+Fetching changes from the remote Git repository
+Checking out Revision 594f0641bff638fbba51fd5f44980dfa7a76e33d (refs/remotes/origin/main)
+Commit message: "fixes"
+[8mha:////4NWngvscqF9o97kz05ABYRyGS5vlNRfGPPSEMWABY8VjAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCiQkRJXWcsMLTGyME+vO2A5JxYv4Gn8gEImKLVY728zzBcsU4cjRYmuoc5Qah8H3dlo4cOwungds+YwNU2JvUJpBsjb1jJKzgTlFCQsBK0ON5+TIZliLVt1V5RXZ6pTj9B0ElE7f4AGFmMxZxfyFMcLm2uvE9PP8FcAYQoZyu//U7g1b0dOKvgAAAA==[0m[Pipeline] }
+[8mha:////4OmoeB3jCHnHQwNeV7eBM140nOzKu1IWR7gOKsEjPQIIAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiJBqEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDyFBu95/avQFoMog2vgAAAA==[0m[Pipeline] // stage
+[8mha:////4PvvzTgG2pBaCBPGUFKgfZmo+kiNI6JAc4moCZKPuZ/HAAAApx+LCAAAAAAAAP9tjT0OwjAUg1+LOrAycoiUnxF1Yo26cILQhJA0eq8kKenEibgadyBQiQkPlm3J+p4vqIKHhrxmVmFvMHSGDW7UObFEvr84SszSmXWEgZxirUotSXWca0tRwayihAWHpcLOUTCoI6y4FXdRO4G6PkWftwOH0sgbPKDgmRyFj98yeVhfRxkIf5y/AJiGCOV2n223+TyrNzgO5r/CAAAA[0m[Pipeline] stage
+[8mha:////4NZwAO1CEza8iCw3rUvWSk6YrC1SVgorDYDZbiRFqKvqAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycogUWBFT1ygLJwhNCGmj/8tPSjtxIq7GHWipxIQHy7ZkvdcbishwInaisdh6jLUXXejdlMRA3F4DDaKhi6gJIwUrlB0UGVstVVGysCjLYSVhbbEOFD26BBvZ6Icug0ZXnhNP21FC7s0dnpDJiZw0p28ZGba33kTCH+cvAMYuQX7Yzbafn8UHbGnGmsIAAAA=[0m[Pipeline] { (Parse Linux Inventory)
+[8mha:////4IW0eIpo8ZVfmksANeBQAeLWFJp301DxVxAW/kY30zE5AAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+DOrAycohUdEVMrFEXThCaEJJG/7dJSjpxIq7GHWipxIQHy7ZkvdcbyhjgRMFwp7GzGFvLez+aOfFMobt5ytzRlbeEkbzmjc4NKX1ea0NJw6qCwUbAVmPrKVo0CXbCyYesvERTXVKYt6MAZtUATyjETE4ypG+ZAuzvo4qEP85fAEx9AlYfFquXZ/kBAsTc3cIAAAA=[0m[Pipeline] script
+[8mha:////4G9T2tMaO7mN4c4102nq6LKB6Zf0pZHTDk++NUYDqJM5AAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUKiNiYo2ycILQhJA0+r9NUtKJE3E17kBLJSY8WLYl673eUMUAJwqGOY2dxdha1vvRzIllCt3NU2aOrqwljOQ1EzoLUvq8VkFJw6qihA2HrcbWU7RoEuy4kw9Ze4mmvqQwb0cOpVUDPKHgMznJkL5lCrC/jyoS/jh/ATD1CcqmWeywPKsPpnFij8IAAAA=[0m[Pipeline] {
+[8mha:////4BsqbxqMSUgKkMscxns7hLHttkD/VyA+ToAlf+qO7zP7AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiAR2iSmu54QUmNsaJdWdsh6TiRXyNPxCIRMUWq51t5vmCZYpw5GixNdQ5So3D4Hs7LRw4dhfPA7Z8xoYpsTcozSBZm3pGydnAnKKEhYCVocZzcmQzrEWr7qryimx1ynH6DgJKp2/wgEJM5qxi/sIYYXPtdWL6ef4KYAwZyu3uU/vwBrANZ3i+AAAA[0m[Pipeline] sh
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/home_infra/CD-Linux/.git # timeout=10
+ > git config remote.origin.url https://github.com/Kobeep/home_infra.git # timeout=10
+Fetching upstream changes from https://github.com/Kobeep/home_infra.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+using GIT_ASKPASS to set credentials GitHub Personal Access Token
+ > git fetch --tags --force --progress -- https://github.com/Kobeep/home_infra.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 594f0641bff638fbba51fd5f44980dfa7a76e33d # timeout=10
++ python3 -c 
+import sys, yaml, json
+target = "server"
+with open("ansible/inventories/hosts.yml") as f:
+    inv = yaml.safe_load(f)
+host_config = None
+if "linux" in inv["all"]["children"]:
+    group = inv["all"]["children"]["linux"]
+    if "hosts" in group and target in group["hosts"]:
+        host_config = group["hosts"][target]
+if host_config is None:
+    sys.exit("Host not found in linux group: " + target)
+print(json.dumps(host_config))
+                        
+[8mha:////4Asf5j28EFC7dS7lj2Eva/LjRWSGiLCfrQvRI7HpE806AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIigagQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN/E8fGG+AAAA[0m[Pipeline] readJSON
+[8mha:////4H8EHFdPO0lTwYAqZfJ5W7gMURH/4/Blc6AsD1l0smzcAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIigUSDqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAEyb1FKvgAAAA==[0m[Pipeline] echo
+➡ Linux Host: server
+[8mha:////4Ny1yxGiGFfeFsaNBzqSHvV7WrLa7b6pDqNWFc8a1i0BAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiQUGBqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAFzXkpTvgAAAA==[0m[Pipeline] echo
+➡ IP: 192.168.0.229
+[8mha:////4B8TcUpshij5zbn7uSXubtnpjYX/Hy8DSC43kVYV/H7KAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiQYOEqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAG8QtLUvgAAAA==[0m[Pipeline] echo
+➡ Remote user: server
+[8mha:////4AZ/LBw46iV+BrfnsMXhy3e5nWALP9d8vLDStlSsUPwPAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiQYUQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGMIGcrt/lO7N5XuKbK+AAAA[0m[Pipeline] }
+[8mha:////4P+kC6d9xjnwok1TXWPCzhktTtgR7brJYl7jkTkHmRK0AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMJBoURUaa00vMDEh3Fi3RnbIal4EV/jD1hEomKL1c4283rDOgY4cTCiRxosxc4K70aTl5g4DFfHk+j5IjqmyA5Fi1PLGpsFW04IS4oSVhI2SJ3jaMkk2MpePVTlFJnqnEL+jhJKq+/whEJmc1IhfWEOsLuNOjL9PH8FMHufoDzsc9X1B3+EVkS+AAAA[0m[Pipeline] // script
+[8mha:////4LZRaQiafF/W+Ey3BBJy/Liv734CT9znxeh/AeROnYY6AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKiQImo0lppeIGJjXFi3RnbIal4EV/jD1hEomKL1c4283rDOgY4cTDYaxosxc6id6PJCycOw9XxhD1fsGOK7DS2empZ6WbBlpOGJUUJKwEbTZ3jaMkk2IpePmTlJJnqnEL+jgJKq+7whEJkc5IhfWEOsLuNKjL9PH8FMHufoDzUufb1B2AGAxa+AAAA[0m[Pipeline] }
+[8mha:////4PJuLXUawJNE3zwQGGZY8lPZqoZ5AamdhKGNVxMM013lAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMJBoURUaa00vMDEh3Fi3RnbIal4EV/jD1hEomKL1c4283rDOgY4cTCiRxosxc4K70aTl5g4DFfHk+j5IjqmyA5Fi1PLGpsFW04IS4oSVhI2SJ3jaMkk2MpePVTlFJnqnEL+jhJKq+/whEJmc1IhfWEOsLuNOjL9PH8FMHufoDzUuer9B1hEkOe+AAAA[0m[Pipeline] // stage
+[8mha:////4FRB9uNTjzMvuY4L6fHSO/T6FD+TfZHdQrI/3llUWRMLAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUqCNiYo2ycIKQhpA2+r/8pLQTJ+Jq3IFAJSY8WLYl6z1fUEWGA7ETncXeYzReDGF0OYmJuL8EmkRHZ2EIIwUrlJ0Utfa4VEXJwqKihJWEtUUTKHp0CTay03ddB42uPiXO215C6dsbPKCQmZw0p2+ZGbbXsY2EP85fAMxDgnLXZGuaz7N6AyJ3BZ/CAAAA[0m[Pipeline] stage
+[8mha:////4POxZuzZ9BDhpcKFstNWK1lGPeKc4wgJSaUZ76azqFAaAAAAph+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0KBtiYo2ycILQhJA0+r9NUtKJE3E17kBLJSY8WLYl673eUMUAJwqGOY2dxdha1vvRzIllCt3NU2aOrqwljOQ1EzoLUvq8VkFJw6qihA2HrcbWU7RoEuy4kw9Ze4mmvqQwb0cOpVUDPKHgMznJkL5lCrC/jyoS/jh/ATD1CcqmWeywPKsPBdk7bsIAAAA=[0m[Pipeline] { (Ensure SSH Key Exists)
+[8mha:////4DBSSqtQ5XCcY1IyX4/TI3IFuoTNCIXasDvzAxwMh7G/AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0ACbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxASMfXIzCAAAA[0m[Pipeline] script
+[8mha:////4Jt8hqepVdVb+/+/OR3kqpwOJB9GO1ANHZUYtaACl+/+AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0QLAgpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD02yRsvCAAAA[0m[Pipeline] {
+[8mha:////4KqakQOHcDCXc7NCKNRukHGoWax/nuAoPIM3vRn18AKUAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIEGBqNJabniBiY1xYt0Z2yGpeBFf4w8EIlGxxWpnm3m+YJkiHDlabA11jlLjMPjeTgsHjt3F84Atn7FhSuwNSjNI1qaeUXI2MKcoYSFgZajxnBzZDGvRqruqvCJbnXKcvoOA0ukbPKAQkzmrmL8wRthce52Yfp6/AhhDhnK7+9Q+vAF9GxrMvgAAAA==[0m[Pipeline] sh
++ [ -f /var/jenkins_home/.ssh/server/id_rsa ]
++ echo no
+[8mha:////4CbJiIRkXlWUSENnhalgmVCxFX1mx75pVlVEpd1C7S3vAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSICEkRJXWcsMLTGyME+vO2A5JxYv4Gn8gEImKLVY728zzBcsU4cjRYmuoc5Qah8H3dlo4cOwungds+YwNU2JvUJpBsjb1jJKzgTlFCQsBK0ON5+TIZliLVt1V5RXZ6pTj9B0ElE7f4AGFmMxZxfyFMcLm2uvE9PP8FcAYMpTb3af24Q2yB4JLvgAAAA==[0m[Pipeline] echo
+🔑 SSH key not found in /var/jenkins_home/.ssh/server/id_rsa. Generating...
+[8mha:////4Ff0RzPKDGbfx9pnuM205KWaqlC4xSeeACLWuahiK1YBAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSICEhRJXWcsMLTGyME+vO2A5JxYv4Gn8gEImKLVY728zzBcsU4cjRYmuoc5Qah8H3dlo4cOwungds+YwNU2JvUJpBsjb1jJKzgTlFCQsBK0ON5+TIZliLVt1V5RXZ6pTj9B0ElE7f4AGFmMxZxfyFMcLm2uvE9PP8FcAYMpTb3af24Q3zNplSvgAAAA==[0m[Pipeline] sh
++ dirname /var/jenkins_home/.ssh/server/id_rsa
++ mkdir -p /var/jenkins_home/.ssh/server
++ ssh-keygen -t rsa -b 4096 -f /var/jenkins_home/.ssh/server/id_rsa -N 
+Generating public/private rsa key pair.
+Your identification has been saved in /var/jenkins_home/.ssh/server/id_rsa
+Your public key has been saved in /var/jenkins_home/.ssh/server/id_rsa.pub
+The key fingerprint is:
+SHA256:xbUGSnR/sAN4McUQCA/xOt7d/e9/RXrjFzny512eBx4 jenkins@319dfbcc74c7
+The key's randomart image is:
++---[RSA 4096]----+
+|      ++ooO*+    |
+|       =o+.*.+   |
+|        +.o * .  |
+|       . . . o  .|
+|      o S      o.|
+|     . o . . oE=o|
+|      . . . ..=+*|
+|              .=O|
+|               +/|
++----[SHA256]-----+
++ chmod 600 /var/jenkins_home/.ssh/server/id_rsa
+[8mha:////4Mzja62jVlYkeVFMpx/dVU6kbQAf5rZ09ERo0VKhza6EAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKCBKJBqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKYhQrk75Npvhw8/mxSGvgAAAA==[0m[Pipeline] echo
+📤 Sending public key to server...
+[8mha:////4JXKdloKu9HBXjbZYeQP+v84lBHJ9nihr97VRRVDarEAAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiBKJBqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKYhQrk75Npvhw9+qg+fvgAAAA==[0m[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [SSH_PASS]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ sshpass -p Kokoda1234 ssh-copy-id -i /var/jenkins_home/.ssh/server/id_rsa.pub server@192.168.0.229
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/var/jenkins_home/.ssh/server/id_rsa.pub"
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'server@192.168.0.229'"
+and check to make sure that only the key(s) you wanted were added.
+
+[8mha:////4GCtBZl2R1lA+XJMdAnP91oqGxsQCR/uLWRskF7bD4ClAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiAaJBqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKZhiFDut7l2hw+i7k/SvgAAAA==[0m[Pipeline] }
+[8mha:////4OUkt2o0TcqJFIgkSJNvrz+i7OM+P3hNB1YNWMX7rkMhAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSBCpEldZKwwtMbIwT687YDknFi/gaf8AiEhVbrHa2mdcb1jHAiYPBXtNgKXYWvRtNXjhxGK6OJ+z5gh1TZKex1VPLSjcLtpw0LClKWAnYaOocR0smwVb08iErJ8lU5xTydxRQWnWHJxQim5MM6QtzgN1tVJHp5/krgNn7BOW+zlUfPr1sGoC+AAAA[0m[Pipeline] // script
+[8mha:////4PQT4Isi9M4np5wZFgDPiFywn6NPjnq0t/+K5ieamfz4AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMIpSIeoaC03vMAkh3Fi3Rnbwal4EV/jD1hEomKL1c4283rDOgY4cjBiQBotxc4K7yZTlsgcxqvjLAa+iI4pskOhMCvu8bSg4oSwpKphJWGD1DmOlkyCrRz0QzdOk2nOKZTvIKG2/R2eUMliTjqkL8wBdrepj0w/z18BzN4nqNu21L79AJNsGOq+AAAA[0m[Pipeline] }
+[8mha:////4DWiVZznYcO2THoaAfkkMTLzQd5e1RxLnWEtbdMh4LF/AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSBCpEldZKwwtMbIwT687YDknFi/gaf8AiEhVbrHa2mdcb1jHAiYPBXtNgKXYWvRtNXjhxGK6OJ+z5gh1TZKex1VPLSjcLtpw0LClKWAnYaOocR0smwVb08iErJ8lU5xTydxRQWnWHJxQim5MM6QtzgN1tVJHp5/krgNn7BOX+kKuuP5UqIL++AAAA[0m[Pipeline] // stage
+[8mha:////4BUvAkqJZ8nnvewNCg5eLPJfrThOIW1uHi9kLSl9VsO7AAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUCMSCOrFGXThBaEJIGv1fkpR04kRcjTsQqMSEB8u2ZL3nC6rgoSGvmVXYGwydYYMbdU4ske8vjhKzdGYdYSCnWKtSS1Id59pSVDCrKGHBYamwcxQM6ggrbsVd1E6grk/R5+3AoTTyBg8oeCZH4eO3TB7W11EGwh/nLwCmIUK52Wbb7T/P6g0f2G8KwgAAAA==[0m[Pipeline] stage
+[8mha:////4OAkvDVBi8tv9uPQdszo0X742Ypq97BHrIR/deuC5pfwAAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0QTAgpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD+jQxyjCAAAA[0m[Pipeline] { (Test SSH Connection)
+[8mha:////4C3/IIqe64rSReCWpmjqtQD0q+eTfJbLOkrjdHJnlh5uAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0QQIJMXWNsnCC0ISQNvq//KS0EyfiatyBlkpMeLBsS9Z7vaGIDCdiJxqLrcdYe9GF3k1JDMTtNdAgGrqImjBSsELZQZGx1VIVJQuLshxWEtYW60DRo0uwkY1+6DJodOU58bQdJeTe3OEJmZzISXP6lpFhe+tNJPxx/gJg7BLku/1sh/lZfAD9vR8YwgAAAA==[0m[Pipeline] script
+[8mha:////4H6YOSY9tF/iKmn8N0jiyDOdiPUevv5QUMgAe1q4zPF1AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0YQAhpq5RFk4QmhDSRv+Xn5R24kRcjTvQUokJD5ZtyXqvNxSR4UTsRGOx9RhrL7rQuymJgbi9BhpEQxdRE0YKVig7KDK2WqqiZGFRlsNKwtpiHSh6dAk2stEPXQaNrjwnnrajhNybOzwhkxM5aU7fMjJsb72JhD/OXwCMXYJ8t5/tMD+LD56au0DCAAAA[0m[Pipeline] {
+[8mha:////4LfHZkzZjz8iJFj9X1nZbZYjGk5uIGJNCK6INVEYoyDhAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJCAQVCqWgtN7zAJMY4se6C7eBUvIiv8QcsIlGxxWpnm3m9YRk81OwNdpp6S6GxOLjR5IWJfX91nLDjCzZMgZ1GqZPkVp9mlBw1zClKWAhYaWocB0smwlp06qEqp8hU5+jzdxRQ2vYOTyhENkfl4xcmD5vb2Aamn+evAKYhQrk75Npvhw/4iFt7vgAAAA==[0m[Pipeline] sh
++ ssh -o StrictHostKeyChecking=no -i /var/jenkins_home/.ssh/server/id_rsa server@192.168.0.229 echo OK
+OK
+[8mha:////4DtgSHwaWIoIgW5apWWQVhW7GISWF+n/tBCwxMwQ2zXRAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiJCgQSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANEcrdIdd+O3wAublAYr4AAAA=[0m[Pipeline] echo
+✅ SSH connection successful.
+[8mha:////4CmuDDTcWd+zi+BBrqDjx6yQbugYIHrt1XhKlIhZcFNOAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiISgQSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANQ4Ryv821O3wAQG7Gq74AAAA=[0m[Pipeline] }
+[8mha:////4PB4ssSHg0I0nG1pA0Bq4r//n64Ey2M9Y1Q8prdPcyXGAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSABISSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANQ4Ryv821O3wAc42dF74AAAA=[0m[Pipeline] // script
+[8mha:////4GwGXzd1k+ZoNBmdrj7AkPr8MWTs5lvQIYlHer958LszAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOLSBFEgqrRWGl5gYmOcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThwM9poGS7Gz6N1o8sKJw3B1PGHPF+yYIjuNrZ5aVrpZsOWkYUlRwkrARlPnOFoyCbailw9ZOUmmOqeQv6OA0qo7PKEQ2ZxkSF+YA+xuo4pMP89fAczeJyj3da768AFaoCeavgAAAA==[0m[Pipeline] }
+[8mha:////4MRHtSA2hZfSLX6XoZl2oq00HIGv1upfpYLi1vRV1eWzAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPMJpCA2iSmul4QUmPowT687YDknFi/gaf8AiEhVbrHa2mdcb1jHAiYMRPdJgKXZWeDeavMTEYbg6nkTPF9ExRXYoWpxa1tgs2HJCWFKUsJKwQeocR0smwVb26qEqp8hU5xTyd5RQWn2HJxQym5MK6QtzgN1t1JHp5/krgNn7BGVd59ofPmlDfCa+AAAA[0m[Pipeline] // stage
+[8mha:////4OnemCHT/gWbUZUzgAjqzLRRr2WlP8OkMUdm5AsxQ1tWAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUCMGCOrFGXThBaEJIGv1fkpR04kRcjTsQqMSEB8u2ZL3nC6rgoSGvmVXYGwydYYMbdU4ske8vjhKzdGYdYSCnWKtSS1Id59pSVDCrKGHBYamwcxQM6ggrbsVd1E6grk/R5+3AoTTyBg8oeCZH4eO3TB7W11EGwh/nLwCmIUK52Wbb7T/P6g2r0xiswgAAAA==[0m[Pipeline] stage
+[8mha:////4NhB621Fs8oXowyZOxPl5GmLAhHCZneZRb1JL2ITDpy5AAAApx+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycoh0AgbE1DXKwglCE0La6P/yk9JOnIircQdaKjHhwbItWe/1hiIynIidaCy2HmPtRRd6NyUxELfXQINo6CJqwkjBCmUHRcZWS1WULCzKclhJWFusA0WPLsFGNvqhy6DRlefE03aUkHtzhydkciInzelbRobtrTeR8Mf5C4CxS5Dv9rMd5mfxATOXFRXCAAAA[0m[Pipeline] { (Run Ansible Playbook)
+[8mha:////4OBV/OxelwXjwXeSd5TjRTsujsBuDGEhYNES4qbKidjTAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIZAQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHNzN5Fy++AAAA[0m[Pipeline] echo
+🚀 Running Linux playbook: server.yml on host server
+[8mha:////4A8YLByfmPvBAL4H/X2KvWA0xcHq6RJ8vCFehNrbmT2FAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIYQQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUG53n9qHN3JIDDa+AAAA[0m[Pipeline] sh
+Warning: A secret was passed to "sh" using Groovy String interpolation, which is insecure.
+		 Affected argument(s) used the following variable(s): [SSH_PASS]
+		 See https://jenkins.io/redirect/groovy-string-interpolation for details.
++ cd ansible/playbooks
++ sshpass -p Kokoda1234 ansible-playbook -i ../inventories/hosts.yml server.yml -K --limit server -e hosts_to_deploy=server
+[0;31mERROR! couldn't resolve module/action 'helm'. This often indicates a misspelling, missing collection, or incorrect module path.[0m
+[0;31m[0m
+[0;31mThe error appears to be in '/var/jenkins_home/workspace/home_infra/CD-Linux/ansible/playbooks/k3s.yml': line 111, column 7, but may[0m
+[0;31mbe elsewhere in the file depending on the exact syntax problem.[0m
+[0;31m[0m
+[0;31mThe offending line appears to be:[0m
+[0;31m[0m
+[0;31m[0m
+[0;31m    - name: Deploy applications via Helm[0m
+[0;31m      ^ here[0m
+[8mha:////4Adfw4hayViNf7IffvNkc2qw++l8s3nBFhqrx4mDitHhAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJCAxQoFa3lhheYxBgn1l2wHZyKF/E1/oBFJCq2WO1sM683LIOHmr3BTlNvKTQWBzeavDCx76+OE3Z8wYYpsNModZLc6tOMkqOGOUUJCwErTY3jYMlEWItOPVTlFJnqHH3+jgJK297hCYXI5qh8/MLkYXMb28D08/wVwDQMEcr9Ntfu8AGQyUUpvgAAAA==[0m[Pipeline] }
+[8mha:////4PNkir45bJOPDXM2vKqU9bh5tS7Kh8EnrD7/mm/kMuh7AAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiCtIgqrRWGl5gYmOcWHfGdkgqXsTX+AMWkajYYrWzzbzesI4BThwM9poGS7Gz6N1o8sKJw3B1PGHPF+yYIjuNrZ5aVrpZsOWkYUlRwkrARlPnOFoyCbailw9ZOUmmOqeQv6OA0qo7PKEQ2ZxkSF+YA+xuo4pMP89fAczeJyjrfa5D/QGjKh6VvgAAAA==[0m[Pipeline] // stage
+[8mha:////4NqRkcwk0TtHtMqQvH//JBjPOEoAv8pPO5r80Uvdw1DBAAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUgMSCOrFGXThBaEJIGv1fkpR04kRcjTsQqMSEB8u2ZL3nC6rgoSGvmVXYGwydYYMbdU4ske8vjhKzdGYdYSCnWKtSS1Id59pSVDCrKGHBYamwcxQM6ggrbsVd1E6grk/R5+3AoTTyBg8oeCZH4eO3TB7W11EGwh/nLwCmIUK52WXbbz/P6g0gi2EGwgAAAA==[0m[Pipeline] stage
+[8mha:////4PYZpvVkA/c9ApW0RSj77frPNfy8trJZSaGfOid2Pga0AAAAqB+LCAAAAAAAAP9tjTEOwjAUQ3+LOrAycohUAokFMXWNsnCC0ISQNvq//KS0EyfiatyBlkpMeLBsS9Z7vaGIDCdiJxqLrcdYe9GF3k1JDMTtNdAgGrqImjBSsELZQZGx1VIVJQuLshxWEtYW60DRo0uwkY1+6DJodOU58bQdJeTe3OEJmZzISXP6lpFhe+tNJPxx/gJg7BLkh91s+/lZfADKbit4wgAAAA==[0m[Pipeline] { (Declarative: Post Actions)
+[8mha:////4LboJ8xmS5XjcYHGennNHLva89kMu2j2Au7vVSb5S7C+AAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSgGgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGPIUO63n9qFN5arJPu+AAAA[0m[Pipeline] echo
+Deployment finished.
+[8mha:////4AQ1VpBFITvlG3gQvRnKEot9uGCMYOhcX/4Gw5k9YBRNAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOJSIGgQVVrLDS8wsTFOrDtjOyQVL+Jr/IFAJCq2WO1sM88XLFOEI0eLraHOUWocBt/baeHAsbt4HrDlMzZMib1BaQbJ2tQzSs4G5hQlLASsDDWekyObYS1adVeVV2SrU47TdxBQOn2DBxRiMmcV8xfGCJtrrxPTz/NXAGMIGcr97lPbN/nPyFW+AAAA[0m[Pipeline] }
+[8mha:////4LN+txaZkgWwfrdCre6X3L4+iawxWzezdNSEdJw14QLjAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiUaRBVLRWGl5gEmPsWHeO7eBUvIiv8QcCkajYYrWzzTxfsI4Bjhw0WkW9odga9G7U88LMob86zmj5gi1TZKewUbnhTp0WbDgpWFKUsBKwUdQ6joZ0gq2w8i4rJ0lX5xTm7yCgNN0ADyjEbE4ypC9MAXa3sYtMP89fAUzeJyjr+lP7N8GNW6S+AAAA[0m[Pipeline] // stage
+[8mha:////4B+KNEwivaOfxzjA6BEzCUcA+3OYkfsZ4Qcgt5Ja+efuAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIihAQFSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANQ4Ryf8i13X0ANfhBV74AAAA=[0m[Pipeline] }
+[8mha:////4EhabdBGAUfV+MWTRcKlGO464rbzv3VDXTwShuYDbsiaAAAAph+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOIiKBASSkVrueEFJjHGiXUXbAen4kV8jT9gEYmKLVY728zrDcvgoWZvsNPUWwqNxcGNJi9M7Pur44QdX7BhCuw0Sp0kt/o0o+SoYU5RwkLASlPjOFgyEdaiUw9VOUWmOkefv6OA0rZ3eEIhsjkqH78wedjcxjYw/Tx/BTANQ4Ryf8i13X0AdnoQ0b4AAAA=[0m[Pipeline] // withEnv
+[8mha:////4P/RCZ0CdL0p1diW93q4jIWNsg3ny9ZhRuQCVwLXVF1mAAAApR+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOKiNEgIUaW10vACExvjxLoztkNS8SK+xh+wiETFFqudbeb1hnUMcOJgsNc0WIqdRe9GkxdOHIar4wl7vmDHFNlpbPXUstLNgi0nDUuKElYCNpo6x9GSSbAVvXzIykky1TmF/B0FlFbd4QmFyOYkQ/rCHGB3G1Vk+nn+CmD2PkG5P+Sq6w9p+EWDvgAAAA==[0m[Pipeline] }
+[8mha:////4Fxp0UtH47M4NXxELRhtv17fnEXxAtjTYUUPWd3ExE/lAAAApB+LCAAAAAAAAP9tjTEOwjAQBC9BFLSUPOISKgpEldZKwwtMbIwT687YDknFi/gaf8AiEhVbrHa2mdcb1jHAiYPBXtNgKXYWvRtNXjhxGK6OJ+z5gh1TZKex1VPLSjcLtpw0LClKWAnYaOocR0smwVb08iErJ8lU5xTydxRQWnWHJxQim5MM6QtzgN1tVJHp5/krgNn7BOWhzrWvP4OSOnW+AAAA[0m[Pipeline] // withEnv
+[8mha:////4PELI9aoVDJ1zBp9zQ7kJ+N1m3qLindriXQGYI4rVI5bAAAApB+LCAAAAAAAAP9tjTEOwjAQBDdBFLSUPMIREhIFoqK10vACkxjjxLoL9oWk4kV8jT8QEYmKrXammdcbyxRx5OhUY6n1lCqvutC76amBY3sNPKiGL6piShysKu1Qcm1PM5YsFvOyHAuNlaUqcPLkBGvdmIcpgiFXnCVO7qCR+/qOJzI9lcVE+cIYsbn1dWL6df4GMHadIN9vBdnuAyjhfDm9AAAA[0m[Pipeline] }
+[8mha:////4F6qAuoy/Mr+FdM/wIa5dy5LT7UhKudSNEM0gQVDqQ/IAAAApB+LCAAAAAAAAP9tjTEOwjAQBDdBFLSUPMKRoKBAVLRWGl5gEmOcWHfBvpBUvIiv8QciIlGx1c4083pjmSKOHJ1qLLWeUuVVF3o3PTVwbK+BB9XwRVVMiYNVpR1Kru1pxpLFYl6WY6GxslQFTp6cYK0b8zBFMOSKs8TJHTRyX9/xRKanspgoXxgjNre+Tky/zt8Axq4T5PutINt9AFsOuOC9AAAA[0m[Pipeline] // node
+[8mha:////4CXQq59wD9CgOpe3YFfwCTNkpzBsPpvTD3LbcjnM1IipAAAApB+LCAAAAAAAAP9tjTEOwjAQBDdBFLSUPMKRoKBAVLRWGl5gEmOcWHfBvpBUvIiv8QciIlGx1c4083pjmSKOHJ1qLLWeUuVVF3o3PTVwbK+BB9XwRVVMiYNVpR1Kru1pxpLFYl6WY6GxslQFTp6cYK0b8zBFMOSKs8TJHTRyX9/xRKanspgoXxgjNre+Tky/zt8Axq4T5PudINt+AH0X36q9AAAA[0m[Pipeline] End of Pipeline
+ERROR: script returned exit code 4
+Finished: FAILURE

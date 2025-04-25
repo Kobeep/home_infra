@@ -1,0 +1,234 @@
+commit 4a8e090d344dec38c08e52f923ec65cb0f921349
+tree e62b96514af674486ee07b654b733f6f73f72dc8
+parent 74fd54d7e6196b94e9dee2a00f341a62db771ecb
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:47:52 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:47:52 +0200
+
+    test11
+
+
+:100644 100644 0799ce513f143a3b4e1598443516441c01621e1f a3c2be1de58f682bb6529af9bff026fc923256c8 M	Jenkinsfile
+commit 74fd54d7e6196b94e9dee2a00f341a62db771ecb
+tree 991a3ce5b226c3f925a26d100b217c09dcc533a4
+parent a3cae53c7427aa691b45a9c55a21c0b48a7084d1
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:44:55 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:44:55 +0200
+
+    test10
+
+
+:100644 100644 3b21c2aadd28a7913aaa1f520f9411e2a23c79bc fadf537b0fcebc6221efe438a42c50510ce9dc59 M	ansible/ansible.cfg
+commit a3cae53c7427aa691b45a9c55a21c0b48a7084d1
+tree ffcd9d4d5dae165a82ced5e56053c28132b8aac3
+parent c931d9c4f18f5bcad29347f3cd10363d6378be3f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:43:13 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:43:13 +0200
+
+    test9
+
+
+:100644 100644 5598e48460eb7967cc3e465cd8efc9159017557b 0799ce513f143a3b4e1598443516441c01621e1f M	Jenkinsfile
+commit c931d9c4f18f5bcad29347f3cd10363d6378be3f
+tree 50e3d3f2c2813ffc6e89a92ca82d1141dfbc4a91
+parent a5c82076d78c6bbbc96cc5807a6dbbd7fe4b8553
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:41:16 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:41:16 +0200
+
+    test8
+
+
+:100644 100644 31e3843cf63abe55e7e141d495af515916f956dd 5598e48460eb7967cc3e465cd8efc9159017557b M	Jenkinsfile
+commit a5c82076d78c6bbbc96cc5807a6dbbd7fe4b8553
+tree b65dc8d95fe66339f4d4ae1c4482512d68426b4a
+parent 3c51a1790a6745f705f979636617d8f2aeac56ce
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:37:26 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:37:26 +0200
+
+    test7
+
+
+:100644 100644 027aa041bfcbcdbcb2bea34404a304eb55ff8857 31e3843cf63abe55e7e141d495af515916f956dd M	Jenkinsfile
+commit 3c51a1790a6745f705f979636617d8f2aeac56ce
+tree 5cd5304a2cfb1eb6420687711898b18ffb1da69a
+parent 1a30f618a49d499f33d99f2b9bf41340336dddaa
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:36:12 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:36:12 +0200
+
+    test6
+
+
+:100644 100644 fbf4290e1fbb339b0e4ba283449cf58c4ac70fd5 027aa041bfcbcdbcb2bea34404a304eb55ff8857 M	Jenkinsfile
+commit 1a30f618a49d499f33d99f2b9bf41340336dddaa
+tree ab3d8380e9587c99c9927127cbe4c9f5253f0b0b
+parent d465d0c4b64e893026f4f5250f26d8786d85f623
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:34:59 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:34:59 +0200
+
+    test5
+
+
+:100644 100644 f24b36dd9509b4ae3990c4ecf9e6a28d0b6546a0 fbf4290e1fbb339b0e4ba283449cf58c4ac70fd5 M	Jenkinsfile
+commit d465d0c4b64e893026f4f5250f26d8786d85f623
+tree 0a3f5cea19a05586c4008e027d5e4b45265008b1
+parent 98fc1fe567eb5358b1bd36e9130a03ef8d760155
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:34:03 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:34:03 +0200
+
+    test4
+
+
+:100644 100644 85bc23100a138864e96a72f16b1e4c0324eec276 f24b36dd9509b4ae3990c4ecf9e6a28d0b6546a0 M	Jenkinsfile
+commit 98fc1fe567eb5358b1bd36e9130a03ef8d760155
+tree b29dc4cc78afd908410066a874ed65ccfeb774e5
+parent 7e7d9dce6b317c78443095db94b21b0bccaa5496
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:32:21 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:32:21 +0200
+
+    test3
+
+
+:100644 100644 336654c7f4977574a765d100bee93a37a21a67a8 85bc23100a138864e96a72f16b1e4c0324eec276 M	Jenkinsfile
+:100644 100644 fadf537b0fcebc6221efe438a42c50510ce9dc59 3b21c2aadd28a7913aaa1f520f9411e2a23c79bc M	ansible/ansible.cfg
+commit 7e7d9dce6b317c78443095db94b21b0bccaa5496
+tree c58d0f06a9730c9f57dbafccd7e441ede64e6e59
+parent 3180f92952d34cf6f60333ffd8eb278b4cdf7ccb
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:30:31 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:30:31 +0200
+
+    test2
+
+
+:100644 100644 85bc23100a138864e96a72f16b1e4c0324eec276 336654c7f4977574a765d100bee93a37a21a67a8 M	Jenkinsfile
+:100644 100644 63717b691a32cf0793ba06cc480dfa41f7af9cfd 1da689928ed50d627f21bcf62a87c46e34c66c94 M	ansible/playbooks/hp.yml
+commit 3180f92952d34cf6f60333ffd8eb278b4cdf7ccb
+tree b2bfadcd69cd25bac68ed43dd46ae2d83ca7f5e3
+parent e83d60db7baab0795d63d63d026979e2546b7bad
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:26:16 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:26:16 +0200
+
+    test
+
+
+:100644 100644 1da689928ed50d627f21bcf62a87c46e34c66c94 63717b691a32cf0793ba06cc480dfa41f7af9cfd M	ansible/playbooks/hp.yml
+commit e83d60db7baab0795d63d63d026979e2546b7bad
+tree de0bc37dcdc7cca053680963d05175676c57a495
+parent 5c75d1ce35a2f7952d49e605665eaa43e02c8280
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:22:14 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:22:14 +0200
+
+    playbooks improvements
+
+
+:000000 100644 0000000000000000000000000000000000000000 fadf537b0fcebc6221efe438a42c50510ce9dc59 A	ansible/ansible.cfg
+commit 5c75d1ce35a2f7952d49e605665eaa43e02c8280
+tree 118c0fca17cf70c7f3698eb6f72346c4be208f58
+parent ea12667b7fdebaff1f0b1e35bf961c54a9f28c8f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:17:00 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:17:00 +0200
+
+    playbooks improvements
+
+
+:100644 100644 f1939cc4ae39725927c653213278d7158c6f093c 1da689928ed50d627f21bcf62a87c46e34c66c94 M	ansible/playbooks/hp.yml
+:100644 100644 9eb2af873a00d86de7ec0b2b55da4423fe7803a7 fec0eb94b0d45e139dad0fe037cdcbd865109639 M	ansible/playbooks/server.yml
+:000000 100644 0000000000000000000000000000000000000000 0b9676bce435059a768a05b06b65e159f97ef0e6 A	ansible/roles/firewall/tasks/main.yml
+:100644 100644 0467582ca24064ada7907c676cf9affc79908da9 82faae39e66d573c98ceea97861f2f16a499da9f R057	ansible/roles/server/jenkins/templates/iptables.sh.j2	ansible/roles/firewall/templates/iptables.sh.j2
+:100644 100644 c09c4249a5d5bcb53fed09feaecf46849a7631c8 98259603862246b6e9ab4ecf89673eda7a401789 M	ansible/roles/server/jenkins/tasks/main.yml
+commit ea12667b7fdebaff1f0b1e35bf961c54a9f28c8f
+tree 96083118736831581c4bf56e29cf8c7fe2b47bd7
+parent 0c021c86141e68a453f1c94115596e411199074a
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:14:17 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:14:17 +0200
+
+    playbooks improvements
+
+
+:100644 100644 dcf27f291ee7200579d610efd3e1f2095ce445f7 f1939cc4ae39725927c653213278d7158c6f093c M	ansible/playbooks/hp.yml
+:100644 100644 8e05491c9e756c23b9b2664616bdc14d889879d2 d35469b6bc4ba0f5f341b475ca36f0d4b75e4d99 M	ansible/playbooks/kobeepc.yml
+:100644 100644 65c5daec40c6577e0776cc345f44fb5902c9373b 9eb2af873a00d86de7ec0b2b55da4423fe7803a7 M	ansible/playbooks/server.yml
+:100644 100644 16c79b5bbece89423bcaee008e3fe132fa31fec2 b1aafcd687c7a26101d7c393b9b9759a20041f0b M	ansible/playbooks/szymonpc.yml
+commit 0c021c86141e68a453f1c94115596e411199074a
+tree d29c8312e22302151dbf3978df1f0a6f6461435c
+parent 660180e73b83a68c8f20a83a45ba7b174c4fa058
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:02:00 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:02:00 +0200
+
+    Jenkins improvements
+
+
+:100644 100644 ca9f28369c0a19e59b4a513268251097ca46eafc 85bc23100a138864e96a72f16b1e4c0324eec276 M	Jenkinsfile
+commit 660180e73b83a68c8f20a83a45ba7b174c4fa058
+tree 5cd5e1a1211637f864ddd5d4c107af029768a435
+parent da842a8df667373567e6235586762ca673645472
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:59:06 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:59:06 +0200
+
+    Inventory improvements
+
+
+:100644 100644 3a7d6b923f1cfdd023e6b40bec8d14c41f75b1f0 ca9f28369c0a19e59b4a513268251097ca46eafc M	Jenkinsfile
+:100644 100644 a6c3e84f2bb4ed6c5aeec6a96209b23b63d683d2 5095c4013e12169487a5a7a51675ab93d213dacf M	ansible/inventories/hosts.yml
+commit da842a8df667373567e6235586762ca673645472
+tree d9db83732614d83032b24035f1835af31bc4f91d
+parent acf1dc50373009920060738339f494d44dfd1e0a
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:51:17 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:51:17 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 58327d9da13100687ccda3a8449ab8d0005e0f90 3a7d6b923f1cfdd023e6b40bec8d14c41f75b1f0 M	Jenkinsfile
+commit acf1dc50373009920060738339f494d44dfd1e0a
+tree 64a97a1bbd99f411f3207f2a5c16733994b244f0
+parent 25d8e9ac89599c5b92f62f1756cc25d3ee8e148a
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:45:20 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:45:20 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 a8a90c5fa56391636063c2f06cf9327c94b34a45 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile
+:100644 100644 6f2cd04fe55831502eed707f7559a23c6f856038 9bead9c588bcd892c35f6613cd8085986c886b38 M	dsl_script/Jenkinsfile
+commit 25d8e9ac89599c5b92f62f1756cc25d3ee8e148a
+tree 99256bfe981147e4b904c798bdc6e03160bf9c29
+parent 60d48d74af89448bcbc083e9d7474d858a1e7768
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:44:13 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:44:13 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 58327d9da13100687ccda3a8449ab8d0005e0f90 M	Jenkinsfile
+:100644 100644 18547a8750ed6c090b2dd5a732ccdde48332c3ad a8a90c5fa56391636063c2f06cf9327c94b34a45 M	autorun_node/Jenkinsfile
+commit 60d48d74af89448bcbc083e9d7474d858a1e7768
+tree 019db033be2a7c66b995faf8e4db7b734482b065
+parent c96b919b38866e263151f3733b5c7077a2ba7891
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:42:47 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:42:47 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 58327d9da13100687ccda3a8449ab8d0005e0f90 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 M	Jenkinsfile
+:100644 100644 a8a90c5fa56391636063c2f06cf9327c94b34a45 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile
+commit c96b919b38866e263151f3733b5c7077a2ba7891
+tree 99256bfe981147e4b904c798bdc6e03160bf9c29
+parent bbe4518e39207d7003ea5faf8be9092b17884add
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:29:01 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:29:01 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 c42500f8600e5bbec8934dd659f7b1a89620f58c 58327d9da13100687ccda3a8449ab8d0005e0f90 M	Jenkinsfile
+:100644 100644 18547a8750ed6c090b2dd5a732ccdde48332c3ad a8a90c5fa56391636063c2f06cf9327c94b34a45 M	autorun_node/Jenkinsfile
+commit bbe4518e39207d7003ea5faf8be9092b17884add
+tree 5ce7bd32529bc450d7f431662a766023e938088e
+parent 6e6a19586dbf4af8dbf2965cb649caf5555a1400
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:27:02 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:27:02 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 5d299858e4c99431cad1ef92016f57b1959ddd51 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile

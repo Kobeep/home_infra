@@ -1,0 +1,10 @@
+commit 9c4024ffed6a4f5c600a33dd0e7aca641bf7ff8e
+tree f9b82b55f09182ce7976356faa3eb5d6cdc859ae
+parent 43b171121944af29e4b6a2c25a74209b78645242
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:08:57 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:08:57 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 b4452df98004cc7eedcc772d36aad6c432d7c7cd d7e8f21805d743fbab39478ba2df4d9c26ca8cdb M	Jenkinsfile

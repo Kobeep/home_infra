@@ -1,0 +1,10 @@
+commit 9b225530dba3c04f335ef2fa9a86f04cbdb8fdcd
+tree 6dc9c71c36d370473a258cf529eaf3cf4f6e0fe1
+parent 76980c2da6aed58879b39765fd89423a9d54a118
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 12:46:06 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 12:46:06 +0200
+
+    jenkins update
+
+
+:000000 100644 0000000000000000000000000000000000000000 bd8a1e3d5adf5457cd11a642609676812f75b0e2 A	ansible/playbooks/vars.yml

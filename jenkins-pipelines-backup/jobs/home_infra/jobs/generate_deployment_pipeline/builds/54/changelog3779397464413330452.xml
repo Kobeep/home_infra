@@ -1,0 +1,11 @@
+commit 8776a16f77b778ffd508111127ef0e42a686da9d
+tree 58b71fcd3901e7dba4bd78790c9e93eac215e6ca
+parent 2132a2170f89c264c2a81c20cd7083b86ea8f2aa
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 13:02:05 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 13:02:05 +0200
+
+    jenkins update
+
+
+:100644 100644 2514b60f1f3cc207239888b325dab83b49fa7390 3aae8903baf57034917accbae9b3cf430ccf74b6 M	ansible/inventories/hosts.yml
+:100644 100644 43bf262670fa9efc086aaabdb22ce57498b80031 5b2476abda905a5df926e113fec591e92b18623d M	ansible/playbooks/fedora.yml

@@ -1,0 +1,10 @@
+commit 74fd54d7e6196b94e9dee2a00f341a62db771ecb
+tree 991a3ce5b226c3f925a26d100b217c09dcc533a4
+parent a3cae53c7427aa691b45a9c55a21c0b48a7084d1
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:44:55 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:44:55 +0200
+
+    test10
+
+
+:100644 100644 3b21c2aadd28a7913aaa1f520f9411e2a23c79bc fadf537b0fcebc6221efe438a42c50510ce9dc59 M	ansible/ansible.cfg

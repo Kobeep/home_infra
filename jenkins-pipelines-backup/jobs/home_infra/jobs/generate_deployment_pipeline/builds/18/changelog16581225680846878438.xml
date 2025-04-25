@@ -1,0 +1,10 @@
+commit 3180f92952d34cf6f60333ffd8eb278b4cdf7ccb
+tree b2bfadcd69cd25bac68ed43dd46ae2d83ca7f5e3
+parent e83d60db7baab0795d63d63d026979e2546b7bad
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:26:16 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:26:16 +0200
+
+    test
+
+
+:100644 100644 1da689928ed50d627f21bcf62a87c46e34c66c94 63717b691a32cf0793ba06cc480dfa41f7af9cfd M	ansible/playbooks/hp.yml

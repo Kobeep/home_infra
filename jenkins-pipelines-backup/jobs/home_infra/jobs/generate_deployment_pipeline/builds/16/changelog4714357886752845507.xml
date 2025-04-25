@@ -1,0 +1,27 @@
+commit 5c75d1ce35a2f7952d49e605665eaa43e02c8280
+tree 118c0fca17cf70c7f3698eb6f72346c4be208f58
+parent ea12667b7fdebaff1f0b1e35bf961c54a9f28c8f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:17:00 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:17:00 +0200
+
+    playbooks improvements
+
+
+:100644 100644 f1939cc4ae39725927c653213278d7158c6f093c 1da689928ed50d627f21bcf62a87c46e34c66c94 M	ansible/playbooks/hp.yml
+:100644 100644 9eb2af873a00d86de7ec0b2b55da4423fe7803a7 fec0eb94b0d45e139dad0fe037cdcbd865109639 M	ansible/playbooks/server.yml
+:000000 100644 0000000000000000000000000000000000000000 0b9676bce435059a768a05b06b65e159f97ef0e6 A	ansible/roles/firewall/tasks/main.yml
+:100644 100644 0467582ca24064ada7907c676cf9affc79908da9 82faae39e66d573c98ceea97861f2f16a499da9f R057	ansible/roles/server/jenkins/templates/iptables.sh.j2	ansible/roles/firewall/templates/iptables.sh.j2
+:100644 100644 c09c4249a5d5bcb53fed09feaecf46849a7631c8 98259603862246b6e9ab4ecf89673eda7a401789 M	ansible/roles/server/jenkins/tasks/main.yml
+commit ea12667b7fdebaff1f0b1e35bf961c54a9f28c8f
+tree 96083118736831581c4bf56e29cf8c7fe2b47bd7
+parent 0c021c86141e68a453f1c94115596e411199074a
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:14:17 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:14:17 +0200
+
+    playbooks improvements
+
+
+:100644 100644 dcf27f291ee7200579d610efd3e1f2095ce445f7 f1939cc4ae39725927c653213278d7158c6f093c M	ansible/playbooks/hp.yml
+:100644 100644 8e05491c9e756c23b9b2664616bdc14d889879d2 d35469b6bc4ba0f5f341b475ca36f0d4b75e4d99 M	ansible/playbooks/kobeepc.yml
+:100644 100644 65c5daec40c6577e0776cc345f44fb5902c9373b 9eb2af873a00d86de7ec0b2b55da4423fe7803a7 M	ansible/playbooks/server.yml
+:100644 100644 16c79b5bbece89423bcaee008e3fe132fa31fec2 b1aafcd687c7a26101d7c393b9b9759a20041f0b M	ansible/playbooks/szymonpc.yml

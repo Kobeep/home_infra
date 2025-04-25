@@ -1,0 +1,11 @@
+commit 0cce4af726c468d6ce702b8673a4b95c2c80f67c
+tree 29496cfb9732f6d6be3ac95a18ec68b8b6607e27
+parent dc48a66cdab02a10c57dd7670a88f32c26a7161b
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:47:04 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 19:47:04 +0200
+
+    Iptables modification
+
+
+:100644 100644 2aec64128ac3261ef89fbd8342a4bb98358be6e0 575f25a9aa28c729f88b5c3f09d357db3491b12c M	ansible/roles/server/grafana/tasks/main.yml
+:100644 100644 654be5d426cf3f09f72e8c1c4c4c90e45e0effdf dd075f961dee458f592af416501a84e30e170cc5 M	ansible/roles/server/home_assistant/tasks/main.yml

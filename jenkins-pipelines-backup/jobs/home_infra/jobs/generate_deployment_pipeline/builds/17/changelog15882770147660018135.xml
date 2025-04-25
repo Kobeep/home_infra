@@ -1,0 +1,10 @@
+commit e83d60db7baab0795d63d63d026979e2546b7bad
+tree de0bc37dcdc7cca053680963d05175676c57a495
+parent 5c75d1ce35a2f7952d49e605665eaa43e02c8280
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:22:14 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 13:22:14 +0200
+
+    playbooks improvements
+
+
+:000000 100644 0000000000000000000000000000000000000000 fadf537b0fcebc6221efe438a42c50510ce9dc59 A	ansible/ansible.cfg

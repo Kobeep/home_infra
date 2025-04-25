@@ -1,0 +1,10 @@
+commit b75e5a6de4d487b9b122b904165c39cd8c873431
+tree e4576fea4da8dd4bc5d5e4a5fb43181979e86970
+parent 674d8071e95a7c4afbe5b230c40ca1401f8b4706
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:39:22 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:39:22 +0200
+
+    Backup pipeline fix
+
+
+:100644 100644 f604ce8b9ab36b336de6c59defd549b2ccdec938 03e7a4df3cb34b7f541e662e6155f8a2adeeda41 M	jf/Jenkinsfile

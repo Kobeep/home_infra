@@ -1,0 +1,10 @@
+commit a71615bccfe9dfeae6b2c33d4e2a296992a13e16
+tree 8fcf7c0d9518591f24c7dc5d13ad4b4aa97da925
+parent cfcfe0456f87533cd690db893dfda941be5c0e01
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-11 13:24:41 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-11 13:24:41 +0200
+
+    push test playbook
+
+
+:000000 100644 0000000000000000000000000000000000000000 03858b5c7c172158127afeebd1140055f971fcfb A	ansible/playbooks/test.yml

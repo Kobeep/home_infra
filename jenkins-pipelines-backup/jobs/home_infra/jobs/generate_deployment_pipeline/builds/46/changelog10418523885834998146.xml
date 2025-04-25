@@ -1,0 +1,10 @@
+commit cb5f44a65a9355c26cb5e8631e64d8620b7940f0
+tree d36751dc98c35a9bed12773bc2158d053a232922
+parent 1a305075d9b5f77d9e1d51ee193e0919e6e66834
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 12:34:25 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 12:34:25 +0200
+
+    jenkins update
+
+
+:100644 100644 7a5b02699b794ab502f9fec40914e47717a9d484 2514b60f1f3cc207239888b325dab83b49fa7390 M	ansible/inventories/hosts.yml

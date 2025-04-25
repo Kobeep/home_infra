@@ -1,0 +1,10 @@
+commit aeebac07ce0594ae54693990fa5c70ba1558d539
+tree 967fef3fea3cb1ff3fbdf93b2e607f7dfa616ae4
+parent adf457f70aeb9f22cb7e8d8023725607bd9010f7
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 13:22:26 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-13 13:22:26 +0200
+
+    jenkins update
+
+
+:100644 100644 ee430609c175887e609ff46bb7be14f8c5ac5bcb dc00cc29603db5c731fb3a40b1f0de8c3e653ce6 M	ansible/playbooks/fedora.yml

@@ -1,0 +1,33 @@
+commit 71fab50d7524732d83802ba649162ac4b4309b63
+tree 1be9a9ed8b2e04841d47430684700dbd8e9935b9
+parent 6bda60466a60ee0ab11de5c9073ceaeb349e7ecb
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:12:14 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:12:14 +0200
+
+    server fix
+
+
+:100644 100644 bb0950d1c3c79f93b133f270cb01f1f36b562c61 0a5f695972b03b1bb5f884c0e6d00f06b8d6dc23 M	ansible/inventories/hosts.yml
+:000000 100644 0000000000000000000000000000000000000000 afaacf35ee912bd28c590990a4b2acbacd4bbffd A	ansible/playbooks/k3s.yml
+:100644 100644 d728e6bc0970f50fdce0f8bfa51db84bf75651db 5518848eab81f166abf65f754aaea8a4b183605e M	ansible/playbooks/server.yml
+commit 6bda60466a60ee0ab11de5c9073ceaeb349e7ecb
+tree 550927ce366c7a763fc5866bb3b0a20d4cec6d7c
+parent aeebac07ce0594ae54693990fa5c70ba1558d539
+author Jakub Pospieszny <102924040+Kobeep@users.noreply.github.com> 2025-04-22 18:59:42 +0200
+committer GitHub <noreply@github.com> 2025-04-22 18:59:42 +0200
+
+    Feature/windows (#2)
+    
+    * Windows automation
+    
+    * Windows automation
+    
+    * Windows playbook
+    
+    * update hosts.yml
+
+:100644 100644 804ce1ec6bbac6567e157915be1311e7343f6d67 9ce41f72fd3adc9d2e13c5d46da0af5a17d29c10 M	Jenkinsfile
+:100644 100644 2514b60f1f3cc207239888b325dab83b49fa7390 bb0950d1c3c79f93b133f270cb01f1f36b562c61 M	ansible/inventories/hosts.yml
+:100644 100644 62f7b2032536d53c0ee0eb090701ef3a52727e3c 8f69613f253c6b478b33af1c12ec1ba967cbc89c M	ansible/playbooks/windows.yml
+:100644 100644 aa5fa7de9a0e150a15f36fc91c5d70bf6fc60dff 1dcf936c9e7039bf37f7ef330adab5ad3d3a4591 M	dsl_script/Jenkinsfile
+:000000 100644 0000000000000000000000000000000000000000 2073ad954d414fde3c91ded5ce2ded75a9820457 A	windows/Jenkinsfile

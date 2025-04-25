@@ -1,0 +1,104 @@
+commit bce91d995737696d5157d0a9aef8fa1517049b9c
+tree 15389cb6e4773a41ab07b14bc4a9119d8242c7d1
+parent b672d7220ba5d557ac6889d4e4e7fb9c9b0f8c7f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:11:06 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:11:06 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 7b45298496c76f771260c92358cb3c3d2a7de813 5b71ec6028e2e414eae840f91221a2660532a8b7 M	jf/Jenkinsfile
+commit b672d7220ba5d557ac6889d4e4e7fb9c9b0f8c7f
+tree f8ea5bbbd7c86e9c0ff7b874d95ad2928ed06809
+parent b7dd935c438f31d36e98fd3898e87b3c099f43ea
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:02:03 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 15:02:03 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 ebedaecce0e83559f97c72f1689b0646dc96924e aaa76f9c390755b360f91ae30b5b21f6be2fba79 M	ansible/roles/server/home_assistant/tasks/main.yml
+commit b7dd935c438f31d36e98fd3898e87b3c099f43ea
+tree 413196536d1cf3b794dc2ef38300be9bb214385f
+parent f1332bcd958e34428aa73812d79a8ce33585adde
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:58:00 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:58:00 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 81568f2a9d626983e9ac3fb3bab974d1ea2b691d 77da3d5271c7f67184035a1759727c9755238be8 M	ansible/playbooks/server.yml
+:100644 100644 b5db124c80755ce26e66be16ac3cb07990b46a69 ebedaecce0e83559f97c72f1689b0646dc96924e M	ansible/roles/server/home_assistant/tasks/main.yml
+:100644 100644 2db7d4673dd0b9aca92ff5069109fad8b777743e 3c0f3ff95d68485e355c34ba7f487381ece3118c M	ansible/roles/server/ingress/tasks/main.yml
+commit f1332bcd958e34428aa73812d79a8ce33585adde
+tree 5563f61c57c5985eddf7e33356333ab587be1ccd
+parent 9c4024ffed6a4f5c600a33dd0e7aca641bf7ff8e
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:26:57 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:26:57 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 7a73048f0435438696f773cdcd994e8ec722c20f b5db124c80755ce26e66be16ac3cb07990b46a69 M	ansible/roles/server/home_assistant/tasks/main.yml
+:100644 100644 ab14d155022acdcc5033386ff1394af348392a7b 2db7d4673dd0b9aca92ff5069109fad8b777743e M	ansible/roles/server/ingress/tasks/main.yml
+commit 9c4024ffed6a4f5c600a33dd0e7aca641bf7ff8e
+tree f9b82b55f09182ce7976356faa3eb5d6cdc859ae
+parent 43b171121944af29e4b6a2c25a74209b78645242
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:08:57 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:08:57 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 b4452df98004cc7eedcc772d36aad6c432d7c7cd d7e8f21805d743fbab39478ba2df4d9c26ca8cdb M	Jenkinsfile
+commit 43b171121944af29e4b6a2c25a74209b78645242
+tree cce41f3a84fe1b44ce01bdd0a3a87cd00d9cd376
+parent 5088265423239a2b23d9226be0af54ed88d6249f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:06:28 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 14:06:28 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 9703178fae9624dfb523daa5fce23b1ebf3892e8 7a73048f0435438696f773cdcd994e8ec722c20f M	ansible/roles/server/home_assistant/tasks/main.yml
+commit 5088265423239a2b23d9226be0af54ed88d6249f
+tree ee9723fadf8892f14abb27adf9e685ee9db9815c
+parent f4844e09232c253db4f9d8556b20bf3fe1511f1c
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:40:28 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:40:28 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 762166b85b572ba741778640d823fc25f2df1d53 7b45298496c76f771260c92358cb3c3d2a7de813 M	jf/Jenkinsfile
+commit f4844e09232c253db4f9d8556b20bf3fe1511f1c
+tree 55b23c5083e07802b839b4c6e9bdd30012a68a56
+parent c7a898b9cf1849acc5f2eb078b4a814d6fc4b85e
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:39:40 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:39:40 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 2bb48e1f740a93c3d446fbc6e366aaf2a624cf5f ab14d155022acdcc5033386ff1394af348392a7b M	ansible/roles/server/ingress/tasks/main.yml
+commit c7a898b9cf1849acc5f2eb078b4a814d6fc4b85e
+tree 3c5fc499d6d9131c12419b4828e04da7b201d0f6
+parent a548c2eb039b8205822919ce36410efb1fb60a7f
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:36:48 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:36:48 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 100644 08cc8b6a1939bf25c05efae571625030bcb4156e 2bb48e1f740a93c3d446fbc6e366aaf2a624cf5f M	ansible/roles/server/ingress/tasks/main.yml
+commit a548c2eb039b8205822919ce36410efb1fb60a7f
+tree acc6cc769039a9815b600d55f9c493b141585949
+parent 46b558b1497a6b3be29b5fe657dd8b64f9bdc888
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:33:50 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 20:33:50 +0200
+
+    Added pipeline responsible for fetching the configs
+
+
+:100644 000000 77187cbbd0704931842f92cd83e8e2b79733e1c2 0000000000000000000000000000000000000000 D	ansible/roles/server/grafana/tasks/addons.yml
+:100644 100644 575f25a9aa28c729f88b5c3f09d357db3491b12c ea8b5bc73c787e2a6a82aff42d1db3ccd4aca1c3 M	ansible/roles/server/grafana/tasks/main.yml

@@ -1,0 +1,12 @@
+commit b454032b3a3851bd4ff02d5aea1dbb682e1036bc
+tree a6a0f627157a36524aec5def3adc1529cb12b440
+parent 665a7793b990ec647a603961e58c59cc4f72a5a6
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 20:09:31 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 20:09:31 +0200
+
+    fix
+
+
+:100644 100644 b10a1af3b708082ed1f63f79779e856d59b06830 52a8ba2820e70828cc43b9fa2942455cc8f4e6cb M	ansible/roles/server/dashy/tasks/main.yml
+:100644 100644 849a33279d918a0c5c0dee6497c1299528e79e97 d8c39e9458841346c22acc3e6ecb230ee84c3762 M	ansible/roles/server/grafana/tasks/main.yml
+:100644 100644 e502b42a0a3e2927af89f21c85d03c165ba67b28 aea5da647c82ae03c126c56a8e046becfbb0bc84 M	ansible/roles/server/home_assistant/tasks/main.yml

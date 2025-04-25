@@ -1,0 +1,26 @@
+commit 0f9bf0a43fe3e059dd4b588655bc7032a40b5a9b
+tree 79c8ddc9b38649d6228cd7c98beaab77b20968c0
+parent a85bdc1cb023113094b5c8be581f513150fd52b8
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:41:45 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:41:45 +0200
+
+    fix
+
+
+:100644 100644 21dbbc870e8a39b863e4f2d73980cd1ac434005a 41b9b033c8a3a74c3291723ada158a9315b638fe M	ansible/playbooks/hp.yml
+commit a85bdc1cb023113094b5c8be581f513150fd52b8
+tree 51dab8f2bcfd7a13cba94aeda2700a84bffc69ef
+parent fd35453d671de282b79e871c02bf7691e923be87
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:41:14 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-22 19:41:14 +0200
+
+    fix
+
+
+:100644 100644 d26ec7108a8bfaa8e2cc9bf3773fbafd55e9ff42 638fa6a8480cd1d677762b5f6e9a3850d6cbbb77 M	ansible/playbooks/k3s.yml
+:100644 100644 0a2bc8d92ccf7ab74081efc1074e453a6f4186c7 aee472cc8eb1efed22ab16c5349308559d7c0e9b M	ansible/playbooks/server.yml
+:100644 100644 f6fec7dfdead0b08675bb33e76504c2419be06e3 b10a1af3b708082ed1f63f79779e856d59b06830 M	ansible/roles/server/dashy/tasks/main.yml
+:100644 100644 0b9676bce435059a768a05b06b65e159f97ef0e6 fd02c8b3969b69514d22a20970456dd221819a85 M	ansible/roles/server/firewall/tasks/main.yml
+:100644 100644 82faae39e66d573c98ceea97861f2f16a499da9f 16eb772cf91be99325e2b9a8fe596ed72c0ef2b8 M	ansible/roles/server/firewall/templates/iptables.sh.j2
+:000000 100644 0000000000000000000000000000000000000000 849a33279d918a0c5c0dee6497c1299528e79e97 A	ansible/roles/server/grafana/tasks/main.yml
+:100644 100644 95017e420597eb4266efcb7ef3f04595092ca8ae e502b42a0a3e2927af89f21c85d03c165ba67b28 M	ansible/roles/server/home_assistant/tasks/main.yml

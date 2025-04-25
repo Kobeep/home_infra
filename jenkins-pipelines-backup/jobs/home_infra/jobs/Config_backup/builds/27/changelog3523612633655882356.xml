@@ -1,0 +1,10 @@
+commit 9a1d20069a8c8712574b2653334917706eb8a657
+tree 4e0e341742ee870c55097a03dc0778cef0135c8b
+parent fe2264640eb4e7180fa79e8bc5b7be96d453700e
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 16:20:17 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-25 16:20:17 +0200
+
+    Add jenkins backup
+
+
+:100644 100644 fffc8725356727192c65377c48d1d734adf99003 715b8801101848ae39fc6f39efcdc369e8d7a733 M	jf/Jenkinsfile

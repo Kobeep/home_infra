@@ -1,0 +1,318 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-build plugin="workflow-job@1508.v9cb_c3a_a_89dfd">
+  <actions>
+    <hudson.model.CauseAction>
+      <causeBag class="linked-hash-map">
+        <entry>
+          <hudson.model.Cause_-UserIdCause>
+            <userId>kobeeq</userId>
+          </hudson.model.Cause_-UserIdCause>
+          <int>1</int>
+        </entry>
+      </causeBag>
+    </hudson.model.CauseAction>
+    <jenkins.metrics.impl.TimeInQueueAction plugin="metrics@4.2.21-464.vc9fa_a_0d6265d">
+      <queuingDurationMillis>48</queuingDurationMillis>
+      <blockedDurationMillis>0</blockedDurationMillis>
+      <buildableDurationMillis>0</buildableDurationMillis>
+      <waitingDurationMillis>32</waitingDurationMillis>
+    </jenkins.metrics.impl.TimeInQueueAction>
+    <org.jenkinsci.plugins.workflow.libs.LibrariesAction plugin="pipeline-groovy-lib@752.vdddedf804e72">
+      <libraries/>
+    </org.jenkinsci.plugins.workflow.libs.LibrariesAction>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction plugin="pipeline-model-definition@2.2254.v2a_978de46f35">
+      <stagesUUID>ccd40f97-b593-446d-97f5-c282b1f12fa8</stagesUUID>
+      <pipelineDefs>
+        <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef plugin="pipeline-model-api@2.2254.v2a_978de46f35">
+          <stages>
+            <stages>
+              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+                <name>Checkout Repository</name>
+                <branches>
+                  <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                    <name>default</name>
+                    <steps>
+                      <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep>
+                        <name>echo</name>
+                        <args class="org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList">
+                          <arguments class="linked-hash-map">
+                            <entry>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                                <key>message</key>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                                <value class="string">📥 Checking out repository...</value>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                            </entry>
+                          </arguments>
+                        </args>
+                      </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep>
+                      <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep>
+                        <name>checkout</name>
+                        <args class="org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList">
+                          <arguments class="linked-hash-map">
+                            <entry>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                                <key>scm</key>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-GStringValue>
+                                <value class="string">${scm}</value>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-GStringValue>
+                            </entry>
+                          </arguments>
+                        </args>
+                      </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep>
+                    </steps>
+                  </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                </branches>
+              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+                <name>Gather Dynamic Values</name>
+                <branches>
+                  <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                    <name>default</name>
+                    <steps>
+                      <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock>
+                        <name>script</name>
+                        <args class="org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList">
+                          <arguments class="linked-hash-map">
+                            <entry>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                                <key>scriptBlock</key>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                                <value class="string">def inv = readYaml file: &quot;${env.INVENTORY_FILE}&quot;
+                    def hosts = inv.all.hosts.keySet().toList()
+
+                    def playbooksShell = sh(
+                        script: &quot;ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename&quot;,
+                        returnStdout: true
+                    ).trim()
+                    def playbooks = playbooksShell.tokenize(&quot;\n&quot;)
+
+                    def userSelection = input(
+                        message: &quot;Select target host, playbook and provide SSH password:&quot;,
+                        parameters: [
+                            [
+                                $class: &apos;ChoiceParameterDefinition&apos;,
+                                choices: hosts.join(&quot;\n&quot;),
+                                description: &apos;Choose the target host&apos;,
+                                name: &apos;TARGET_HOST&apos;
+                            ],
+                            [
+                                $class: &apos;ChoiceParameterDefinition&apos;,
+                                choices: playbooks.join(&quot;\n&quot;),
+                                description: &apos;Choose the playbook to run&apos;,
+                                name: &apos;PLAYBOOK&apos;
+                            ],
+                            password(name: &apos;SSH_PASS&apos;, defaultValue: &apos;&apos;, description: &apos;Enter the SSH password for the target host&apos;)
+                        ]
+                    )
+
+                    env.TARGET_HOST = userSelection.TARGET_HOST
+                    env.PLAYBOOK    = userSelection.PLAYBOOK
+                    env.SSH_PASS    = userSelection.SSH_PASS
+
+                    echo &quot;Selected target host: ${env.TARGET_HOST}&quot;
+                    echo &quot;Selected playbook: ${env.PLAYBOOK}&quot;</value>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                            </entry>
+                          </arguments>
+                        </args>
+                      </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock>
+                    </steps>
+                  </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                </branches>
+              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+                <name>Trigger Deployment Pipeline</name>
+                <branches>
+                  <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                    <name>default</name>
+                    <steps>
+                      <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock>
+                        <name>script</name>
+                        <args class="org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList">
+                          <arguments class="linked-hash-map">
+                            <entry>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                                <key>scriptBlock</key>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                              <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                                <value class="string">build job: &quot;CD&quot;,
+                        parameters: [
+                            string(name: &apos;TARGET_HOST&apos;, value: env.TARGET_HOST),
+                            string(name: &apos;PLAYBOOK&apos;, value: env.PLAYBOOK),
+                            password(name: &apos;SSH_PASS&apos;, value: env.SSH_PASS)
+                        ]</value>
+                              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                            </entry>
+                          </arguments>
+                        </args>
+                      </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock>
+                    </steps>
+                  </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch>
+                </branches>
+              </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage>
+            </stages>
+            <uuid>ccd40f97-b593-446d-97f5-c282b1f12fa8</uuid>
+          </stages>
+          <environment>
+            <variables class="linked-hash-map">
+              <entry>
+                <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                  <key>INVENTORY_FILE</key>
+                </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                  <value class="string">ansible/inventories/hosts.yml</value>
+                </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+              </entry>
+              <entry>
+                <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                  <key>PLAYBOOKS_DIR</key>
+                </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey>
+                <org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+                  <value class="string">ansible/playbooks</value>
+                </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue_-ConstantValue>
+              </entry>
+            </variables>
+          </environment>
+          <agent>
+            <variables class="org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue$ConstantValue">
+              <value class="string">slave</value>
+            </variables>
+            <agentType>
+              <key>label</key>
+            </agentType>
+          </agent>
+        </org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef>
+      </pipelineDefs>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction>
+    <jenkins.model.InterruptedBuildAction>
+      <causes>
+        <jenkins.model.CauseOfInterruption_-UserInterruption>
+          <user>kobeeq</user>
+        </jenkins.model.CauseOfInterruption_-UserInterruption>
+      </causes>
+    </jenkins.model.InterruptedBuildAction>
+  </actions>
+  <queueId>137</queueId>
+  <timestamp>1744539823066</timestamp>
+  <startTime>1744539823077</startTime>
+  <result>ABORTED</result>
+  <duration>15997</duration>
+  <charset>UTF-8</charset>
+  <keepLog>false</keepLog>
+  <execution class="org.jenkinsci.plugins.workflow.cps.CpsFlowExecution">
+    <result>ABORTED</result>
+    <script>pipeline {
+    agent { label &apos;slave&apos; }
+
+    environment {
+        INVENTORY_FILE = &apos;ansible/inventories/hosts.yml&apos;
+        PLAYBOOKS_DIR  = &apos;ansible/playbooks&apos;
+    }
+
+    stages {
+        stage(&apos;Checkout Repository&apos;) {
+            steps {
+                echo &quot;📥 Checking out repository...&quot;
+                checkout scm
+            }
+        }
+
+        stage(&apos;Gather Dynamic Values&apos;) {
+            steps {
+                script {
+                    def inv = readYaml file: &quot;${env.INVENTORY_FILE}&quot;
+                    def hosts = inv.all.hosts.keySet().toList()
+
+                    def playbooksShell = sh(
+                        script: &quot;ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename&quot;,
+                        returnStdout: true
+                    ).trim()
+                    def playbooks = playbooksShell.tokenize(&quot;\n&quot;)
+
+                    def userSelection = input(
+                        message: &quot;Select target host, playbook and provide SSH password:&quot;,
+                        parameters: [
+                            [
+                                $class: &apos;ChoiceParameterDefinition&apos;,
+                                choices: hosts.join(&quot;\n&quot;),
+                                description: &apos;Choose the target host&apos;,
+                                name: &apos;TARGET_HOST&apos;
+                            ],
+                            [
+                                $class: &apos;ChoiceParameterDefinition&apos;,
+                                choices: playbooks.join(&quot;\n&quot;),
+                                description: &apos;Choose the playbook to run&apos;,
+                                name: &apos;PLAYBOOK&apos;
+                            ],
+                            password(name: &apos;SSH_PASS&apos;, defaultValue: &apos;&apos;, description: &apos;Enter the SSH password for the target host&apos;)
+                        ]
+                    )
+
+                    env.TARGET_HOST = userSelection.TARGET_HOST
+                    env.PLAYBOOK    = userSelection.PLAYBOOK
+                    env.SSH_PASS    = userSelection.SSH_PASS
+
+                    echo &quot;Selected target host: ${env.TARGET_HOST}&quot;
+                    echo &quot;Selected playbook: ${env.PLAYBOOK}&quot;
+                }
+            }
+        }
+
+        stage(&apos;Trigger Deployment Pipeline&apos;) {
+            steps {
+                script {
+                    build job: &quot;CD&quot;,
+                        parameters: [
+                            string(name: &apos;TARGET_HOST&apos;, value: env.TARGET_HOST),
+                            string(name: &apos;PLAYBOOK&apos;, value: env.PLAYBOOK),
+                            password(name: &apos;SSH_PASS&apos;, value: env.SSH_PASS)
+                        ]
+                }
+            }
+        }
+    }
+}
+</script>
+    <loadedScripts class="linked-hash-map"/>
+    <durabilityHint>MAX_SURVIVABILITY</durabilityHint>
+    <timings class="map">
+      <entry>
+        <string>flowNode</string>
+        <long>83778870</long>
+      </entry>
+      <entry>
+        <string>classLoad</string>
+        <long>6580637229</long>
+      </entry>
+      <entry>
+        <string>runQueue</string>
+        <long>366571412</long>
+      </entry>
+      <entry>
+        <string>run</string>
+        <long>2843941320</long>
+      </entry>
+      <entry>
+        <string>parse</string>
+        <long>2303656195</long>
+      </entry>
+      <entry>
+        <string>saveProgram</string>
+        <long>246144154</long>
+      </entry>
+    </timings>
+    <internalCalls class="sorted-set"/>
+    <sandbox>true</sandbox>
+    <iota>5</iota>
+    <head>1:5</head>
+    <done>true</done>
+    <resumeBlocked>false</resumeBlocked>
+    <storageDir>workflow-completed</storageDir>
+  </execution>
+  <completed>true</completed>
+  <checkouts class="hudson.util.PersistedList"/>
+</flow-build>

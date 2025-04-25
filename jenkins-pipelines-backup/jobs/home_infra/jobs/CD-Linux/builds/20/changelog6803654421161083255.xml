@@ -1,0 +1,10 @@
+commit fa69f40ca11ab553b1742564a863edb6bc33cbb2
+tree 999f31d7677952c098b5a58ddc3885261752af23
+parent 330e32c4cf5e8d4259440f47e4620c8a537f8576
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 18:53:13 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-24 18:53:13 +0200
+
+    HA fix
+
+
+:100644 100644 47e36755262e2a55563533b6f760a1e940ae69a2 5fed1102711345d85dc47bbe40d4b3b1bff4cf66 M	ansible/roles/server/home_assistant/tasks/main.yml

@@ -1,0 +1,10 @@
+commit 5a9dee8d64fddeb91911cdcb3b0f880723c952d4
+tree 9d3e92ffd4d9b309ced8cf36720209b617e2742d
+parent dccc19335082a7534663f2f9370ef2a1ec212676
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:00:06 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:00:06 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 ca77fe66262b8d243e2ae13c76c2250314b67117 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 M	Jenkinsfile

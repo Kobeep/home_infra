@@ -1,0 +1,75 @@
+commit acf1dc50373009920060738339f494d44dfd1e0a
+tree 64a97a1bbd99f411f3207f2a5c16733994b244f0
+parent 25d8e9ac89599c5b92f62f1756cc25d3ee8e148a
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:45:20 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:45:20 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 a8a90c5fa56391636063c2f06cf9327c94b34a45 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile
+:100644 100644 6f2cd04fe55831502eed707f7559a23c6f856038 9bead9c588bcd892c35f6613cd8085986c886b38 M	dsl_script/Jenkinsfile
+commit 25d8e9ac89599c5b92f62f1756cc25d3ee8e148a
+tree 99256bfe981147e4b904c798bdc6e03160bf9c29
+parent 60d48d74af89448bcbc083e9d7474d858a1e7768
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:44:13 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:44:13 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 58327d9da13100687ccda3a8449ab8d0005e0f90 M	Jenkinsfile
+:100644 100644 18547a8750ed6c090b2dd5a732ccdde48332c3ad a8a90c5fa56391636063c2f06cf9327c94b34a45 M	autorun_node/Jenkinsfile
+commit 60d48d74af89448bcbc083e9d7474d858a1e7768
+tree 019db033be2a7c66b995faf8e4db7b734482b065
+parent c96b919b38866e263151f3733b5c7077a2ba7891
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:42:47 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:42:47 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 58327d9da13100687ccda3a8449ab8d0005e0f90 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 M	Jenkinsfile
+:100644 100644 a8a90c5fa56391636063c2f06cf9327c94b34a45 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile
+commit c96b919b38866e263151f3733b5c7077a2ba7891
+tree 99256bfe981147e4b904c798bdc6e03160bf9c29
+parent bbe4518e39207d7003ea5faf8be9092b17884add
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:29:01 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:29:01 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 c42500f8600e5bbec8934dd659f7b1a89620f58c 58327d9da13100687ccda3a8449ab8d0005e0f90 M	Jenkinsfile
+:100644 100644 18547a8750ed6c090b2dd5a732ccdde48332c3ad a8a90c5fa56391636063c2f06cf9327c94b34a45 M	autorun_node/Jenkinsfile
+commit bbe4518e39207d7003ea5faf8be9092b17884add
+tree 5ce7bd32529bc450d7f431662a766023e938088e
+parent 6e6a19586dbf4af8dbf2965cb649caf5555a1400
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:27:02 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:27:02 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 5d299858e4c99431cad1ef92016f57b1959ddd51 18547a8750ed6c090b2dd5a732ccdde48332c3ad M	autorun_node/Jenkinsfile
+commit 6e6a19586dbf4af8dbf2965cb649caf5555a1400
+tree 68174e2796671dd804cd1adcd2c61c3328b79d9a
+parent 9da56ad9f77da68971197cb24443e0786be044fb
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:12:27 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:12:27 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 0e571750cda527fe65aa9a75f25a689ce478c14d 5d299858e4c99431cad1ef92016f57b1959ddd51 M	autorun_node/Jenkinsfile
+commit 9da56ad9f77da68971197cb24443e0786be044fb
+tree e96550ebe7444cabdd93e5e93be9fd35511c1f71
+parent 5a9dee8d64fddeb91911cdcb3b0f880723c952d4
+author Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:00:45 +0200
+committer Kobeep <kuba.pospieszny@gmail.com> 2025-04-10 12:00:45 +0200
+
+    Jenkinsfile fix
+
+
+:100644 100644 b8c2cda82050b6c8777cee0acd8e94be92d89fb3 c42500f8600e5bbec8934dd659f7b1a89620f58c M	Jenkinsfile
+:100644 100644 ceb8bcd4c82261f24a12345df6caa6b696c1f49c 6f2cd04fe55831502eed707f7559a23c6f856038 M	dsl_script/Jenkinsfile
