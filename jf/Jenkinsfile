@@ -46,14 +46,11 @@ pipeline {
           passwordVariable: 'GIT_PASS'
         )]) {
           sh '''
-            # ustawiamy autora tylko lokalnie
             git config user.email "jenkins@localhost"
             git config user.name  "Jenkins CI"
 
-            # oryginalny URL
             ORIG_URL=$(git remote get-url origin)
 
-            # wstrzykujemy user:token przy pomocy sed
             AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://$GIT_USER:$GIT_PASS@#")
 
             git remote set-url origin "$AUTH_URL"
