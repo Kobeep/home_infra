@@ -40,24 +40,24 @@ pipeline {
 
     stage('Commit & Push') {
       steps {
-        withCredentials([string(
+        withCredentials([usernamePassword(
           credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
-          variable: 'GITHUB_TOKEN'
+          usernameVariable: 'GIT_USER',
+          passwordVariable: 'GIT_PASS'
         )]) {
           sh """
-            # ustaw dane autora tylko lokalnie
+            # ustawiamy autora tylko w tym repo
             git config user.email "jenkins@localhost"
             git config user.name  "Jenkins CI"
 
-            # Odczytaj oryginalne origin
+            # wstrzykujemy poświadczenia do URL-a
             ORIG_URL=\$(git remote get-url origin)
-
-            # Wstrzyknij token do URL-a: https://<token>@github.com/Org/Repo.git
-            AUTH_URL=\${ORIG_URL/https:\\/\\//https:\\/\\/\$GITHUB_TOKEN@}
+            AUTH_URL=\${ORIG_URL/https:\\/\\//https:\\/\\/\$GIT_USER:\$GIT_PASS@}
 
             git remote set-url origin \$AUTH_URL
 
             git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+
             if git diff --cached --quiet; then
               echo "✅ No changes to commit."
             else
@@ -68,6 +68,7 @@ pipeline {
         }
       }
     }
+
   }
 
   post {
