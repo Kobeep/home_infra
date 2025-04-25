@@ -15,6 +15,7 @@ KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
 
 fetch_pod_data(){
   local ns="$1" namefrag="$2" podpath="$3" localdir="$4" mode="$5"
+  rm -rf "${localdir}"
   mkdir -p "${localdir}"
   pod=$(ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
         "${REMOTE_USER}@${REMOTE_HOST}" \
@@ -26,7 +27,7 @@ fetch_pod_data(){
       ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
         "${REMOTE_USER}@${REMOTE_HOST}" \
         "sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n ${ns} cp ${pod}:${podpath} -" \
-        | tar -xz -C "${localdir}"
+        | tar -x -C "${localdir}"
     else
       ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
         "${REMOTE_USER}@${REMOTE_HOST}" \
@@ -38,13 +39,6 @@ fetch_pod_data(){
   fi
 }
 
-rm -rf "${HASS_LOCAL}" "${DASHY_LOCAL}" "${GRAFANA_LOCAL}"
-
-# Home Assistant (namespace home, katalog /config)
-fetch_pod_data home              home-assistant   /config            "${HASS_LOCAL}"    dir
-
-# Dashy       (namespace monitoring, plik conf.yml)
+fetch_pod_data home              home-assistant   /config              "${HASS_LOCAL}"    dir
 fetch_pod_data monitoring        dashy            /app/public/conf.yml "${DASHY_LOCAL}"  file
-
-# Grafana     (namespace monitoring, katalog /var/lib/grafana)
-fetch_pod_data monitoring        grafana          /var/lib/grafana   "${GRAFANA_LOCAL}" dir
+fetch_pod_data monitoring        grafana          /var/lib/grafana     "${GRAFANA_LOCAL}" dir
