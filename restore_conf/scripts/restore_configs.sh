@@ -20,41 +20,34 @@ kc() {
 }
 
 find_pod() {
-  local ns=$1 namefrag=$2
+  local ns=$1 frag=$2
   kc -n "${ns}" get pods --no-headers \
-    | awk "/${namefrag}/ {print \$1; exit}"
+    | awk "/${frag}/ {print \$1; exit}"
 }
 
 restore_dir() {
-  local ns=$1 namefrag=$2 podpath=$3 localdir=$4
+  local ns=$1 frag=$2 remote_path=$3 local_dir=$4
   local pod
-  pod=$(find_pod "${ns}" "${namefrag}")
+  pod=$(find_pod "${ns}" "${frag}")
   if [[ -z "$pod" ]]; then
-    echo "⚠️ Pod '${namefrag}' not found in '${ns}'; skipping."
+    echo "⚠️ Pod '${frag}' not found in '${ns}'; skipping."
     return
   fi
-  echo "⟳ Restoring dir '${localdir}' → ${ns}/${pod}:${podpath}"
-  tar cf - -C "${localdir}" . \
+  echo "⟳ Restoring dir '${local_dir}' → ${ns}/${pod}:${remote_path}"
+  tar cf - -C "${local_dir}" . \
     | ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
       "${REMOTE_USER}@${REMOTE_HOST}" \
-      "sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n ${ns} exec -i ${pod} -- tar xf - -C ${podpath}"
+      "sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n ${ns} exec -i ${pod} -- tar xf - -C ${remote_path}"
 }
 
-restore_file() {
-  local ns=$1 namefrag=$2 podpath=$3 localfile=$4
-  local pod
-  pod=$(find_pod "${ns}" "${namefrag}")
-  if [[ -z "$pod" ]]; then
-    echo "⚠️ Pod '${namefrag}' not found in '${ns}'; skipping."
-    return
-  fi
-  echo "⟳ Restoring file '${localfile}' → ${ns}/${pod}:${podpath}"
-  cat "${localfile}" \
-    | ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
-      "${REMOTE_USER}@${REMOTE_HOST}" \
-      "sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n ${ns} exec -i ${pod} -- sh -c 'cat > ${podpath}'"
-}
+restore_dir home              home-assistant   /config            "${HASS_LOCAL}"
 
-restore_dir  home       home-assistant   /config            "${HASS_LOCAL}"
-restore_file monitoring dashy            /app/public/conf.yml "${DASHY_LOCAL}/conf.yml"
-restore_dir  monitoring grafana          /var/lib/grafana   "${GRAFANA_LOCAL}"
+echo "⟳ Creating/updating ConfigMap 'dashy-config' from ${DASHY_LOCAL}/conf.yml"
+ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no "${REMOTE_USER}@${REMOTE_HOST}" <<EOF
+sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n monitoring create configmap dashy-config \\
+  --from-file=conf.yml=- < ${DASHY_LOCAL}/conf.yml \\
+  --dry-run=client -o yaml | kubectl apply -f -
+sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl -n monitoring rollout restart deployment dashy
+EOF
+
+restore_dir monitoring        grafana          /var/lib/grafana   "${GRAFANA_LOCAL}"
