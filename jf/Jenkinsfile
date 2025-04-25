@@ -9,6 +9,7 @@ pipeline {
     HASS_LOCAL        = 'hass-config'
     DASHY_LOCAL       = 'dashy-config'
     GRAFANA_LOCAL     = 'grafana-config'
+    JENKINS_BACKUP    = 'jenkins-pipelines-backup'
   }
 
   stages {
@@ -31,10 +32,28 @@ pipeline {
       }
     }
 
+    stage('Clean old configs') {
+      steps {
+        sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}"
+      }
+    }
+
     stage('Backup via Script') {
       steps {
         sh 'chmod +x jf/scripts/backup_configs.sh'
         sh './jf/scripts/backup_configs.sh'
+      }
+    }
+
+    stage('Backup Jenkins Pipelines') {
+      steps {
+        sh '''
+          # remove old and create fresh
+          rm -rf ${JENKINS_BACKUP}
+          mkdir -p ${JENKINS_BACKUP}
+          # copy all job configs
+          sudo rsync -a /var/jenkins_home/jobs/ ${JENKINS_BACKUP}/jobs/
+        '''
       }
     }
 
@@ -50,12 +69,10 @@ pipeline {
             git config user.name  "Jenkins CI"
 
             ORIG_URL=$(git remote get-url origin)
-
-            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://$GIT_USER:$GIT_PASS@#")
-
+            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
             git remote set-url origin "$AUTH_URL"
 
-            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
+            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}
             if git diff --cached --quiet; then
               echo "✅ No changes to commit."
             else
