@@ -11,11 +11,13 @@
       https://k8s-home-lab.github.io/helm-charts/ || true
     helm --kubeconfig /root/.kube/config repo update
 
-- name: Deploy Home Assistant via Helm
-  shell: |
+- name: Deploy Home Assistant via Helm CLI (NodePort)
+  shell: >
     helm --kubeconfig /root/.kube/config upgrade --install home-assistant \
       k8s-home-lab/home-assistant \
       --namespace home \
       --create-namespace \
       --set PVC.enabled=true \
-      --set PVC.size=10Gi
+      --set PVC.size=10Gi \
+      --set service.type=NodePort \
+      --set service.nodePort=31234
