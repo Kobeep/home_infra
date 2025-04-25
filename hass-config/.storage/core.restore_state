@@ -4,19 +4,29 @@
   "key": "core.restore_state",
   "data": [
     {
-      "state": {"entity_id":"person.jakub_pospieszny","state":"unknown","attributes":{"editable":true,"id":"jakub_pospieszny","device_trackers":[],"user_id":"0a0487e952d44636bbab2db0ca26cdc6","friendly_name":"Jakub Pospieszny"},"last_changed":"2025-04-25T15:39:49.666165+00:00","last_reported":"2025-04-25T15:39:49.666165+00:00","last_updated":"2025-04-25T15:39:49.666165+00:00","context":{"id":"01JSPSNS12P8QARJC46SCFWCEB","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"person.jakub_pospieszny","state":"unknown","attributes":{"editable":true,"id":"jakub_pospieszny","device_trackers":[],"source":"person.jakub_pospieszny","user_id":"0a0487e952d44636bbab2db0ca26cdc6","friendly_name":"Jakub Pospieszny"},"last_changed":"2025-04-25T16:14:53.541700+00:00","last_reported":"2025-04-25T16:14:53.541700+00:00","last_updated":"2025-04-25T16:14:53.541700+00:00","context":{"id":"01JSPVNZK5CWH09MCAJEN2Q5BY","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-25T15:39:51.992599+00:00"
+      "last_seen": "2025-04-25T16:15:28.809106+00:00"
     },
     {
-      "state": {"entity_id":"conversation.home_assistant","state":"unknown","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2025-04-25T15:39:51.392100+00:00","last_reported":"2025-04-25T15:39:51.392100+00:00","last_updated":"2025-04-25T15:39:51.392100+00:00","context":{"id":"01JSPSNTQ0C85C163Y1WXFZKT0","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"conversation.home_assistant","state":"unknown","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2025-04-25T16:15:23.199828+00:00","last_reported":"2025-04-25T16:15:23.199828+00:00","last_updated":"2025-04-25T16:15:23.199828+00:00","context":{"id":"01JSPVPWHZK754WRNVYKA3JECN","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-25T15:39:51.992599+00:00"
+      "last_seen": "2025-04-25T16:15:28.809106+00:00"
     },
     {
-      "state": {"entity_id":"tts.google_translate_en_com","state":"unknown","attributes":{"friendly_name":"Google Translate en com"},"last_changed":"2025-04-25T15:39:51.845502+00:00","last_reported":"2025-04-25T15:39:51.845502+00:00","last_updated":"2025-04-25T15:39:51.845502+00:00","context":{"id":"01JSPSNV554KGD7EJMJT1HJ34F","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"tts.google_translate_en_com","state":"unknown","attributes":{"friendly_name":"Google Translate en com"},"last_changed":"2025-04-25T16:15:26.887715+00:00","last_reported":"2025-04-25T16:15:26.887715+00:00","last_updated":"2025-04-25T16:15:26.887715+00:00","context":{"id":"01JSPVQ057QMXT6VYGA6DBAWFA","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-25T15:39:51.992599+00:00"
+      "last_seen": "2025-04-25T16:15:28.809106+00:00"
+    },
+    {
+      "state": {"entity_id":"button.sony_kd_55xe8599_restart","state":"unknown","attributes":{"device_class":"restart","friendly_name":"Sony KD-55XE8599 Restart"},"last_changed":"2025-04-25T16:15:27.183062+00:00","last_reported":"2025-04-25T16:15:27.183062+00:00","last_updated":"2025-04-25T16:15:27.183062+00:00","context":{"id":"01JSPVQ0EFGGQB2VGMPXABPDBT","parent_id":null,"user_id":null}},
+      "extra_data": null,
+      "last_seen": "2025-04-25T16:15:28.809106+00:00"
+    },
+    {
+      "state": {"entity_id":"button.sony_kd_55xe8599_terminate_apps","state":"unknown","attributes":{"friendly_name":"Sony KD-55XE8599 Terminate apps"},"last_changed":"2025-04-25T16:15:27.183378+00:00","last_reported":"2025-04-25T16:15:27.183378+00:00","last_updated":"2025-04-25T16:15:27.183378+00:00","context":{"id":"01JSPVQ0EFDWST7NRJ3ET95H80","parent_id":null,"user_id":null}},
+      "extra_data": null,
+      "last_seen": "2025-04-25T16:15:28.809106+00:00"
     }
   ]
 }

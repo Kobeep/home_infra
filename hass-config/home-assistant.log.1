@@ -1,55 +1,213 @@
-2025-04-25 13:54:00.230 ERROR (MainThread) [aiohttp.server] Error handling request from 10.42.0.1
+2025-04-25 16:12:34.906 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
 Traceback (most recent call last):
-  File "/usr/local/lib/python3.13/site-packages/aiohttp/web_protocol.py", line 480, in _handle_request
-    resp = await request_handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.13/site-packages/aiohttp/web_app.py", line 569, in _handle
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/local/lib/python3.13/site-packages/aiohttp/web_middlewares.py", line 117, in impl
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/security_filter.py", line 92, in security_filter_middleware
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/forwarded.py", line 83, in forwarded_middleware
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/request_context.py", line 26, in request_context_middleware
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/ban.py", line 86, in ban_middleware
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/auth.py", line 242, in auth_middleware
-    return await handler(request)
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/headers.py", line 32, in headers_middleware
-    response = await handler(request)
-               ^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/helpers/http.py", line 73, in handle
-    result = await handler(request, **request.match_info)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/http/data_validator.py", line 74, in wrapper
-    return await method(view, request, data, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/components/onboarding/views.py", line 167, in post
-    await provider.async_add_auth(data["username"], data["password"])
-  File "/usr/src/homeassistant/homeassistant/auth/providers/homeassistant.py", line 328, in async_add_auth
-    await self.hass.async_add_executor_job(self.data.add_auth, username, password)
-  File "/usr/local/lib/python3.13/concurrent/futures/thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "/usr/src/homeassistant/homeassistant/auth/providers/homeassistant.py", line 198, in add_auth
-    self._validate_new_username(username)
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "/usr/src/homeassistant/homeassistant/auth/providers/homeassistant.py", line 247, in _validate_new_username
-    raise InvalidUsername(
-    ...<2 lines>...
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
     )
-homeassistant.auth.providers.homeassistant.InvalidUsername: Username "Kobeep" is not normalized. Please make sure the username is lowercase and does not contain any whitespace
-2025-04-25 13:54:20.228 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain energy.sensor
-2025-04-25 13:54:20.229 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain cloud.tts
-2025-04-25 13:54:20.229 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain mobile_app.notify
-2025-04-25 13:54:20.229 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain backup.sensor
-2025-04-25 13:54:20.229 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain sun.sensor
-2025-04-25 13:54:20.229 WARNING (MainThread) [homeassistant.helpers.translation] Failed to load integration for translation: Invalid domain homeassistant.scene
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:38.026 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:41.143 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:44.263 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:44.743 WARNING (MainThread) [homeassistant.setup] Setup of recorder is taking over 10 seconds.
+2025-04-25 16:12:47.395 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:50.513 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:53.631 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:56.748 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:12:59.865 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:13:02.984 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
+Traceback (most recent call last):
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
+    self._setup_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
+    self.engine = create_engine(self.db_url, **kwargs, future=True)
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
+    entrypoint = u._get_entrypoint()
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
+    cls = registry.load(name)
+  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
+    raise exc.NoSuchModuleError(
+        "Can't load plugin: %s:%s" % (self.group, name)
+    )
+sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
+2025-04-25 16:13:02.985 ERROR (Recorder) [homeassistant.components.recorder.core] Recorder setup failed, recorder shutting down
+2025-04-25 16:13:02.986 ERROR (MainThread) [homeassistant.setup] Setup failed for 'recorder': Integration failed to initialize.
+2025-04-25 16:13:04.414 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'history'. Setup failed for dependencies: ['recorder']
+2025-04-25 16:13:04.415 ERROR (MainThread) [homeassistant.setup] Setup failed for 'history': Could not setup dependencies: recorder
+2025-04-25 16:13:04.420 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'energy'. Setup failed for dependencies: ['history', 'recorder']
+2025-04-25 16:13:04.420 ERROR (MainThread) [homeassistant.setup] Setup failed for 'energy': Could not setup dependencies: history, recorder
+2025-04-25 16:13:04.435 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'logbook'. Setup failed for dependencies: ['recorder']
+2025-04-25 16:13:04.435 ERROR (MainThread) [homeassistant.setup] Setup failed for 'logbook': Could not setup dependencies: recorder
+2025-04-25 16:13:06.819 ERROR (SyncWorker_2) [homeassistant.components.influxdb] Cannot connect to InfluxDB due to 'HTTPConnectionPool(host='influxdb.monitoring.svc.cluster.local', port=8086): Max retries exceeded with url: /write?db=home_assistant (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7dfcc940d1d0>: Failed to establish a new connection: [Errno -2] Name does not resolve'))'. Please check that the provided connection details (host, port, etc.) are correct and that your InfluxDB server is running and accessible. Retrying in 60 seconds.
+2025-04-25 16:13:07.951 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'default_config'. Setup failed for dependencies: ['energy', 'history', 'logbook']
+2025-04-25 16:13:07.951 ERROR (MainThread) [homeassistant.setup] Setup failed for 'default_config': Could not setup dependencies: energy, history, logbook
+2025-04-25 16:14:07.001 ERROR (SyncWorker_4) [homeassistant.components.influxdb] Cannot connect to InfluxDB due to 'HTTPConnectionPool(host='influxdb.monitoring.svc.cluster.local', port=8086): Max retries exceeded with url: /write?db=home_assistant (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7dfcc7071c70>: Failed to establish a new connection: [Errno -2] Name does not resolve'))'. Please check that the provided connection details (host, port, etc.) are correct and that your InfluxDB server is running and accessible. Retrying in 60 seconds.
