@@ -48,11 +48,12 @@ pipeline {
     stage('Backup Jenkins Pipelines') {
       steps {
         sh '''
-          # remove old and create fresh
+          # clean and recreate
           rm -rf ${JENKINS_BACKUP}
           mkdir -p ${JENKINS_BACKUP}
-          # copy all job configs
-          sudo rsync -a /var/jenkins_home/jobs/ ${JENKINS_BACKUP}/jobs/
+
+          # copy all jobs
+          rsync -a /var/jenkins_home/jobs/ ${JENKINS_BACKUP}/jobs/
         '''
       }
     }
