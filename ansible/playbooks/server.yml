@@ -31,6 +31,10 @@
       include_role:
         name: server/grafana
 
+    - name: Deploy Grafana role
+      include_role:
+        name: server/influxDB
+
     - name: Configure firewall rules
       include_role:
         name: server/firewall

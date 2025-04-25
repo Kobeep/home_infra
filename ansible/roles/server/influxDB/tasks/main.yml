@@ -1,0 +1,49 @@
+---
+
+- name: Ensure namespace "monitoring" exists
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring
+
+- name: Add InfluxData Helm repo (idempotent)
+  shell: |
+    helm --kubeconfig /root/.kube/config repo add influxdata https://helm.influxdata.com || true
+    helm --kubeconfig /root/.kube/config repo update
+
+- name: Deploy InfluxDB via Helm
+  shell: >
+    helm --kubeconfig /root/.kube/config upgrade --install influxdb influxdata/influxdb
+      --namespace monitoring
+      --create-namespace
+      --set persistence.enabled=true
+      --set persistence.size=5Gi
+      --set auth.enabled=true
+      --set auth.adminUser=hauser
+      --set auth.adminPassword=SuperSecretInflux123
+      --set service.type=ClusterIP
+
+- name: Wait for InfluxDB pod to be ready
+  k8s_info:
+    kind: Pod
+    namespace: monitoring
+    label_selectors:
+      - app.kubernetes.io/name=influxdb
+  register: influx_pods
+
+- name: Block until InfluxDB is listening on 8086
+  wait_for:
+    host: "{{ influx_pods.resources[0].status.podIP }}"
+    port: 8086
+    timeout: 120
+
+- name: Create database and user in InfluxDB
+  shell: |
+    kubectl --kubeconfig /root/.kube/config -n monitoring exec -i \
+      svc/influxdb -- influx -execute "CREATE DATABASE home_assistant"
+    kubectl --kubeconfig /root/.kube/config -n monitoring exec -i \
+      svc/influxdb -- influx -execute "GRANT ALL ON home_assistant TO hauser"
+  when: influx_pods.resources[0].status.phase == "Running"
