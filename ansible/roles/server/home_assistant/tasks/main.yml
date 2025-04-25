@@ -2,8 +2,8 @@
 
 - name: Ensure namespace "home" exists
   shell: |
-    kubectl --kubeconfig /root/.kube/config get namespace home \
-      || kubectl --kubeconfig /root/.kube/config create namespace home
+    kubectl --kubeconfig /root/.kube/config get namespace monitoring \
+      || kubectl --kubeconfig /root/.kube/config create namespace monitoring
 
 - name: Add Home Assistant Helm repo and update
   shell: |
@@ -15,9 +15,9 @@
   shell: >
     helm --kubeconfig /root/.kube/config upgrade --install home-assistant \
       k8s-home-lab/home-assistant \
-      --namespace home \
+      --namespace monitoring \
       --create-namespace \
-      --set PVC.enabled=true \
-      --set PVC.size=10Gi \
-      --set service.type=NodePort \
-      --set service.nodePort=31234
+      --set persistence.config.enabled=true \
+      --set persistence.config.size=10Gi \
+      --set service.main.type=NodePort \
+      --set service.main.nodePort=31234
