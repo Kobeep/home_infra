@@ -52,8 +52,8 @@ pipeline {
           rm -rf ${JENKINS_BACKUP}
           mkdir -p ${JENKINS_BACKUP}
 
-          # copy all jobs
-          rsync -a /var/jenkins_home/jobs/ ${JENKINS_BACKUP}/jobs/
+          # copy all pipelines
+          cp -a /var/jenkins_home/jobs ${JENKINS_BACKUP}/
         '''
       }
     }
