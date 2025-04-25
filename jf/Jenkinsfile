@@ -48,15 +48,19 @@ pipeline {
     stage('Backup Jenkins Pipelines') {
       steps {
         sh '''
-          # clean and recreate
+          # clean & recreate
           rm -rf ${JENKINS_BACKUP}
           mkdir -p ${JENKINS_BACKUP}
 
-          # copy all pipelines
-          cp -a /var/jenkins_home/jobs ${JENKINS_BACKUP}/
+          # tar jobs, excluding all builds (logs)
+          tar cf - \
+            --exclude='jobs/*/builds' \
+            -C /var/jenkins_home jobs \
+          | tar xf - -C ${JENKINS_BACKUP}
         '''
       }
     }
+
 
     stage('Commit & Push') {
       steps {
