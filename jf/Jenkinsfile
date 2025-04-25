@@ -33,8 +33,8 @@ pipeline {
 
     stage('Backup via Script') {
       steps {
-        sh 'chmod +x scripts/backup_configs.sh'
-        sh './scripts/backup_configs.sh'
+        sh 'chmod +x jf/scripts/backup_configs.sh'
+        sh './jf/scripts/backup_configs.sh'
       }
     }
 
