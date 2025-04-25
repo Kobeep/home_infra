@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# —— Konfiguracja —— (można też przekazywać jako ENV)
 SSH_BASE="${SSH_BASE:-/var/jenkins_home/.ssh}"
 HOST_NAME="${HOST_NAME:?Need HOST_NAME}"
 REMOTE_HOST="${REMOTE_HOST:?Need REMOTE_HOST}"
@@ -14,14 +13,12 @@ GRAFANA_LOCAL="${GRAFANA_LOCAL:-grafana-config}"
 
 KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
 
-# wrapper do kubectl w sudo
 kc() {
   ssh -i "${KEY_PATH}" -o StrictHostKeyChecking=no \
     "${REMOTE_USER}@${REMOTE_HOST}" \
     "sudo env KUBECONFIG=${REMOTE_KUBECONFIG} kubectl $*"
 }
 
-# fetch directory via kubectl exec+tar
 fetch_dir() {
   local ns=$1 podname=$2 remotepath=$3 localdir=$4
   rm -rf "${localdir}"
@@ -31,7 +28,6 @@ fetch_dir() {
     | tar xf - -C "${localdir}"
 }
 
-# fetch file via kubectl exec+cat
 fetch_file() {
   local ns=$1 podname=$2 remotepath=$3 localfile=$4
   mkdir -p "$(dirname "${localfile}")"
@@ -40,15 +36,12 @@ fetch_file() {
     > "${localfile}"
 }
 
-# — główny flow —
-# znajdź nazwę poda po fragmencie
 find_pod() {
   local ns=$1 namefrag=$2
   kc -n "${ns}" get pods --no-headers \
     | awk "/${namefrag}/ {print \$1; exit}"
 }
 
-# Home Assistant (namespace home, katalog /config)
 POD=$(find_pod home home-assistant)
 if [[ -n "$POD" ]]; then
   fetch_dir  home "$POD" /config              "${HASS_LOCAL}"
@@ -56,7 +49,6 @@ else
   echo "⚠️ HA pod not found; skipping."
 fi
 
-# Dashy (namespace monitoring, plik conf.yml)
 POD=$(find_pod monitoring dashy)
 if [[ -n "$POD" ]]; then
   fetch_file monitoring "$POD" /app/public/conf.yml "${DASHY_LOCAL}/conf.yml"
@@ -64,7 +56,6 @@ else
   echo "⚠️ Dashy pod not found; skipping."
 fi
 
-# Grafana (namespace monitoring, katalog /var/lib/grafana)
 POD=$(find_pod monitoring grafana)
 if [[ -n "$POD" ]]; then
   fetch_dir  monitoring "$POD" /var/lib/grafana   "${GRAFANA_LOCAL}"

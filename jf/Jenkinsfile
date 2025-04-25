@@ -41,9 +41,13 @@ pipeline {
     stage('Commit & Push') {
       steps {
         sh '''
+          # ustawiamy usera tylko w tym repo
+          git config user.email "jenkins@localhost"
+          git config user.name  "Jenkins CI"
+
           git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
           if git diff --cached --quiet; then
-            echo "✅ No changes."
+            echo "✅ No changes to commit."
           else
             git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
             git push origin HEAD:main
