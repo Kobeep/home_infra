@@ -45,30 +45,30 @@ pipeline {
           usernameVariable: 'GIT_USER',
           passwordVariable: 'GIT_PASS'
         )]) {
-          sh """
-            # ustawiamy autora tylko w tym repo
+          sh '''
+            # ustawiamy autora tylko lokalnie
             git config user.email "jenkins@localhost"
             git config user.name  "Jenkins CI"
 
-            # wstrzykujemy poświadczenia do URL-a
-            ORIG_URL=\$(git remote get-url origin)
-            AUTH_URL=\${ORIG_URL/https:\\/\\//https:\\/\\/\$GIT_USER:\$GIT_PASS@}
+            # oryginalny URL
+            ORIG_URL=$(git remote get-url origin)
 
-            git remote set-url origin \$AUTH_URL
+            # wstrzykujemy user:token przy pomocy sed
+            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://$GIT_USER:$GIT_PASS@#")
+
+            git remote set-url origin "$AUTH_URL"
 
             git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL}
-
             if git diff --cached --quiet; then
               echo "✅ No changes to commit."
             else
-              git commit -m "Backup ${HOST_NAME}: \$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+              git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
               git push origin HEAD:main
             fi
-          """
+          '''
         }
       }
     }
-
   }
 
   post {
