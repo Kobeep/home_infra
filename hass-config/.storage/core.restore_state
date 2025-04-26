@@ -4,130 +4,130 @@
   "key": "core.restore_state",
   "data": [
     {
-      "state": {"entity_id":"person.jakub_pospieszny","state":"unknown","attributes":{"editable":true,"id":"jakub_pospieszny","device_trackers":["device_tracker.iphone_kuba"],"user_id":"0a0487e952d44636bbab2db0ca26cdc6","friendly_name":"Jakub Pospieszny"},"last_changed":"2025-04-26T07:31:50.537934+00:00","last_reported":"2025-04-26T07:32:28.679783+00:00","last_updated":"2025-04-26T07:32:28.679783+00:00","context":{"id":"01JSRG64C7PR2AM7VYBQCA5FNP","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"person.jakub_pospieszny","state":"unknown","attributes":{"editable":true,"id":"jakub_pospieszny","device_trackers":["device_tracker.iphone_kuba"],"source":"person.jakub_pospieszny","user_id":"0a0487e952d44636bbab2db0ca26cdc6","friendly_name":"Jakub Pospieszny"},"last_changed":"2025-04-26T09:14:52.300731+00:00","last_reported":"2025-04-26T09:14:52.300731+00:00","last_updated":"2025-04-26T09:14:52.300731+00:00","context":{"id":"01JSRP1M0C2DX2G5ZVTGDDFH5Y","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"conversation.home_assistant","state":"unknown","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2025-04-26T07:32:21.493542+00:00","last_reported":"2025-04-26T07:32:21.493542+00:00","last_updated":"2025-04-26T07:32:21.493542+00:00","context":{"id":"01JSRG5XBNZEF9B24ZYR2M4WWG","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"conversation.home_assistant","state":"unknown","attributes":{"friendly_name":"Home Assistant","supported_features":1},"last_changed":"2025-04-26T09:14:53.746773+00:00","last_reported":"2025-04-26T09:14:53.746773+00:00","last_updated":"2025-04-26T09:14:53.746773+00:00","context":{"id":"01JSRP1NDJT20T038ZMA1ENWVA","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"device_tracker.iphone_kuba","state":"unknown","attributes":{"source_type":"gps","friendly_name":"iPhone (Kuba)"},"last_changed":"2025-04-26T07:32:26.317816+00:00","last_reported":"2025-04-26T07:32:26.317816+00:00","last_updated":"2025-04-26T07:32:26.317816+00:00","context":{"id":"01JSRG622D48XZQ5SZP2XPD0Y8","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"device_tracker.iphone_kuba","state":"unknown","attributes":{"source_type":"gps","friendly_name":"iPhone (Kuba)"},"last_changed":"2025-04-26T09:14:57.314657+00:00","last_reported":"2025-04-26T09:14:57.314657+00:00","last_updated":"2025-04-26T09:14:57.314657+00:00","context":{"id":"01JSRP1RX2WG97FKQKKZT9T4CS","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_battery_level","state":"60","attributes":{"unit_of_measurement":"%","device_class":"battery","icon":"mdi:battery-60","friendly_name":"iPhone (Kuba) Battery Level"},"last_changed":"2025-04-26T07:32:26.318542+00:00","last_reported":"2025-04-26T07:32:26.318542+00:00","last_updated":"2025-04-26T07:32:26.318542+00:00","context":{"id":"01JSRG622EA0B0HKT1GVGWNX5A","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_battery_level","state":"60","attributes":{"unit_of_measurement":"%","device_class":"battery","icon":"mdi:battery-60","friendly_name":"iPhone (Kuba) Battery Level"},"last_changed":"2025-04-26T09:14:57.316366+00:00","last_reported":"2025-04-26T09:14:57.316366+00:00","last_updated":"2025-04-26T09:14:57.316366+00:00","context":{"id":"01JSRP1RX42QAQF5PG5ACQAYGG","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": 60,
         "native_unit_of_measurement": "%"
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_battery_state","state":"Not Charging","attributes":{"Low Power Mode":false,"icon":"mdi:battery-60","friendly_name":"iPhone (Kuba) Battery State"},"last_changed":"2025-04-26T07:32:26.318731+00:00","last_reported":"2025-04-26T07:32:26.318731+00:00","last_updated":"2025-04-26T07:32:26.318731+00:00","context":{"id":"01JSRG622EMBNJH86YMEHTNN4G","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_battery_state","state":"Not Charging","attributes":{"Low Power Mode":false,"icon":"mdi:battery-60","friendly_name":"iPhone (Kuba) Battery State"},"last_changed":"2025-04-26T09:14:57.316775+00:00","last_reported":"2025-04-26T09:14:57.316775+00:00","last_updated":"2025-04-26T09:14:57.316775+00:00","context":{"id":"01JSRP1RX4DZJSCGKGDJZE52JX","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Not Charging",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_connection_type","state":"Wi-Fi","attributes":{"icon":"mdi:wifi","friendly_name":"iPhone (Kuba) Connection Type"},"last_changed":"2025-04-26T07:32:26.318883+00:00","last_reported":"2025-04-26T07:32:26.318883+00:00","last_updated":"2025-04-26T07:32:26.318883+00:00","context":{"id":"01JSRG622E4KAGGTQ62JV2T9MC","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_connection_type","state":"Wi-Fi","attributes":{"icon":"mdi:wifi","friendly_name":"iPhone (Kuba) Connection Type"},"last_changed":"2025-04-26T09:14:57.317090+00:00","last_reported":"2025-04-26T09:14:57.317090+00:00","last_updated":"2025-04-26T09:14:57.317090+00:00","context":{"id":"01JSRP1RX53GC1DGEQ69H5XS39","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Wi-Fi",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_storage","state":"14.01","attributes":{"Available":"18,24 GB","Available (Important)":"49,88 GB","Available (Opportunistic)":"17,89 GB","Total":"127,86 GB","unit_of_measurement":"% available","icon":"mdi:database","friendly_name":"iPhone (Kuba) Storage"},"last_changed":"2025-04-26T07:32:26.319038+00:00","last_reported":"2025-04-26T07:32:26.319038+00:00","last_updated":"2025-04-26T07:32:26.319038+00:00","context":{"id":"01JSRG622F2WB0RAZD7787JWB0","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_storage","state":"14.01","attributes":{"Available":"18,24 GB","Available (Important)":"49,88 GB","Available (Opportunistic)":"17,89 GB","Total":"127,86 GB","unit_of_measurement":"% available","icon":"mdi:database","friendly_name":"iPhone (Kuba) Storage"},"last_changed":"2025-04-26T09:14:57.317436+00:00","last_reported":"2025-04-26T09:14:57.317436+00:00","last_updated":"2025-04-26T09:14:57.317436+00:00","context":{"id":"01JSRP1RX597DXACB8ER1ET4TX","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "14.01",
         "native_unit_of_measurement": "% available"
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_ssid","state":"Kobee24GHz","attributes":{"icon":"mdi:wifi","friendly_name":"iPhone (Kuba) SSID"},"last_changed":"2025-04-26T07:32:26.319174+00:00","last_reported":"2025-04-26T07:32:26.319174+00:00","last_updated":"2025-04-26T07:32:26.319174+00:00","context":{"id":"01JSRG622FM6H48B89W6HDRXC9","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_ssid","state":"Kobee24GHz","attributes":{"icon":"mdi:wifi","friendly_name":"iPhone (Kuba) SSID"},"last_changed":"2025-04-26T09:14:57.317750+00:00","last_reported":"2025-04-26T09:14:57.317750+00:00","last_updated":"2025-04-26T09:14:57.317750+00:00","context":{"id":"01JSRP1RX5S0T65H2VKSQA30XV","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Kobee24GHz",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_bssid","state":"60:63:4c:66:2b:9","attributes":{"icon":"mdi:wifi-star","friendly_name":"iPhone (Kuba) BSSID"},"last_changed":"2025-04-26T07:32:26.319337+00:00","last_reported":"2025-04-26T07:32:26.319337+00:00","last_updated":"2025-04-26T07:32:26.319337+00:00","context":{"id":"01JSRG622FQ6B8TDNABGETT5QV","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_bssid","state":"60:63:4c:66:2b:9","attributes":{"icon":"mdi:wifi-star","friendly_name":"iPhone (Kuba) BSSID"},"last_changed":"2025-04-26T09:14:57.318042+00:00","last_reported":"2025-04-26T09:14:57.318042+00:00","last_updated":"2025-04-26T09:14:57.318042+00:00","context":{"id":"01JSRP1RX6VN7MRTH1GCH2N1T9","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "60:63:4c:66:2b:9",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_sim_1","state":"--","attributes":{"Allows VoIP":true,"Carrier ID":"0000000100000001","Carrier Name":"--","Current Radio Technology":"5G Non-Standalone","ISO Country Code":"--","Mobile Country Code":"65535","Mobile Network Code":"65535","icon":"mdi:sim","friendly_name":"iPhone (Kuba) SIM 1"},"last_changed":"2025-04-26T07:32:26.319467+00:00","last_reported":"2025-04-26T07:32:26.319467+00:00","last_updated":"2025-04-26T07:32:26.319467+00:00","context":{"id":"01JSRG622FZ5WDPC0JT3DWKFCG","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_sim_1","state":"--","attributes":{"Allows VoIP":true,"Carrier ID":"0000000100000001","Carrier Name":"--","Current Radio Technology":"5G Non-Standalone","ISO Country Code":"--","Mobile Country Code":"65535","Mobile Network Code":"65535","icon":"mdi:sim","friendly_name":"iPhone (Kuba) SIM 1"},"last_changed":"2025-04-26T09:14:57.318364+00:00","last_reported":"2025-04-26T09:14:57.318364+00:00","last_updated":"2025-04-26T09:14:57.318364+00:00","context":{"id":"01JSRP1RX6T5NVQE25XNT63E97","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "--",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_sim_2","state":"--","attributes":{"Allows VoIP":true,"Carrier ID":"0000000100000002","Carrier Name":"--","ISO Country Code":"--","Mobile Country Code":"65535","Mobile Network Code":"65535","icon":"mdi:sim","friendly_name":"iPhone (Kuba) SIM 2"},"last_changed":"2025-04-26T07:32:26.319593+00:00","last_reported":"2025-04-26T07:32:26.319593+00:00","last_updated":"2025-04-26T07:32:26.319593+00:00","context":{"id":"01JSRG622FDWSV0XAS1EJ5809Z","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_sim_2","state":"--","attributes":{"Allows VoIP":true,"Carrier ID":"0000000100000002","Carrier Name":"--","ISO Country Code":"--","Mobile Country Code":"65535","Mobile Network Code":"65535","icon":"mdi:sim","friendly_name":"iPhone (Kuba) SIM 2"},"last_changed":"2025-04-26T09:14:57.318655+00:00","last_reported":"2025-04-26T09:14:57.318655+00:00","last_updated":"2025-04-26T09:14:57.318655+00:00","context":{"id":"01JSRP1RX6S09AZ8BWKC4K6CS7","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "--",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_app_version","state":"2025.3","attributes":{"icon":"mdi:cellphone","friendly_name":"iPhone (Kuba) App Version"},"last_changed":"2025-04-26T07:32:26.319727+00:00","last_reported":"2025-04-26T07:32:26.319727+00:00","last_updated":"2025-04-26T07:32:26.319727+00:00","context":{"id":"01JSRG622FD99Y4S5B4DNDS7RV","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_app_version","state":"2025.3","attributes":{"icon":"mdi:cellphone","friendly_name":"iPhone (Kuba) App Version"},"last_changed":"2025-04-26T09:14:57.318937+00:00","last_reported":"2025-04-26T09:14:57.318937+00:00","last_updated":"2025-04-26T09:14:57.318937+00:00","context":{"id":"01JSRP1RX62A0J6FW348RGQEEV","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "2025.3",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_last_update_trigger","state":"Launch","attributes":{"icon":"mdi:cellphone-wireless","friendly_name":"iPhone (Kuba) Last Update Trigger"},"last_changed":"2025-04-26T07:32:26.319859+00:00","last_reported":"2025-04-26T07:32:26.319859+00:00","last_updated":"2025-04-26T07:32:26.319859+00:00","context":{"id":"01JSRG622F44M5Y6D53V481B8P","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_last_update_trigger","state":"Launch","attributes":{"icon":"mdi:cellphone-wireless","friendly_name":"iPhone (Kuba) Last Update Trigger"},"last_changed":"2025-04-26T09:14:57.319252+00:00","last_reported":"2025-04-26T09:14:57.319252+00:00","last_updated":"2025-04-26T09:14:57.319252+00:00","context":{"id":"01JSRP1RX7Y4YWD7MGVN624SX2","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Launch",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_location_permission","state":"Authorized when in use","attributes":{"icon":"mdi:map","friendly_name":"iPhone (Kuba) Location permission"},"last_changed":"2025-04-26T07:32:26.320451+00:00","last_reported":"2025-04-26T07:32:26.320451+00:00","last_updated":"2025-04-26T07:32:26.320451+00:00","context":{"id":"01JSRG622GJ61JNH62J03DRSDX","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_location_permission","state":"Authorized when in use","attributes":{"icon":"mdi:map","friendly_name":"iPhone (Kuba) Location permission"},"last_changed":"2025-04-26T09:14:57.319546+00:00","last_reported":"2025-04-26T09:14:57.319546+00:00","last_updated":"2025-04-26T09:14:57.319546+00:00","context":{"id":"01JSRP1RX7NQG0028HWF88EV5R","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Authorized when in use",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"sensor.iphone_kuba_audio_output","state":"Built-in Speaker","attributes":{"icon":"mdi:volume-high","friendly_name":"iPhone (Kuba) Audio Output"},"last_changed":"2025-04-26T07:32:26.321515+00:00","last_reported":"2025-04-26T07:32:26.321515+00:00","last_updated":"2025-04-26T07:32:26.321515+00:00","context":{"id":"01JSRG622HVYM3Z1HX56WE3RX8","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"sensor.iphone_kuba_audio_output","state":"Built-in Speaker","attributes":{"icon":"mdi:volume-high","friendly_name":"iPhone (Kuba) Audio Output"},"last_changed":"2025-04-26T09:14:57.319829+00:00","last_reported":"2025-04-26T09:14:57.319829+00:00","last_updated":"2025-04-26T09:14:57.319829+00:00","context":{"id":"01JSRP1RX7PA1TA19A9YRVM65T","parent_id":null,"user_id":null}},
       "extra_data": {
         "native_value": "Built-in Speaker",
         "native_unit_of_measurement": null
       },
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"tts.google_translate_en_com","state":"unknown","attributes":{"friendly_name":"Google Translate en com"},"last_changed":"2025-04-26T07:32:26.346299+00:00","last_reported":"2025-04-26T07:32:26.346299+00:00","last_updated":"2025-04-26T07:32:26.346299+00:00","context":{"id":"01JSRG623AY9ZKPPKZSYFNXSKW","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"tts.google_translate_en_com","state":"unknown","attributes":{"friendly_name":"Google Translate en com"},"last_changed":"2025-04-26T09:14:57.350819+00:00","last_reported":"2025-04-26T09:14:57.350819+00:00","last_updated":"2025-04-26T09:14:57.350819+00:00","context":{"id":"01JSRP1RY6PF8BTA80MV0X0JA9","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"button.sony_kd_55xe8599_restart","state":"unknown","attributes":{"device_class":"restart","friendly_name":"Sony KD-55XE8599 Restart"},"last_changed":"2025-04-26T07:32:26.363741+00:00","last_reported":"2025-04-26T07:32:26.363741+00:00","last_updated":"2025-04-26T07:32:26.363741+00:00","context":{"id":"01JSRG623VKMEFR5JCPFCHJRSX","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"button.sony_kd_55xe8599_restart","state":"unknown","attributes":{"device_class":"restart","friendly_name":"Sony KD-55XE8599 Restart"},"last_changed":"2025-04-26T09:14:57.364319+00:00","last_reported":"2025-04-26T09:14:57.364319+00:00","last_updated":"2025-04-26T09:14:57.364319+00:00","context":{"id":"01JSRP1RYMJ091RA19VMBWXE7E","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
-      "state": {"entity_id":"button.sony_kd_55xe8599_terminate_apps","state":"unknown","attributes":{"friendly_name":"Sony KD-55XE8599 Terminate apps"},"last_changed":"2025-04-26T07:32:26.364405+00:00","last_reported":"2025-04-26T07:32:26.364405+00:00","last_updated":"2025-04-26T07:32:26.364405+00:00","context":{"id":"01JSRG623WJV31WRNZBAPV9J6S","parent_id":null,"user_id":null}},
+      "state": {"entity_id":"button.sony_kd_55xe8599_terminate_apps","state":"unknown","attributes":{"friendly_name":"Sony KD-55XE8599 Terminate apps"},"last_changed":"2025-04-26T09:14:57.364667+00:00","last_reported":"2025-04-26T09:14:57.364667+00:00","last_updated":"2025-04-26T09:14:57.364667+00:00","context":{"id":"01JSRP1RYM9HVEAE8EMW06JJMF","parent_id":null,"user_id":null}},
       "extra_data": null,
-      "last_seen": "2025-04-26T08:02:28.683917+00:00"
+      "last_seen": "2025-04-26T09:14:58.344276+00:00"
     },
     {
       "state": {"entity_id":"sensor.iphone_kuba_geocoded_location","state":"Unknown","attributes":{"icon":"mdi:map","friendly_name":"iPhone (Kuba) Geocoded Location"},"last_changed":"2025-04-25T21:05:50.892930+00:00","last_reported":"2025-04-25T21:05:50.892930+00:00","last_updated":"2025-04-25T21:05:50.892930+00:00","context":{"id":"01JSQCAQSCR54D2A15M3QTS44D","parent_id":null,"user_id":null}},

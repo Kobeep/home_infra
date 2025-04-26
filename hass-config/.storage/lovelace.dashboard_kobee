@@ -110,6 +110,20 @@
               ],
               "title": "T & H Sensor"
             }
+          ],
+          "badges": [
+            {
+              "type": "entity",
+              "entity": "sensor.system_monitor_processor_use"
+            },
+            {
+              "type": "entity",
+              "entity": "sensor.system_monitor_memory_usage"
+            },
+            {
+              "type": "entity",
+              "entity": "sensor.system_monitor_disk_usage"
+            }
           ]
         }
       ]

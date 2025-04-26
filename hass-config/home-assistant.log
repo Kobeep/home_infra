@@ -1,213 +1,82 @@
-2025-04-26 07:31:51.075 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:31:54.219 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:31:57.348 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:00.476 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:00.552 WARNING (MainThread) [homeassistant.setup] Setup of recorder is taking over 10 seconds.
-2025-04-26 07:32:03.600 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:06.724 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:09.851 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:12.975 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:16.098 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:19.225 ERROR (Recorder) [homeassistant.components.recorder.core] Error during connection setup: (retrying in 3 seconds)
-Traceback (most recent call last):
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 927, in _setup_recorder
-    self._setup_connection()
-    ~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/usr/src/homeassistant/homeassistant/components/recorder/core.py", line 1437, in _setup_connection
-    self.engine = create_engine(self.db_url, **kwargs, future=True)
-                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<string>", line 2, in create_engine
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
-    return fn(*args, **kwargs)  # type: ignore[no-any-return]
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/create.py", line 553, in create_engine
-    entrypoint = u._get_entrypoint()
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/engine/url.py", line 772, in _get_entrypoint
-    cls = registry.load(name)
-  File "/usr/local/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 375, in load
-    raise exc.NoSuchModuleError(
-        "Can't load plugin: %s:%s" % (self.group, name)
-    )
-sqlalchemy.exc.NoSuchModuleError: Can't load plugin: sqlalchemy.dialects:influxdb
-2025-04-26 07:32:19.226 ERROR (Recorder) [homeassistant.components.recorder.core] Recorder setup failed, recorder shutting down
-2025-04-26 07:32:19.226 ERROR (MainThread) [homeassistant.setup] Setup failed for 'recorder': Integration failed to initialize.
-2025-04-26 07:32:21.499 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'history'. Setup failed for dependencies: ['recorder']
-2025-04-26 07:32:21.499 ERROR (MainThread) [homeassistant.setup] Setup failed for 'history': Could not setup dependencies: recorder
-2025-04-26 07:32:21.499 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'energy'. Setup failed for dependencies: ['history', 'recorder']
-2025-04-26 07:32:21.500 ERROR (MainThread) [homeassistant.setup] Setup failed for 'energy': Could not setup dependencies: history, recorder
-2025-04-26 07:32:21.505 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'logbook'. Setup failed for dependencies: ['recorder']
-2025-04-26 07:32:21.506 ERROR (MainThread) [homeassistant.setup] Setup failed for 'logbook': Could not setup dependencies: recorder
-2025-04-26 07:32:26.322 ERROR (MainThread) [homeassistant.setup] Unable to set up dependencies of 'default_config'. Setup failed for dependencies: ['energy', 'history', 'logbook']
-2025-04-26 07:32:26.322 ERROR (MainThread) [homeassistant.setup] Setup failed for 'default_config': Could not setup dependencies: energy, history, logbook
-2025-04-26 07:32:27.636 WARNING (MainThread) [homeassistant.config_entries] Config entry 'Kuba-Pospiesznywp.pl@wp.pl' for tuya integration could not authenticate: Authentication failed. Please re-authenticate
-2025-04-26 07:32:38.647 WARNING (MainThread) [homeassistant.helpers.service] Referenced entities light.led_bulb_w509z2, light.lsc_smart_a60_rgb_cct, light.lsc_smart_a60_rgb_cct_2, light.lsc_smart_a60_rgb_cct_3 are missing or not currently available
+2025-04-26 09:14:52.287 INFO (MainThread) [homeassistant.bootstrap] Setting up stage frontend: {'frontend'} | set()
+Dependencies: {'api', 'lovelace', 'file_upload', 'config', 'image_upload', 'repairs', 'search', 'device_automation', 'diagnostics', 'onboarding', 'auth', 'person'} | {'websocket_api', 'system_log', 'http'}
+2025-04-26 09:14:52.310 INFO (MainThread) [homeassistant.bootstrap] Setting up stage recorder: {'recorder'} | set()
+Dependencies: set() | set()
+2025-04-26 09:14:52.313 INFO (MainThread) [homeassistant.components.http] Now listening on port 8123
+2025-04-26 09:14:52.339 INFO (MainThread) [homeassistant.bootstrap] Nothing to set up in stage debugger: {'debugpy'}
+2025-04-26 09:14:52.339 INFO (MainThread) [homeassistant.bootstrap] Setting up stage zeroconf: {'zeroconf'} | set()
+Dependencies: set() | {'websocket_api', 'network', 'http', 'api'}
+2025-04-26 09:14:52.342 INFO (MainThread) [homeassistant.components.zeroconf] Starting Zeroconf broadcast
+2025-04-26 09:14:52.342 INFO (MainThread) [homeassistant.bootstrap] Setting up stage 1: {'cloud', 'usb', 'ssdp', 'bluetooth', 'dhcp'} | set()
+Dependencies: {'webhook'} | {'network', 'http', 'websocket_api', 'repairs', 'auth'}
+2025-04-26 09:14:53.742 INFO (MainThread) [homeassistant.bootstrap] Setting up stage 2: {'go2rtc', 'default_config', 'tag', 'input_select', 'system_health', 'input_text', 'automation', 'input_button', 'timer', 'sun', 'input_number', 'mobile_app', 'input_boolean', 'google_translate', 'input_datetime', 'script', 'backup', 'application_credentials', 'hardware', 'braviatv', 'philips_js', 'zone', 'influxdb', 'tuya', 'met', 'counter', 'shopping_list', 'analytics', 'systemmonitor', 'radio_browser', 'schedule', 'scene'} | {'logger', 'network', 'frontend', 'recorder', 'person'}
+Dependencies: {'intent', 'conversation', 'assist_pipeline', 'my', 'blueprint', 'history', 'wake_word', 'homeassistant_alerts', 'energy', 'media_source', 'stream', 'trace', 'stt', 'logbook', 'camera'} | {'api', 'websocket_api', 'bluetooth', 'device_automation', 'dhcp', 'webhook', 'cloud', 'http', 'lovelace', 'image_upload', 'ssdp', 'onboarding', 'recorder', 'zeroconf', 'tts', 'config', 'search', 'auth', 'person', 'network', 'frontend', 'file_upload', 'usb', 'repairs', 'system_log', 'diagnostics', 'ffmpeg'}
+2025-04-26 09:14:53.767 INFO (MainThread) [homeassistant.components.scene] Setting up homeassistant.scene
+2025-04-26 09:14:53.964 INFO (MainThread) [homeassistant.components.sensor] Setting up sun.sensor
+2025-04-26 09:14:57.263 INFO (MainThread) [homeassistant.components.sensor] Setting up energy.sensor
+2025-04-26 09:14:57.312 INFO (MainThread) [homeassistant.components.binary_sensor] Setting up mobile_app.binary_sensor
+2025-04-26 09:14:57.314 INFO (MainThread) [homeassistant.components.device_tracker] Setting up mobile_app.device_tracker
+2025-04-26 09:14:57.315 INFO (MainThread) [homeassistant.components.sensor] Setting up mobile_app.sensor
+2025-04-26 09:14:57.320 INFO (MainThread) [homeassistant.components.notify] Setting up notify.mobile_app
+2025-04-26 09:14:57.350 INFO (MainThread) [homeassistant.components.tts] Setting up google_translate.tts
+2025-04-26 09:14:57.362 INFO (MainThread) [homeassistant.components.button] Setting up braviatv.button
+2025-04-26 09:14:57.372 INFO (MainThread) [homeassistant.components.media_player] Setting up braviatv.media_player
+2025-04-26 09:14:57.376 INFO (MainThread) [homeassistant.components.remote] Setting up braviatv.remote
+2025-04-26 09:14:57.381 INFO (MainThread) [homeassistant.components.todo] Setting up shopping_list.todo
+2025-04-26 09:14:57.382 INFO (MainThread) [homeassistant.components.binary_sensor] Setting up systemmonitor.binary_sensor
+2025-04-26 09:14:57.382 INFO (MainThread) [homeassistant.components.sensor] Setting up systemmonitor.sensor
+2025-04-26 09:14:57.391 INFO (MainThread) [homeassistant.components.sensor] Setting up backup.sensor
+2025-04-26 09:14:57.421 INFO (MainThread) [homeassistant.components.weather] Setting up met.weather
+2025-04-26 09:14:58.116 INFO (MainThread) [homeassistant.components.binary_sensor] Setting up philips_js.binary_sensor
+2025-04-26 09:14:58.123 INFO (MainThread) [homeassistant.components.light] Setting up philips_js.light
+2025-04-26 09:14:58.124 INFO (MainThread) [homeassistant.components.media_player] Setting up philips_js.media_player
+2025-04-26 09:14:58.125 INFO (MainThread) [homeassistant.components.remote] Setting up philips_js.remote
+2025-04-26 09:14:58.126 INFO (MainThread) [homeassistant.components.switch] Setting up philips_js.switch
+2025-04-26 09:14:58.279 INFO (MainThread) [homeassistant.components.alarm_control_panel] Setting up tuya.alarm_control_panel
+2025-04-26 09:14:58.279 INFO (MainThread) [homeassistant.components.binary_sensor] Setting up tuya.binary_sensor
+2025-04-26 09:14:58.280 INFO (MainThread) [homeassistant.components.button] Setting up tuya.button
+2025-04-26 09:14:58.280 INFO (MainThread) [homeassistant.components.camera] Setting up tuya.camera
+2025-04-26 09:14:58.285 INFO (MainThread) [homeassistant.components.climate] Setting up tuya.climate
+2025-04-26 09:14:58.287 INFO (MainThread) [homeassistant.components.cover] Setting up tuya.cover
+2025-04-26 09:14:58.291 INFO (MainThread) [homeassistant.components.fan] Setting up tuya.fan
+2025-04-26 09:14:58.292 INFO (MainThread) [homeassistant.components.humidifier] Setting up tuya.humidifier
+2025-04-26 09:14:58.292 INFO (MainThread) [homeassistant.components.light] Setting up tuya.light
+2025-04-26 09:14:58.294 INFO (MainThread) [homeassistant.components.number] Setting up tuya.number
+2025-04-26 09:14:58.294 INFO (MainThread) [homeassistant.components.scene] Setting up tuya.scene
+2025-04-26 09:14:58.298 INFO (MainThread) [homeassistant.components.select] Setting up tuya.select
+2025-04-26 09:14:58.300 INFO (MainThread) [homeassistant.components.sensor] Setting up tuya.sensor
+2025-04-26 09:14:58.305 INFO (MainThread) [homeassistant.components.siren] Setting up tuya.siren
+2025-04-26 09:14:58.305 INFO (MainThread) [homeassistant.components.switch] Setting up tuya.switch
+2025-04-26 09:14:58.308 INFO (MainThread) [homeassistant.components.vacuum] Setting up tuya.vacuum
+2025-04-26 09:14:58.342 INFO (MainThread) [homeassistant.bootstrap] Home Assistant initialized in 6.96s
+2025-04-26 09:14:58.343 INFO (MainThread) [homeassistant.core] Starting Home Assistant
+2025-04-26 09:14:59.356 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 7 events.
+2025-04-26 09:15:12.805 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 3 events.
+2025-04-26 09:15:27.807 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:15:42.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:15:57.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:16:12.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:16:27.802 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:16:42.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:16:57.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:17:42.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:17:57.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:18:12.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:18:27.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:18:42.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:19:27.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:19:42.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:19:57.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:20:27.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:20:42.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:21:12.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:21:42.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:21:57.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:22:12.802 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:23:12.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:23:27.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:23:42.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:24:12.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:24:27.804 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.
+2025-04-26 09:24:42.806 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 2 events.
+2025-04-26 09:24:57.803 DEBUG (influxdb) [homeassistant.components.influxdb] Wrote 1 events.

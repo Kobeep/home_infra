@@ -10,9 +10,13 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
+logger:
+  default: info
+  logs:
+    homeassistant.components.influxdb: debug
+
 recorder:
-  purge_keep_days: 7
-  db_url: influxdb://hauser:SuperSecretInflux123@influxdb.monitoring.svc.cluster.local:8086/home_assistant
+  purge_keep_days: 7  
 
 influxdb:
   host: influxdb.monitoring.svc.cluster.local
@@ -28,3 +32,6 @@ influxdb:
       - light.lsc_smart_a60_rgb_cct_2
       - light.lsc_smart_a60_rgb_cct_3
       - switch.lsc_smart_power_plug_socket_1
+      - sensor.system_monitor_processor_use
+      - sensor.system_monitor_memory_usage
+      - sensor.system_monitor_disk_usage
