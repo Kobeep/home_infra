@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "lovelace.dashboard_kobee",
+  "data": {
+    "config": {
+      "views": [
+        {
+          "path": "default_view",
+          "title": "Home",
+          "cards": [
+            {
+              "type": "entities",
+              "entities": [
+                "person.jakub_pospieszny"
+              ]
+            },
+            {
+              "type": "entities",
+              "entities": [
+                "light.led_bulb_w509z2",
+                "light.lsc_smart_a60_rgb_cct",
+                "light.lsc_smart_a60_rgb_cct_2",
+                "light.lsc_smart_a60_rgb_cct_3"
+              ],
+              "title": "Light"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                "switch.lsc_smart_power_plug_socket_1"
+              ],
+              "title": "Switch"
+            },
+            {
+              "type": "weather-forecast",
+              "entity": "weather.forecast_home",
+              "show_forecast": false
+            },
+            {
+              "type": "grid",
+              "square": false,
+              "columns": 1,
+              "cards": [
+                {
+                  "type": "entities",
+                  "entities": [
+                    {
+                      "entity": "light.58pus8535_12_ambilight",
+                      "name": "Ambilight"
+                    },
+                    {
+                      "entity": "switch.58pus8535_12_ambilight_hue",
+                      "name": "Ambilight + Hue"
+                    },
+                    {
+                      "entity": "remote.58pus8535_12_remote",
+                      "name": "Remote"
+                    },
+                    {
+                      "entity": "switch.58pus8535_12_screen_state",
+                      "name": "Screen state"
+                    },
+                    {
+                      "entity": "binary_sensor.58pus8535_12_new_recording_available",
+                      "name": "New recording available"
+                    },
+                    {
+                      "entity": "binary_sensor.58pus8535_12_recording_ongoing",
+                      "name": "Recording ongoing"
+                    }
+                  ],
+                  "title": "58PUS8535/12"
+                },
+                {
+                  "type": "media-control",
+                  "entity": "media_player.58pus8535_12"
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "square": false,
+              "columns": 1,
+              "cards": [
+                {
+                  "type": "entities",
+                  "entities": [
+                    "remote.sony_kd_55xe8599"
+                  ],
+                  "title": "Sony KD-55XE8599"
+                },
+                {
+                  "type": "media-control",
+                  "entity": "media_player.sony_kd_55xe8599"
+                }
+              ]
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "sensor.t_h_sensor_humidity",
+                  "name": "Humidity"
+                },
+                {
+                  "entity": "sensor.t_h_sensor_temperature",
+                  "name": "Temperature"
+                }
+              ],
+              "title": "T & H Sensor"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

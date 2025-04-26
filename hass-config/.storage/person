@@ -8,7 +8,9 @@
         "id": "jakub_pospieszny",
         "name": "Jakub Pospieszny",
         "user_id": "0a0487e952d44636bbab2db0ca26cdc6",
-        "device_trackers": []
+        "device_trackers": [
+          "device_tracker.iphone_kuba"
+        ]
       }
     ]
   }
