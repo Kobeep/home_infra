@@ -3,8 +3,8 @@
   file:
     path: /srv/cicd
     state: directory
-    owner: hpserver
-    group: hpserver
+    owner: server
+    group: server
     mode: 0755
     recurse: true
 
@@ -12,16 +12,16 @@
   copy:
     src: docker-compose.yml
     dest: /srv/cicd/docker-compose.yml
-    owner: hpserver
-    group: hpserver
+    owner: server
+    group: server
     mode: 0644
 
 - name: Copy Jenkins Dockerfile
   copy:
     src: Dockerfile
     dest: /srv/cicd/Dockerfile
-    owner: hpserver
-    group: hpserver
+    owner: server
+    group: server
     mode: 0644
 
 - name: Create directories for config files and volumes

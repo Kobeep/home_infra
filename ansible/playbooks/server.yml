@@ -17,6 +17,7 @@
     - tools/helm
     - tools/kubectl
     - apps/oh_my_zsh
+    - server/jenkins_k3s
 
   tasks:
     - name: Deploy Home Assistant role
