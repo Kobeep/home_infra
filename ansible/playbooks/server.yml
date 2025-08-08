@@ -20,26 +20,34 @@
     - server/jenkins_k3s
 
   tasks:
-    - name: Deploy Home Assistant role
+    - name: Deploy Home Assistant to K3S
       include_role:
         name: server/home_assistant
 
-    - name: Deploy Dashy role
+    - name: Deploy Dashy to K3S
       include_role:
         name: server/dashy
 
-    - name: Deploy Grafana role
+    - name: Deploy Grafana to K3S
       include_role:
         name: server/grafana
 
-    - name: Deploy Grafana role
+    - name: Deploy Influxdb to K3S
       include_role:
         name: server/influxDB
+
+    - name: Ingress
+      include_role:
+        name: server/ingress
+
+    - name: Deploy LLama to K3S
+      include_role:
+        name: server/llama
+
+    - name: Deploy AdGuard to K3S
+      include_role:
+        name: server/adguard
 
     - name: Configure firewall rules
       include_role:
         name: server/firewall
-
-    # - name: Ingress
-    #   include_role:
-    #     name: server/ingress

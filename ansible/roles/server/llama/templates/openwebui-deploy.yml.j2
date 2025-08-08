@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openwebui
+  namespace: {{ ollama_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openwebui
+  template:
+    metadata:
+      labels:
+        app: openwebui
+    spec:
+      containers:
+      - name: openwebui
+        image: ghcr.io/open-webui/open-webui:main
+        ports:
+          - containerPort: 8080
+        env:
+          - name: OLLAMA_API_BASE_URL
+            value: "http://ollama.{{ ollama_namespace }}.svc.cluster.local:11434"
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: gpt3o-api-key
+                key: OPENAI_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openwebui
+  namespace: {{ ollama_namespace }}
+spec:
+  selector:
+    app: openwebui
+  ports:
+    - port: 8080
+      targetPort: 8080

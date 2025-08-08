@@ -1,0 +1,26 @@
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ ollama_namespace }}"
+    state: present
+
+- name: Deploy GPT-3o API key secret
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'secrets.yaml.j2') | from_yaml }}"
+
+- name: Deploy Ollama backend
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ollama-deploy.yaml.j2') | from_yaml }}"
+
+- name: Deploy OpenWebUI frontend
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'openwebui-deploy.yaml.j2') | from_yaml }}"
+
+- name: Deploy Ingress for AI chat
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yaml.j2') | from_yaml }}"

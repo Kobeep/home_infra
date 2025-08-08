@@ -1,5 +1,5 @@
 ---
-- name: Create Traefik Ingress for Home Services
+- name: Create Traefik Ingress for Monitoring Services
   k8s:
     state: present
     definition:
@@ -8,22 +8,10 @@
       metadata:
         name: home-services-ingress
         namespace: monitoring
-        annotations:
-          kubernetes.io/ingress.class: traefik
       spec:
         ingressClassName: traefik
         rules:
-          - host: home.local
-            http:
-              paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: home-assistant
-                      port:
-                        number: 8123
-          - host: dashy.local
+          - host: dashy.kobeeq.eu
             http:
               paths:
                 - path: /
@@ -33,7 +21,7 @@
                       name: dashy
                       port:
                         number: 80
-          - host: grafana.local
+          - host: grafana.kobeeq.eu
             http:
               paths:
                 - path: /
@@ -43,3 +31,26 @@
                       name: grafana
                       port:
                         number: 80
+
+- name: Create Traefik Ingress for Home Assistant
+  k8s:
+    state: present
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: home-assistant-ingress
+        namespace: home
+      spec:
+        ingressClassName: traefik
+        rules:
+          - host: ha.kobeeq.eu
+            http:
+              paths:
+                - path: /dashboard-kobee/0
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: home-assistant
+                      port:
+                        number: 8123

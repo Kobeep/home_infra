@@ -4,7 +4,7 @@
     name: jenkins-custom
     tag: latest
     build:
-      path: "{{ role_path }}/build"
+      path: "./build"
     source: build
     force_source: true
 
