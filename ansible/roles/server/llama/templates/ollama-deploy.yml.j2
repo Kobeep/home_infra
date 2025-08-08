@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: {{ ollama_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: {{ ollama_image }}
+        ports:
+          - containerPort: 11434
+        volumeMounts:
+          - name: ollama-data
+            mountPath: /root/.ollama
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+            # start server in background
+            ollama serve &
+            # wait for server to be responsive up to timeout
+            max_wait={{ ollama_pull_timeout_seconds }}
+            waited=0
+            until ollama list >/dev/null 2>&1 || [ $waited -ge $max_wait ]; do
+              sleep 1
+              waited=$((waited+1))
+            done
+            if [ $waited -ge $max_wait ]; then
+              echo "ollama did not become ready in $max_wait seconds" >&2
+              exit 1
+            fi
+            # small extra delay
+            sleep {{ ollama_start_delay }}
+            # pull model if not present
+            if ! ollama list | grep -q "{{ ollama_model }}"; then
+              ollama pull "{{ ollama_model }}"
+            fi
+            # keep the server in foreground
+            fg 1
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: {{ ollama_namespace }}
+spec:
+  selector:
+    app: ollama
+  ports:
+    - port: 11434
+      targetPort: 11434

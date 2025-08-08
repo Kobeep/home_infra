@@ -44,10 +44,10 @@
       spec:
         ingressClassName: traefik
         rules:
-          - host: ha.kobeeq.eu
+          - host: home.kobeeq.eu
             http:
               paths:
-                - path: /dashboard-kobee/0
+                - path: /
                   pathType: Prefix
                   backend:
                     service:

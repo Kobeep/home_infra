@@ -15,17 +15,19 @@ spec:
     spec:
       containers:
       - name: openwebui
-        image: ghcr.io/open-webui/open-webui:main
+        image: {{ openwebui_image }}
         ports:
           - containerPort: 8080
         env:
           - name: OLLAMA_API_BASE_URL
             value: "http://ollama.{{ ollama_namespace }}.svc.cluster.local:11434"
+{% if gpt3o_api_key != "" %}
           - name: OPENAI_API_KEY
             valueFrom:
               secretKeyRef:
                 name: gpt3o-api-key
                 key: OPENAI_API_KEY
+{% endif %}
 ---
 apiVersion: v1
 kind: Service

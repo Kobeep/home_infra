@@ -53,3 +53,31 @@
 
 - name: Launch Jenkins via docker-compose
   shell: docker compose -f /srv/cicd/docker-compose.yml up -d
+
+- name: Deploy slave agent start script
+  copy:
+    dest: /usr/local/bin/start_slave_agent.sh
+    content: |
+      #!/bin/bash
+      set -x
+      export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+      CONTAINER=$(docker ps --filter "name=jenkins_from_file" --format "{% raw %}{{.ID}}{% endraw %}")
+      if [ -z "$CONTAINER" ]; then
+          echo "Jenkins container not running."
+          exit 1
+      fi
+
+      if ! /usr/bin/docker exec "$CONTAINER" pgrep -f "agent.jar .* -name slave" > /dev/null; then
+          echo "Agent slave nie działa, rozpoczynam start." >> /var/log/jenkins_slave.log
+          /usr/bin/docker exec "$CONTAINER" curl -s -o /var/jenkins_home/agent.jar http://192.168.1.16:8080/jnlpJars/agent.jar
+          /usr/bin/docker exec "$CONTAINER" nohup java -jar /var/jenkins_home/agent.jar -url http://192.168.1.16:8080/ -secret 2b3a02d4d6ddc574a5926dbc0dae1f4588a344c0062ab2f27314ea6503ee8b0a -name slave -webSocket -workDir "/var/jenkins_home" &
+      fi
+    mode: '0755'
+
+- name: Setup cron job for Jenkins Slave Agent Monitor
+  cron:
+    name: "Run Jenkins Slave Agent Monitor"
+    minute: "*/1"
+    job: "/usr/local/bin/start_slave_agent.sh"
+...

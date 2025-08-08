@@ -1,3 +1,4 @@
+---
 - name: Ensure namespace exists
   kubernetes.core.k8s:
     api_version: v1
@@ -5,22 +6,40 @@
     name: "{{ ollama_namespace }}"
     state: present
 
-- name: Deploy GPT-3o API key secret
+- name: Create PVC for ollama data
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'secrets.yaml.j2') | from_yaml }}"
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: ollama-data-pvc
+        namespace: "{{ ollama_namespace }}"
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: "{{ ollama_pvc_size }}"
+        storageClassName: "{{ ollama_storage_class }}"
 
-- name: Deploy Ollama backend
+- name: Deploy secret (OpenAI API key) if provided
+  when: gpt3o_api_key != ""
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'ollama-deploy.yaml.j2') | from_yaml }}"
+    definition: "{{ lookup('template', 'secret.yml.j2') | from_yaml }}"
 
-- name: Deploy OpenWebUI frontend
+- name: Deploy Ollama (with automatic pull)
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'openwebui-deploy.yaml.j2') | from_yaml }}"
+    definition: "{{ lookup('template', 'ollama-deploy.yml.j2') }}"
 
-- name: Deploy Ingress for AI chat
+
+- name: Deploy OpenWebUI
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'ingress.yaml.j2') | from_yaml }}"
+    definition: "{{ lookup('template', 'openwebui-deploy.yml.j2') }}"
+
+- name: Deploy Ingress for OpenWebUI
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"

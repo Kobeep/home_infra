@@ -17,7 +17,7 @@
     - tools/helm
     - tools/kubectl
     - apps/oh_my_zsh
-    - server/jenkins_k3s
+    - server/jenkins
 
   tasks:
     - name: Deploy Home Assistant to K3S
@@ -48,6 +48,6 @@
       include_role:
         name: server/adguard
 
-    - name: Configure firewall rules
-      include_role:
-        name: server/firewall
+    # - name: Configure firewall rules
+    #   include_role:
+    #     name: server/firewall

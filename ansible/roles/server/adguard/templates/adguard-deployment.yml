@@ -10,7 +10,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: "/mnt/adguard/work" # Upewnij się, że ten folder istnieje na Twoim węźle!
+    path: "/mnt/adguard/work"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -35,7 +35,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: "/mnt/adguard/conf" # Upewnij się, że ten folder istnieje na Twoim węźle!
+    path: "/mnt/adguard/conf"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -72,7 +72,7 @@ spec:
               protocol: TCP
             - containerPort: 53
               protocol: UDP
-            - containerPort: 3000 # Interfejs WWW
+            - containerPort: 3000
               protocol: TCP
           volumeMounts:
             - name: workdir
@@ -95,7 +95,7 @@ metadata:
 spec:
   selector:
     app: adguardhome
-  type: LoadBalancer # Lub NodePort, jeśli wolisz
+  type: LoadBalancer
   ports:
     - name: dns-tcp
       port: 53
@@ -114,7 +114,7 @@ metadata:
 spec:
   selector:
     app: adguardhome
-  type: LoadBalancer # Lub NodePort
+  type: LoadBalancer
   ports:
     - name: web
       port: 3000
