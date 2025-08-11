@@ -39,9 +39,9 @@
 - name: Deploy OpenWebUI
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'openwebui-deploy.yaml.j2') | from_yaml }}"
+    definition: "{{ lookup('template', 'openwebui-deploy.yml.j2') | from_yaml }}"
 
 - name: Deploy Ingress for OpenWebUI
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('template', 'ingress.yaml.j2') | from_yaml }}"
+    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"
