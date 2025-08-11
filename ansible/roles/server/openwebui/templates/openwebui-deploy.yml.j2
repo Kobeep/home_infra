@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openwebui-data
+  namespace: {{ ollama_namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,7 +28,7 @@ spec:
     spec:
       containers:
       - name: openwebui
-        image: {{ openwebui_image }}
+        image: ghcr.io/open-webui/open-webui:main
         ports:
           - containerPort: 8080
         env:
@@ -30,25 +43,12 @@ spec:
                 name: ai-api-keys
                 key: GOOGLE_API_KEY
         volumeMounts:
-          - name: openwebui-data
+          - name: openwebui-storage
             mountPath: /app/backend/data
       volumes:
-        - name: openwebui-data
+        - name: openwebui-storage
           persistentVolumeClaim:
-            claimName: openwebui-data-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: openwebui-data-pvc
-  namespace: {{ ollama_namespace }}
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: local-path
+            claimName: openwebui-data
 ---
 apiVersion: v1
 kind: Service
