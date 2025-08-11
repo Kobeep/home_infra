@@ -1,0 +1,47 @@
+---
+- name: Remove old openwebui deployment
+  kubernetes.core.k8s:
+    state: absent
+    kind: Deployment
+    namespace: "{{ ollama_namespace }}"
+    name: openwebui
+  ignore_errors: true
+
+- name: Remove old ollama deployment
+  kubernetes.core.k8s:
+    state: absent
+    kind: Deployment
+    namespace: "{{ ollama_namespace }}"
+    name: ollama
+  ignore_errors: true
+
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ ollama_namespace }}"
+    state: present
+
+- name: Create k8s secret for API keys
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: ai-api-keys
+        namespace: "{{ ollama_namespace }}"
+      type: Opaque
+      stringData:
+        OPENAI_API_KEY: "{{ openai_api_key | default('') }}"
+        GOOGLE_API_KEY: "{{ google_api_key | default('') }}"
+
+- name: Deploy OpenWebUI
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'openwebui-deploy.yaml.j2') | from_yaml }}"
+
+- name: Deploy Ingress for OpenWebUI
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yaml.j2') | from_yaml }}"

@@ -4,6 +4,8 @@
 - name: Provision server with base tools and applications
   hosts: server
   become: true
+  vars_files:
+    - group_vars/all/vault.yml
   pre_tasks:
     - name: Install python3-pip and Kubernetes client package
       apt:
@@ -40,13 +42,13 @@
       include_role:
         name: server/ingress
 
-    - name: Deploy LLama to K3S
+    - name: Deploy OpenWebUI to K3S
       include_role:
-        name: server/llama
+        name: server/openwebui
 
-    - name: Deploy AdGuard to K3S
-      include_role:
-        name: server/adguard
+    # - name: Deploy AdGuard to K3S
+    #   include_role:
+    #     name: server/adguard
 
     # - name: Configure firewall rules
     #   include_role:

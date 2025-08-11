@@ -19,15 +19,36 @@ spec:
         ports:
           - containerPort: 8080
         env:
-          - name: OLLAMA_API_BASE_URL
-            value: "http://ollama.{{ ollama_namespace }}.svc.cluster.local:11434"
-{% if gpt3o_api_key != "" %}
           - name: OPENAI_API_KEY
             valueFrom:
               secretKeyRef:
-                name: gpt3o-api-key
+                name: ai-api-keys
                 key: OPENAI_API_KEY
-{% endif %}
+          - name: GOOGLE_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: ai-api-keys
+                key: GOOGLE_API_KEY
+        volumeMounts:
+          - name: openwebui-data
+            mountPath: /app/backend/data
+      volumes:
+        - name: openwebui-data
+          persistentVolumeClaim:
+            claimName: openwebui-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openwebui-data-pvc
+  namespace: {{ ollama_namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
 ---
 apiVersion: v1
 kind: Service
