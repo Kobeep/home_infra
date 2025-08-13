@@ -10,8 +10,6 @@ REMOTE_KUBECONFIG="${REMOTE_KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
 HASS_LOCAL="${HASS_LOCAL:-hass-config}"
 DASHY_LOCAL="${DASHY_LOCAL:-dashy-config}"
 GRAFANA_LOCAL="${GRAFANA_LOCAL:-grafana-config}"
-ADGUARD_LOCAL="${ADGUARD_LOCAL:-adguard-config}"
-OPENWEBUI_LOCAL="${OPENWEBUI_LOCAL:-openwebui-config}"
 
 KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
 
@@ -73,35 +71,7 @@ restore_grafana() {
   restore_dir monitoring grafana /var/lib/grafana "$GRAFANA_LOCAL"
 }
 
-# AdGuard Home restore
-restore_adguard() {
-  echo "→ [AdGuard] restore"
-  if [[ -d "${ADGUARD_LOCAL}/work" ]]; then
-    restore_dir default adguardhome /opt/adguardhome/work "${ADGUARD_LOCAL}/work"
-  else
-    echo "⚠️ ${ADGUARD_LOCAL}/work not found; skipping AdGuard work directory"
-  fi
-  
-  if [[ -d "${ADGUARD_LOCAL}/conf" ]]; then
-    restore_dir default adguardhome /opt/adguardhome/conf "${ADGUARD_LOCAL}/conf"
-  else
-    echo "⚠️ ${ADGUARD_LOCAL}/conf not found; skipping AdGuard conf directory"
-  fi
-}
-
-# OpenWebUI restore
-restore_openwebui() {
-  echo "→ [OpenWebUI] restore"
-  if [[ -d "${OPENWEBUI_LOCAL}" ]]; then
-    restore_dir ai openwebui /app/backend/data "$OPENWEBUI_LOCAL"
-  else
-    echo "⚠️ ${OPENWEBUI_LOCAL} not found; skipping OpenWebUI"
-  fi
-}
-
 # main flow
 restore_ha
 restore_dashy
 restore_grafana
-restore_adguard
-restore_openwebui

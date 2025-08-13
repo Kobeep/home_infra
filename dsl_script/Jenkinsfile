@@ -1,6 +1,7 @@
 pipeline {
     agent { label 'slave' }
 
+    // Only the target OS is chosen at the start.
     parameters {
         choice(name: 'TARGET_OS', choices: ['windows', 'linux'], description: 'Select target OS (windows or linux)')
     }
@@ -10,37 +11,7 @@ pipeline {
         PLAYBOOKS_DIR  = 'ansible/playbooks'
     }
 
-    options {
-        timestamps()
-        timeout(time: 15, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '20'))
-        ansiColor('xterm')
-    }
-
     stages {
-        stage('Pre-flight Checks') {
-            steps {
-                script {
-                    echo "🔍 Performing pre-flight checks for ${params.TARGET_OS} deployment..."
-                    
-                    // Validate required parameters
-                    validateParameters(params, ['TARGET_OS'])
-                    
-                    // Check if inventory file exists
-                    if (!fileExists(env.INVENTORY_FILE)) {
-                        error "❌ Inventory file not found: ${env.INVENTORY_FILE}"
-                    }
-                    
-                    // Check if playbooks directory exists
-                    if (!fileExists(env.PLAYBOOKS_DIR)) {
-                        error "❌ Playbooks directory not found: ${env.PLAYBOOKS_DIR}"
-                    }
-                    
-                    echo "✅ Pre-flight checks completed successfully"
-                }
-            }
-        }
-
         stage('Checkout Repository') {
             steps {
                 echo "📥 Checking out repository..."
@@ -48,43 +19,38 @@ pipeline {
             }
         }
 
+        // Stage for dynamically selecting the target host, playbook, and providing the password.
         stage('Select Deployment Options') {
             steps {
                 script {
-                    echo "🎯 Dynamically selecting deployment options for ${params.TARGET_OS}..."
-                    
                     // Read the YAML inventory file.
                     def inv = readYaml file: "${env.INVENTORY_FILE}"
                     def hosts = []
 
                     // Build the list of hosts based on the selected TARGET_OS.
                     if (params.TARGET_OS == 'windows') {
-                        if (inv.all?.children?.windows?.hosts) {
+                        if (inv.all.children.windows?.hosts) {
                             hosts = inv.all.children.windows.hosts.keySet().toList()
                         }
                     } else {
-                        if (inv.all?.children?.linux?.hosts) {
+                        if (inv.all.children.linux?.hosts) {
                             hosts = inv.all.children.linux.hosts.keySet().toList()
                         }
                     }
 
                     if (hosts.isEmpty()) {
-                        error "❌ No hosts found for group ${params.TARGET_OS} in inventory."
+                        error "No hosts found for group ${params.TARGET_OS} in inventory."
                     }
-                    
-                    echo "📋 Found ${hosts.size()} hosts for ${params.TARGET_OS}: ${hosts.join(', ')}"
 
                     // Retrieve the list of playbook files from the PLAYBOOKS_DIR.
                     def playbooksShell = sh(
-                        script: "find ${env.PLAYBOOKS_DIR} -name '*.yml' -type f | xargs -n1 basename | sort",
+                        script: "ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename",
                         returnStdout: true
                     ).trim()
                     def playbooks = playbooksShell.tokenize("\n")
                     if (playbooks.isEmpty()) {
-                        error "❌ No playbooks found in directory ${env.PLAYBOOKS_DIR}"
+                        error "No playbooks found in directory ${env.PLAYBOOKS_DIR}"
                     }
-                    
-                    echo "📚 Found ${playbooks.size()} playbooks: ${playbooks.join(', ')}"
 
                     // Dynamically prompt for selection of target host, playbook, and password.
                     def userSelection = input(
@@ -109,38 +75,36 @@ pipeline {
                     // Save the user selections as environment variables.
                     env.TARGET_HOST = userSelection.TARGET_HOST
                     env.PLAYBOOK    = userSelection.PLAYBOOK
+                    // The entered password from input is stored in userSelection.AUTH_PASS.
                     env.AUTH_PASS   = userSelection.AUTH_PASS
 
-                    echo "✅ Selected host: ${env.TARGET_HOST}"
-                    echo "✅ Selected playbook: ${env.PLAYBOOK}"
+                    echo "Selected host: ${env.TARGET_HOST}"
+                    echo "Selected playbook: ${env.PLAYBOOK}"
                 }
             }
         }
 
+        // Stage for triggering the proper downstream job based on the target OS.
         stage('Trigger Downstream Deployment') {
             steps {
                 script {
-                    echo "🚀 Triggering ${params.TARGET_OS} deployment pipeline..."
-                    
-                    def downstreamJob = params.TARGET_OS == 'windows' ? "CD-Windows" : "CD-Linux"
-                    def passwordParam = params.TARGET_OS == 'windows' ? 'WINRM_PASS' : 'SSH_PASS'
-                    
-                    echo "➡ Downstream job: ${downstreamJob}"
-                    echo "➡ Target host: ${env.TARGET_HOST}"
-                    echo "➡ Playbook: ${env.PLAYBOOK}"
-                    
-                    def buildResult = build(
-                        job: downstreamJob,
-                        parameters: [
-                            string(name: 'TARGET_HOST', value: env.TARGET_HOST),
-                            string(name: 'PLAYBOOK', value: env.PLAYBOOK),
-                            password(name: passwordParam, value: env.AUTH_PASS)
-                        ],
-                        wait: true,
-                        propagate: true
-                    )
-                    
-                    echo "✅ Downstream deployment completed with result: ${buildResult.result}"
+                    if (params.TARGET_OS == 'windows') {
+                        // Trigger downstream Windows job.
+                        build job: "CD-Windows",
+                              parameters: [
+                                  string(name: 'TARGET_HOST', value: env.TARGET_HOST),
+                                  string(name: 'PLAYBOOK', value: env.PLAYBOOK),
+                                  password(name: 'WINRM_PASS', value: env.AUTH_PASS)
+                              ]
+                    } else {
+                        // Trigger downstream Linux job.
+                        build job: "CD-Linux",
+                              parameters: [
+                                  string(name: 'TARGET_HOST', value: env.TARGET_HOST),
+                                  string(name: 'PLAYBOOK', value: env.PLAYBOOK),
+                                  password(name: 'SSH_PASS', value: env.AUTH_PASS)
+                              ]
+                    }
                 }
             }
         }
@@ -148,19 +112,7 @@ pipeline {
 
     post {
         always {
-            script {
-                def duration = currentBuild.duration ? currentBuild.duration / 1000 : 'unknown'
-                echo "📊 Upstream Pipeline finished in ${duration} seconds"
-            }
-        }
-        success {
-            echo "✅ Deployment orchestration completed successfully for ${params.TARGET_OS}"
-        }
-        failure {
-            echo "❌ Deployment orchestration failed for ${params.TARGET_OS}"
-        }
-        unstable {
-            echo "⚠️ Deployment orchestration completed with warnings for ${params.TARGET_OS}"
+            echo "Upstream Pipeline finished."
         }
     }
 }

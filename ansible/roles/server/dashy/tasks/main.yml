@@ -73,8 +73,3 @@
           - port: 80
             targetPort: 8080
             nodePort: 30001
-
-- name: Deploy Ingress for Dashy
-  k8s:
-    state: present
-    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"

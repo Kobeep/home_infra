@@ -1,166 +1,28 @@
 pipeline {
     agent any
-    
-    parameters {
-        string(name: 'JENKINS_URL', defaultValue: 'http://192.168.0.122:8080/', description: 'Jenkins master URL')
-        string(name: 'AGENT_NAME', defaultValue: 'slave', description: 'Jenkins agent name')
-        string(name: 'AGENT_WORKDIR', defaultValue: '/var/jenkins_home', description: 'Agent working directory')
-        password(name: 'AGENT_SECRET', defaultValue: '', description: 'Jenkins agent secret token')
-    }
-    
-    environment {
-        // Default values that can be overridden by parameters
-        DEFAULT_JENKINS_URL = 'http://192.168.0.122:8080/'
-        DEFAULT_AGENT_SECRET = '5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2'
-    }
-    
-    options {
-        timestamps()
-        timeout(time: 10, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '5'))
-        ansiColor('xterm')
-    }
     stages {
-        stage('Pre-flight Checks') {
+        stage('Start slave if offline') {
             steps {
                 script {
-                    echo "🔍 Performing pre-flight checks for agent management..."
-                    
-                    // Validate parameters
-                    validateParameters(params, ['AGENT_NAME'])
-                    
-                    // Use parameter values or fall back to defaults
-                    env.JENKINS_URL = params.JENKINS_URL ?: env.DEFAULT_JENKINS_URL
-                    env.AGENT_SECRET = params.AGENT_SECRET ?: env.DEFAULT_AGENT_SECRET
-                    env.AGENT_NAME = params.AGENT_NAME
-                    env.AGENT_WORKDIR = params.AGENT_WORKDIR ?: '/var/jenkins_home'
-                    
-                    echo "✅ Jenkins URL: ${env.JENKINS_URL}"
-                    echo "✅ Agent Name: ${env.AGENT_NAME}"
-                    echo "✅ Work Directory: ${env.AGENT_WORKDIR}"
-                    echo "✅ Pre-flight checks completed"
-                }
-            }
-        }
+                    def node = Jenkins.instance.getNode("slave")
+                    def comp = node?.toComputer()
 
-        stage('Check Agent Status') {
-            steps {
-                script {
-                    echo "🔍 Checking status of agent: ${env.AGENT_NAME}"
-                    
-                    def isOnline = isNodeOnline(env.AGENT_NAME)
-                    
-                    if (isOnline) {
-                        echo "✅ Agent '${env.AGENT_NAME}' is online and ready"
-                        env.AGENT_STATUS = 'online'
+                    if (!comp?.isOnline()) {
+                        echo "Slave is offline – triggering startup..."
+
+                        sh 'nohup java -jar agent.jar -url http://192.168.0.122:8080/ -secret 5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2 -name slave -webSocket -workDir "/var/jenkins_home" &'
                     } else {
-                        echo "⚠️ Agent '${env.AGENT_NAME}' is offline - startup required"
-                        env.AGENT_STATUS = 'offline'
+                        echo "Slave is online"
                     }
                 }
             }
         }
 
-        stage('Start Agent if Offline') {
-            when {
-                expression { env.AGENT_STATUS == 'offline' }
-            }
+        stage('Build on slave') {
+            agent { label 'slave' }
             steps {
-                script {
-                    echo "🚀 Starting Jenkins agent: ${env.AGENT_NAME}"
-                    
-                    timeout(time: 5, unit: 'MINUTES') {
-                        sh """
-                            echo "📋 Agent startup command:"
-                            echo "java -jar agent.jar -url ${env.JENKINS_URL} -secret [REDACTED] -name ${env.AGENT_NAME} -webSocket -workDir ${env.AGENT_WORKDIR}"
-                            
-                            # Start the agent in the background
-                            nohup java -jar agent.jar \
-                                -url ${env.JENKINS_URL} \
-                                -secret ${env.AGENT_SECRET} \
-                                -name ${env.AGENT_NAME} \
-                                -webSocket \
-                                -workDir "${env.AGENT_WORKDIR}" \
-                                > agent.log 2>&1 &
-                            
-                            echo "🔄 Agent startup initiated, PID: \$!"
-                        """
-                    }
-                    
-                    // Wait a bit and verify the agent comes online
-                    echo "⏳ Waiting for agent to come online..."
-                    sleep(time: 10, unit: 'SECONDS')
-                    
-                    def startTime = System.currentTimeMillis()
-                    def timeout = 60000 // 60 seconds
-                    def agentOnline = false
-                    
-                    while (!agentOnline && (System.currentTimeMillis() - startTime) < timeout) {
-                        agentOnline = isNodeOnline(env.AGENT_NAME)
-                        if (!agentOnline) {
-                            sleep(time: 5, unit: 'SECONDS')
-                        }
-                    }
-                    
-                    if (agentOnline) {
-                        echo "✅ Agent '${env.AGENT_NAME}' is now online"
-                    } else {
-                        echo "⚠️ Agent '${env.AGENT_NAME}' did not come online within timeout - check agent.log"
-                    }
-                }
+                echo "Running on slave!"
             }
-        }
-
-        stage('Test Agent Connection') {
-            steps {
-                script {
-                    echo "🧪 Testing connection to agent: ${env.AGENT_NAME}"
-                    
-                    def isOnline = isNodeOnline(env.AGENT_NAME)
-                    
-                    if (isOnline) {
-                        echo "✅ Agent connection test successful"
-                        
-                        // Try to run a simple command on the agent
-                        try {
-                            node(env.AGENT_NAME) {
-                                echo "🎯 Running test command on agent..."
-                                sh 'echo "Agent is working correctly"'
-                                sh 'pwd && date'
-                            }
-                            echo "✅ Agent functionality test passed"
-                        } catch (Exception e) {
-                            echo "⚠️ Agent is online but functionality test failed: ${e.message}"
-                        }
-                    } else {
-                        error "❌ Agent is not online - startup may have failed"
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            script {
-                def duration = currentBuild.duration ? currentBuild.duration / 1000 : 'unknown'
-                echo "📊 Agent management finished in ${duration} seconds"
-                
-                // Clean up log file if it exists
-                if (fileExists('agent.log')) {
-                    echo "📋 Agent startup log:"
-                    sh 'cat agent.log || echo "No log content"'
-                }
-            }
-        }
-        success {
-            echo "✅ Agent management completed successfully for ${env.AGENT_NAME}"
-        }
-        failure {
-            echo "❌ Agent management failed for ${env.AGENT_NAME}"
-        }
-        unstable {
-            echo "⚠️ Agent management completed with warnings for ${env.AGENT_NAME}"
         }
     }
 }

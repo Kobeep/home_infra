@@ -4,8 +4,6 @@
 - name: Provision server with base tools and applications
   hosts: server
   become: true
-  vars_files:
-    - group_vars/all/vault.yml
   pre_tasks:
     - name: Install python3-pip and Kubernetes client package
       apt:
@@ -19,33 +17,28 @@
     - tools/helm
     - tools/kubectl
     - apps/oh_my_zsh
-    - server/jenkins
 
   tasks:
-    - name: Deploy Home Assistant to K3S
+    - name: Deploy Home Assistant role
       include_role:
         name: server/home_assistant
 
-    - name: Deploy Dashy to K3S
+    - name: Deploy Dashy role
       include_role:
         name: server/dashy
 
-    - name: Deploy Grafana to K3S
+    - name: Deploy Grafana role
       include_role:
         name: server/grafana
 
-    - name: Deploy Influxdb to K3S
+    - name: Deploy Grafana role
       include_role:
         name: server/influxDB
 
-    - name: Deploy OpenWebUI to K3S
+    - name: Configure firewall rules
       include_role:
-        name: server/openwebui
+        name: server/firewall
 
-    # - name: Deploy AdGuard to K3S
+    # - name: Ingress
     #   include_role:
-    #     name: server/adguard
-
-    # - name: Configure firewall rules
-    #   include_role:
-    #     name: server/firewall
+    #     name: server/ingress

@@ -1,6 +1,6 @@
 ---
 - name: Provision hpserver
-  hosts: all
+  hosts: hpserver
   become: true
   roles:
     - tools/docker
