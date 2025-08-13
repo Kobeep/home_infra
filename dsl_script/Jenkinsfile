@@ -14,7 +14,11 @@
  * @author Jenkins CI
  */
 
-@Library('homeInfraUtils') _
+// Load shared library from current repository
+library identifier: 'homeInfraUtils@main', retriever: modernSCM([
+    $class: 'GitSCMSource',
+    remote: 'https://github.com/Kobeep/home_infra.git'
+]) _
 
 pipeline {
     agent { 
