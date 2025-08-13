@@ -42,6 +42,8 @@ spec:
               secretKeyRef:
                 name: ai-api-keys
                 key: GOOGLE_API_KEY
+          - name: GEMINI_MODEL
+            value: "gemini-1.5-pro-latest"
         volumeMounts:
           - name: openwebui-storage
             mountPath: /app/backend/data

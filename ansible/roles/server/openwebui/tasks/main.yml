@@ -46,3 +46,42 @@
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"
+
+- name: Wait for OpenWebUI pod to be ready
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ ollama_namespace }}"
+    label_selectors:
+      - app=openwebui
+  register: openwebui_pods
+  until: openwebui_pods.resources | length > 0 and openwebui_pods.resources[0].status.phase == "Running"
+  retries: 30
+  delay: 10
+
+- name: Add OpenAI model to OpenWebUI
+  uri:
+    url: "http://{{ openwebui_pods.resources[0].status.podIP }}:8080/api/admin/models"
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+    body:
+      name: "gpt-4o"
+      provider: "openai"
+      config:
+        api_key: "{{ openai_api_key }}"
+  when: openai_api_key is defined and openai_api_key | length > 0
+
+- name: Add Gemini model to OpenWebUI
+  uri:
+    url: "http://{{ openwebui_pods.resources[0].status.podIP }}:8080/api/admin/models"
+    method: POST
+    body_format: json
+    headers:
+      Content-Type: "application/json"
+    body:
+      name: "gemini-2.5-pro"
+      provider: "google"
+      config:
+        api_key: "{{ google_api_key }}"
+  when: google_api_key is defined and google_api_key | length > 0
