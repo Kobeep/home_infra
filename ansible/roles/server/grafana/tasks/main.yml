@@ -77,3 +77,8 @@
           - port: 80
             targetPort: 3000
             nodePort: 30002
+
+- name: Deploy Ingress for Grafana
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"
