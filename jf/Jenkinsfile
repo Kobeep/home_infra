@@ -9,89 +9,217 @@ pipeline {
     HASS_LOCAL        = 'hass-config'
     DASHY_LOCAL       = 'dashy-config'
     GRAFANA_LOCAL     = 'grafana-config'
+    ADGUARD_LOCAL     = 'adguard-config'
+    OPENWEBUI_LOCAL   = 'openwebui-config'
     JENKINS_BACKUP    = 'jenkins-pipelines-backup'
+    TARGET_GROUP      = 'linux'
+    // Store credential ID as environment variable for better maintainability
+    GIT_CREDENTIALS_ID = '7a5fcd35-3a38-4511-a275-881c11e6625d'
+  }
+
+  options {
+    timestamps()
+    timeout(time: 45, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+    ansiColor('xterm')
   }
 
   stages {
+    stage('Pre-flight Checks') {
+      steps {
+        script {
+          echo "🔍 Performing pre-flight checks for backup operation..."
+          
+          // Check if inventory file exists
+          if (!fileExists(env.INVENTORY_FILE)) {
+            error "❌ Inventory file not found: ${env.INVENTORY_FILE}"
+          }
+          
+          // Check if backup script exists
+          def backupScript = 'jf/scripts/backup_configs.sh'
+          if (!fileExists(backupScript)) {
+            error "❌ Backup script not found: ${backupScript}"
+          }
+          
+          // Verify Jenkins home directory
+          if (!fileExists('/var/jenkins_home')) {
+            error "❌ Jenkins home directory not accessible"
+          }
+          
+          echo "✅ Pre-flight checks completed successfully"
+        }
+      }
+    }
+
     stage('Checkout') {
-      steps { checkout scm }
+      steps { 
+        echo "📥 Checking out repository for backup operation..."
+        checkout scm 
+      }
     }
 
     stage('Parse Inventory') {
       steps {
         script {
-          def inv = readYaml file: INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-                             .find { it.hosts?.containsKey(HOST_NAME) }
-                             ?.hosts[HOST_NAME]
-          if (!hostEntry) error "Host '${HOST_NAME}' not found"
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
+          echo "🔍 Parsing inventory for backup target: ${env.HOST_NAME}"
+          
+          // Use shared library function for inventory parsing
+          def hostConfig = parseInventory(env.INVENTORY_FILE, env.HOST_NAME, env.TARGET_GROUP)
+          
+          env.REMOTE_HOST = hostConfig.ansible_host
+          env.REMOTE_USER = hostConfig.ansible_user
+          
           echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+          echo "➡ Host: ${env.HOST_NAME}"
         }
       }
     }
 
     stage('Clean old configs') {
       steps {
-        sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}"
+        script {
+          echo "🧹 Cleaning old configuration backups..."
+          def configDirs = [
+            env.HASS_LOCAL, 
+            env.DASHY_LOCAL, 
+            env.GRAFANA_LOCAL, 
+            env.ADGUARD_LOCAL, 
+            env.OPENWEBUI_LOCAL, 
+            env.JENKINS_BACKUP
+          ]
+          
+          configDirs.each { dir ->
+            if (fileExists(dir)) {
+              echo "🗑️ Removing old backup: ${dir}"
+              sh "rm -rf ${dir}"
+            }
+          }
+          
+          echo "✅ Cleanup completed"
+        }
       }
     }
 
     stage('Backup via Script') {
       steps {
-        sh 'chmod +x jf/scripts/backup_configs.sh'
-        sh './jf/scripts/backup_configs.sh'
+        script {
+          echo "📦 Running configuration backup script..."
+          
+          timeout(time: 15, unit: 'MINUTES') {
+            sh 'chmod +x jf/scripts/backup_configs.sh'
+            sh './jf/scripts/backup_configs.sh'
+          }
+          
+          // Verify backup was created
+          def configDirs = [
+            env.HASS_LOCAL, 
+            env.DASHY_LOCAL, 
+            env.GRAFANA_LOCAL, 
+            env.ADGUARD_LOCAL, 
+            env.OPENWEBUI_LOCAL
+          ]
+          
+          def backupCount = 0
+          configDirs.each { dir ->
+            if (fileExists(dir)) {
+              backupCount++
+              echo "✅ Backup created: ${dir}"
+            } else {
+              echo "⚠️ Backup not found: ${dir} (service might not be running)"
+            }
+          }
+          
+          echo "📊 Successfully backed up ${backupCount}/${configDirs.size()} services"
+        }
       }
     }
 
     stage('Backup Jenkins Pipelines') {
       steps {
-        sh '''
-          # clean & recreate
-          rm -rf ${JENKINS_BACKUP}
-          mkdir -p ${JENKINS_BACKUP}
+        script {
+          echo "🏗️ Backing up Jenkins pipeline configurations..."
+          
+          timeout(time: 5, unit: 'MINUTES') {
+            sh '''
+              # clean & recreate
+              rm -rf ${JENKINS_BACKUP}
+              mkdir -p ${JENKINS_BACKUP}
 
-          # tar jobs, excluding all builds (logs)
-          tar cf - \
-            --exclude='jobs/*/builds' \
-            -C /var/jenkins_home jobs \
-          | tar xf - -C ${JENKINS_BACKUP}
-        '''
+              # tar jobs, excluding all builds (logs)
+              echo "📋 Creating Jenkins jobs backup..."
+              tar cf - \
+                --exclude='jobs/*/builds' \
+                --exclude='jobs/*/workspace*' \
+                --exclude='jobs/*/lastStable*' \
+                --exclude='jobs/*/lastSuccessful*' \
+                -C /var/jenkins_home jobs \
+              | tar xf - -C ${JENKINS_BACKUP}
+              
+              echo "✅ Jenkins backup completed"
+            '''
+          }
+          
+          // Verify Jenkins backup
+          if (fileExists(env.JENKINS_BACKUP)) {
+            def jobCount = sh(script: "find ${env.JENKINS_BACKUP} -name 'config.xml' | wc -l", returnStdout: true).trim()
+            echo "📊 Backed up ${jobCount} Jenkins jobs"
+          } else {
+            error "❌ Jenkins backup failed - directory not created"
+          }
+        }
       }
     }
 
 
     stage('Commit & Push') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
-          usernameVariable: 'GIT_USER',
-          passwordVariable: 'GIT_PASS'
-        )]) {
-          sh '''
-            git config user.email "jenkins@localhost"
-            git config user.name  "Jenkins CI"
-
-            ORIG_URL=$(git remote get-url origin)
-            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
-            git remote set-url origin "$AUTH_URL"
-
-            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}
-            if git diff --cached --quiet; then
-              echo "✅ No changes to commit."
-            else
-              git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-              git push origin HEAD:main
-            fi
-          '''
+        script {
+          echo "📤 Committing and pushing backup changes..."
+          
+          executeGitWithCredentials(env.GIT_CREDENTIALS_ID) {
+            sh '''
+              # Check what files we're about to add
+              echo "📋 Files to be backed up:"
+              ls -la ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP} 2>/dev/null || echo "Some backup directories not found (services may not be running)"
+              
+              # Add backup files
+              git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP}
+              
+              # Check if there are changes to commit
+              if git diff --cached --quiet; then
+                echo "✅ No changes to commit - backups are up to date."
+              else
+                echo "📝 Changes detected, creating commit..."
+                BACKUP_TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+                git commit -m "Backup ${HOST_NAME}: ${BACKUP_TIMESTAMP}"
+                
+                echo "🚀 Pushing changes to repository..."
+                git push origin HEAD:main
+                
+                echo "✅ Backup successfully pushed to repository"
+              fi
+            '''
+          }
         }
       }
     }
   }
 
   post {
-    success { echo "✅ Done." }
-    failure { echo "❌ Failed, check logs." }
+    always {
+      script {
+        def duration = currentBuild.duration ? currentBuild.duration / 1000 : 'unknown'
+        echo "📊 Backup operation finished in ${duration} seconds"
+      }
+    }
+    success { 
+      echo "✅ Backup operation completed successfully for ${env.HOST_NAME}"
+    }
+    failure { 
+      echo "❌ Backup operation failed for ${env.HOST_NAME} - check logs for details"
+    }
+    unstable {
+      echo "⚠️ Backup operation completed with warnings for ${env.HOST_NAME}"
+    }
   }
 }

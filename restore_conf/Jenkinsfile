@@ -9,38 +9,134 @@ pipeline {
     HASS_LOCAL        = 'hass-config'
     DASHY_LOCAL       = 'dashy-config'
     GRAFANA_LOCAL     = 'grafana-config'
+    ADGUARD_LOCAL     = 'adguard-config'
+    OPENWEBUI_LOCAL   = 'openwebui-config'
+    TARGET_GROUP      = 'linux'
+  }
+
+  options {
+    timestamps()
+    timeout(time: 30, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '10'))
+    ansiColor('xterm')
   }
 
   stages {
+    stage('Pre-flight Checks') {
+      steps {
+        script {
+          echo "🔍 Performing pre-flight checks for restore operation..."
+          
+          // Check if inventory file exists
+          if (!fileExists(env.INVENTORY_FILE)) {
+            error "❌ Inventory file not found: ${env.INVENTORY_FILE}"
+          }
+          
+          // Check if restore script exists
+          def restoreScript = 'restore_conf/scripts/restore_configs.sh'
+          if (!fileExists(restoreScript)) {
+            error "❌ Restore script not found: ${restoreScript}"
+          }
+          
+          // Check if backup directories exist
+          def configDirs = [
+            env.HASS_LOCAL, 
+            env.DASHY_LOCAL, 
+            env.GRAFANA_LOCAL, 
+            env.ADGUARD_LOCAL, 
+            env.OPENWEBUI_LOCAL
+          ]
+          
+          def availableBackups = 0
+          configDirs.each { dir ->
+            if (fileExists(dir)) {
+              availableBackups++
+              echo "✅ Backup found: ${dir}"
+            } else {
+              echo "⚠️ Backup not found: ${dir}"
+            }
+          }
+          
+          if (availableBackups == 0) {
+            error "❌ No backup directories found - nothing to restore"
+          }
+          
+          echo "📊 Found ${availableBackups}/${configDirs.size()} backup directories"
+          echo "✅ Pre-flight checks completed successfully"
+        }
+      }
+    }
+
     stage('Checkout') {
-      steps { checkout scm }
+      steps { 
+        echo "📥 Checking out repository for restore operation..."
+        checkout scm 
+      }
     }
 
     stage('Parse Inventory') {
       steps {
         script {
-          def inv = readYaml file: INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-                             .find { it.hosts?.containsKey(HOST_NAME) }
-                             ?.hosts[HOST_NAME]
-          if (!hostEntry) error "Host '${HOST_NAME}' not in inventory"
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
+          echo "🔍 Parsing inventory for restore target: ${env.HOST_NAME}"
+          
+          // Use shared library function for inventory parsing
+          def hostConfig = parseInventory(env.INVENTORY_FILE, env.HOST_NAME, env.TARGET_GROUP)
+          
+          env.REMOTE_HOST = hostConfig.ansible_host
+          env.REMOTE_USER = hostConfig.ansible_user
+          
           echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+          echo "➡ Host: ${env.HOST_NAME}"
         }
       }
     }
 
     stage('Restore via Script') {
       steps {
-        sh 'chmod +x restore_conf/scripts/restore_configs.sh'
-        sh './restore_conf/scripts/restore_configs.sh'
+        script {
+          echo "🔄 Running configuration restore script..."
+          
+          // Add confirmation step for restore operations
+          def proceed = input(
+            message: "⚠️ WARNING: This will restore configurations to ${env.HOST_NAME} (${env.REMOTE_HOST}). This may overwrite current configurations. Proceed?",
+            ok: "Yes, Restore Configurations",
+            parameters: [
+              booleanParam(name: 'CONFIRM_RESTORE', defaultValue: false, description: 'Confirm that you want to proceed with the restore operation')
+            ]
+          )
+          
+          if (!proceed.CONFIRM_RESTORE) {
+            error "❌ Restore operation cancelled by user"
+          }
+          
+          echo "✅ User confirmed restore operation"
+          
+          timeout(time: 20, unit: 'MINUTES') {
+            sh 'chmod +x restore_conf/scripts/restore_configs.sh'
+            sh './restore_conf/scripts/restore_configs.sh'
+          }
+          
+          echo "✅ Restore script execution completed"
+        }
       }
     }
   }
 
   post {
-    success { echo "✅ Restore completed." }
-    failure { echo "❌ Restore failed — sprawdź logi." }
+    always {
+      script {
+        def duration = currentBuild.duration ? currentBuild.duration / 1000 : 'unknown'
+        echo "📊 Restore operation finished in ${duration} seconds"
+      }
+    }
+    success { 
+      echo "✅ Restore operation completed successfully for ${env.HOST_NAME}"
+    }
+    failure { 
+      echo "❌ Restore operation failed for ${env.HOST_NAME} - sprawdź logi (check logs for details)"
+    }
+    unstable {
+      echo "⚠️ Restore operation completed with warnings for ${env.HOST_NAME}"
+    }
   }
 }

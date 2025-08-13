@@ -10,9 +10,41 @@ pipeline {
     environment {
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
         PLAYBOOKS_DIR  = 'ansible/playbooks'
+        TARGET_GROUP   = 'windows'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        ansiColor('xterm')
     }
 
     stages {
+        stage('Pre-flight Checks') {
+            steps {
+                script {
+                    echo "🔍 Performing pre-flight checks for Windows deployment..."
+                    
+                    // Validate required parameters
+                    validateParameters(params, ['TARGET_HOST', 'PLAYBOOK', 'WINRM_PASS'])
+                    
+                    // Check if inventory file exists
+                    if (!fileExists(env.INVENTORY_FILE)) {
+                        error "❌ Inventory file not found: ${env.INVENTORY_FILE}"
+                    }
+                    
+                    // Check if playbook exists
+                    def playbookPath = "${env.PLAYBOOKS_DIR}/${params.PLAYBOOK}"
+                    if (!fileExists(playbookPath)) {
+                        error "❌ Playbook not found: ${playbookPath}"
+                    }
+                    
+                    echo "✅ Pre-flight checks completed successfully"
+                }
+            }
+        }
+
         stage('Checkout Repository') {
             steps {
                 echo "📥 Checking out repository for Windows deployment..."
@@ -23,25 +55,10 @@ pipeline {
         stage('Parse Windows Inventory') {
             steps {
                 script {
-                    // Execute Python script to parse the inventory for the given Windows host
-                    def inventoryJson = sh(script: """
-                        python3 -c '
-import sys, yaml, json
-target = "${params.TARGET_HOST}"
-with open("${env.INVENTORY_FILE}") as f:
-    inv = yaml.safe_load(f)
-host_config = None
-if "windows" in inv["all"]["children"]:
-    group = inv["all"]["children"]["windows"]
-    if "hosts" in group and target in group["hosts"]:
-        host_config = group["hosts"][target]
-if host_config is None:
-    sys.exit("Host not found in windows group: " + target)
-print(json.dumps(host_config))
-                        '
-                    """, returnStdout: true).trim()
-
-                    def hostConfig = readJSON text: inventoryJson
+                    echo "🔍 Parsing inventory for Windows host: ${params.TARGET_HOST}"
+                    
+                    // Use shared library function for inventory parsing
+                    def hostConfig = parseInventory(env.INVENTORY_FILE, params.TARGET_HOST, env.TARGET_GROUP)
 
                     env.TARGET_IP   = hostConfig.ansible_host
                     env.REMOTE_USER = hostConfig.ansible_user
@@ -53,20 +70,73 @@ print(json.dumps(host_config))
             }
         }
 
+        stage('Test WinRM Connection') {
+            steps {
+                script {
+                    echo "🔗 Testing WinRM connection to ${params.TARGET_HOST}..."
+                    
+                    timeout(time: 2, unit: 'MINUTES') {
+                        retry(3) {
+                            sh """
+                                ansible ${params.TARGET_HOST} \
+                                    -i ${env.INVENTORY_FILE} \
+                                    -m win_ping \
+                                    -e "ansible_password=${params.WINRM_PASS}" \
+                                    --timeout=30
+                            """
+                        }
+                    }
+                    
+                    echo "✅ WinRM connection established successfully"
+                }
+            }
+        }
+
         stage('Run Ansible Playbook for Windows') {
             steps {
-                echo "🚀 Running Windows playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
-                sh """
-                    cd ${env.PLAYBOOKS_DIR}
-                    ansible-playbook -i ../inventories/hosts.yml ${params.PLAYBOOK} --limit ${params.TARGET_HOST} -e "ansible_password=${params.WINRM_PASS}"
-                """
+                script {
+                    echo "🚀 Running Windows playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
+                    
+                    timeout(time: 20, unit: 'MINUTES') {
+                        dir(env.PLAYBOOKS_DIR) {
+                            sh """
+                                set -e
+                                echo "📋 Validating playbook syntax..."
+                                ansible-playbook --syntax-check -i ../inventories/hosts.yml ${params.PLAYBOOK}
+                                
+                                echo "🎯 Executing Windows playbook with verbose output..."
+                                ansible-playbook \
+                                    -i ../inventories/hosts.yml \
+                                    ${params.PLAYBOOK} \
+                                    --limit ${params.TARGET_HOST} \
+                                    -e "ansible_password=${params.WINRM_PASS}" \
+                                    -v \
+                                    --diff
+                            """
+                        }
+                    }
+                    
+                    echo "✅ Windows playbook execution completed successfully"
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Windows deployment finished."
+            script {
+                def duration = currentBuild.duration ? currentBuild.duration / 1000 : 'unknown'
+                echo "📊 Windows deployment finished in ${duration} seconds"
+            }
+        }
+        success {
+            echo "✅ Windows deployment completed successfully for ${params.TARGET_HOST}"
+        }
+        failure {
+            echo "❌ Windows deployment failed for ${params.TARGET_HOST}"
+        }
+        unstable {
+            echo "⚠️ Windows deployment completed with warnings for ${params.TARGET_HOST}"
         }
     }
 }

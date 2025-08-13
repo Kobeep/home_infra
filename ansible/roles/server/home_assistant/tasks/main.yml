@@ -1,8 +1,12 @@
 ---
+- name: Check if home-assistant Helm release exists
+  shell: helm --kubeconfig /root/.kube/config status home-assistant -n home
+  register: home_assistant_status
+  ignore_errors: yes
+
 - name: Uninstall old Helm release if present
-  shell: >
-    helm --kubeconfig /root/.kube/config uninstall home-assistant -n home
-  ignore_errors: true
+  shell: helm --kubeconfig /root/.kube/config uninstall home-assistant -n home
+  when: home_assistant_status.rc == 0
 
 - name: Delete old home-assistant resources in home namespace
   shell: |
@@ -82,3 +86,8 @@
           - port: 8123
             targetPort: 8123
             nodePort: 31234
+
+- name: Deploy Ingress for Home Assistant
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"
