@@ -1,3 +1,0 @@
-ollama_namespace: ai
-openai_api_key: "{{ vault_openai_api_key }}"
-google_api_key: "{{ vault_google_api_key }}"
