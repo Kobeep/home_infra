@@ -9,6 +9,8 @@ pipeline {
     HASS_LOCAL        = 'hass-config'
     DASHY_LOCAL       = 'dashy-config'
     GRAFANA_LOCAL     = 'grafana-config'
+    ADGUARD_LOCAL     = 'adguard-config'
+    OPENWEBUI_LOCAL   = 'openwebui-config'
     JENKINS_BACKUP    = 'jenkins-pipelines-backup'
   }
 
@@ -34,7 +36,7 @@ pipeline {
 
     stage('Clean old configs') {
       steps {
-        sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}"
+        sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP}"
       }
     }
 
@@ -77,7 +79,7 @@ pipeline {
             AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
             git remote set-url origin "$AUTH_URL"
 
-            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}
+            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP}
             if git diff --cached --quiet; then
               echo "✅ No changes to commit."
             else
