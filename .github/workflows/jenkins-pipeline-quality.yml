@@ -1,0 +1,487 @@
+name: Jenkins Pipeline Quality Assurance
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/Jenkinsfile*'
+      - 'vars/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/Jenkinsfile*'
+      - 'vars/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+env:
+  # Pipeline quality standards
+  MAX_PIPELINE_COMPLEXITY: 50
+  MIN_PIPELINE_DOCUMENTATION: 80
+  SECURITY_SCAN_SEVERITY: medium
+
+jobs:
+  detect-changes:
+    name: Detect Jenkins Pipeline Changes
+    runs-on: ubuntu-latest
+    outputs:
+      jenkinsfiles: ${{ steps.changes.outputs.jenkinsfiles }}
+      shared-libs: ${{ steps.changes.outputs.shared-libs }}
+      scripts: ${{ steps.changes.outputs.scripts }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            jenkinsfiles:
+              - '**/Jenkinsfile*'
+            shared-libs:
+              - 'vars/**'
+            scripts:
+              - '**/*.sh'
+
+  validate-jenkinsfiles:
+    name: Validate Jenkinsfile Syntax
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.jenkinsfiles == 'true'
+    strategy:
+      matrix:
+        jenkinsfile:
+          - Jenkinsfile
+          - dsl_script/Jenkinsfile
+          - windows/Jenkinsfile
+          - jf/Jenkinsfile
+          - autorun_node/Jenkinsfile
+          - restore_conf/Jenkinsfile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java for Jenkins validation
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install Jenkins CLI
+        run: |
+          wget -q https://get.jenkins.io/war-stable/latest/jenkins.war
+          echo "JENKINS_CLI=java -jar jenkins.war" >> $GITHUB_ENV
+
+      - name: Validate Jenkinsfile syntax
+        run: |
+          if [ -f "${{ matrix.jenkinsfile }}.new" ]; then
+            echo "🔍 Validating new version: ${{ matrix.jenkinsfile }}.new"
+            JENKINSFILE="${{ matrix.jenkinsfile }}.new"
+          else
+            echo "🔍 Validating existing version: ${{ matrix.jenkinsfile }}"
+            JENKINSFILE="${{ matrix.jenkinsfile }}"
+          fi
+          
+          # Basic syntax validation
+          if [ -f "$JENKINSFILE" ]; then
+            echo "✅ Jenkinsfile exists: $JENKINSFILE"
+            
+            # Check for basic pipeline structure
+            if grep -q "pipeline {" "$JENKINSFILE"; then
+              echo "✅ Declarative pipeline structure found"
+            else
+              echo "❌ Invalid pipeline structure in $JENKINSFILE"
+              exit 1
+            fi
+            
+            # Check for required sections
+            if grep -q "stages {" "$JENKINSFILE"; then
+              echo "✅ Stages section found"
+            else
+              echo "❌ Missing stages section in $JENKINSFILE"
+              exit 1
+            fi
+            
+            # Check for post section (recommended)
+            if grep -q "post {" "$JENKINSFILE"; then
+              echo "✅ Post section found"
+            else
+              echo "⚠️ Post section not found in $JENKINSFILE (recommended)"
+            fi
+            
+            echo "✅ Basic syntax validation passed for $JENKINSFILE"
+          else
+            echo "⚠️ Jenkinsfile not found: $JENKINSFILE"
+          fi
+
+      - name: Check pipeline documentation
+        run: |
+          if [ -f "${{ matrix.jenkinsfile }}.new" ]; then
+            JENKINSFILE="${{ matrix.jenkinsfile }}.new"
+          else
+            JENKINSFILE="${{ matrix.jenkinsfile }}"
+          fi
+          
+          if [ -f "$JENKINSFILE" ]; then
+            echo "📖 Checking documentation quality for $JENKINSFILE"
+            
+            # Count documentation lines (comments starting with * or //)
+            DOC_LINES=$(grep -c "^ \* \|^\/\/" "$JENKINSFILE" || true)
+            TOTAL_LINES=$(wc -l < "$JENKINSFILE")
+            
+            if [ $TOTAL_LINES -gt 0 ]; then
+              DOC_PERCENTAGE=$((DOC_LINES * 100 / TOTAL_LINES))
+              echo "📊 Documentation coverage: $DOC_PERCENTAGE% ($DOC_LINES/$TOTAL_LINES lines)"
+              
+              if [ $DOC_PERCENTAGE -ge $MIN_PIPELINE_DOCUMENTATION ]; then
+                echo "✅ Documentation quality meets standards (≥$MIN_PIPELINE_DOCUMENTATION%)"
+              else
+                echo "⚠️ Documentation quality below standards (<$MIN_PIPELINE_DOCUMENTATION%)"
+              fi
+            fi
+          fi
+
+  lint-shell-scripts:
+    name: Lint Shell Scripts
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.scripts == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on all shell scripts
+        run: |
+          echo "🔍 Running ShellCheck on all shell scripts..."
+          
+          # Find all shell scripts
+          SHELL_SCRIPTS=$(find . -name "*.sh" -type f)
+          
+          if [ -z "$SHELL_SCRIPTS" ]; then
+            echo "ℹ️ No shell scripts found to lint"
+            exit 0
+          fi
+          
+          echo "📋 Found shell scripts:"
+          echo "$SHELL_SCRIPTS"
+          echo ""
+          
+          # Run shellcheck on each script
+          EXIT_CODE=0
+          for script in $SHELL_SCRIPTS; do
+            echo "🔍 Checking: $script"
+            
+            if shellcheck -e SC1091 -e SC2034 "$script"; then
+              echo "✅ $script passed ShellCheck"
+            else
+              echo "❌ $script failed ShellCheck"
+              EXIT_CODE=1
+            fi
+            echo ""
+          done
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ All shell scripts passed ShellCheck"
+          else
+            echo "❌ Some shell scripts failed ShellCheck"
+            exit $EXIT_CODE
+          fi
+
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run security scan for hardcoded secrets
+        run: |
+          echo "🔒 Scanning for hardcoded secrets and security vulnerabilities..."
+          
+          # Check for hardcoded passwords, tokens, keys
+          echo "🔍 Checking for hardcoded credentials..."
+          
+          SECURITY_ISSUES=0
+          
+          # Check for potential hardcoded secrets
+          if grep -r -i "password.*=" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git" | grep -v "description.*password"; then
+            echo "⚠️ Potential hardcoded passwords found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          if grep -r -i "secret.*=" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git" | grep -v "description.*secret"; then
+            echo "⚠️ Potential hardcoded secrets found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          if grep -r -i "token.*=" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git" | grep -v "description.*token"; then
+            echo "⚠️ Potential hardcoded tokens found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          # Check for Jenkins agent secrets (should be in credentials)
+          if grep -r "5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git"; then
+            echo "❌ Hardcoded Jenkins agent secret found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          # Check for IP addresses (potential information disclosure)
+          if grep -r -E "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git" | grep -v "0.0.0.0" | grep -v "127.0.0.1"; then
+            echo "⚠️ Hardcoded IP addresses found (potential information disclosure)"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          # Check for URLs with credentials
+          if grep -r -E "https://[^:]+:[^@]+@" . --include="*.groovy" --include="*.yml" --include="*.sh" | grep -v ".git"; then
+            echo "❌ URLs with embedded credentials found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          if [ $SECURITY_ISSUES -eq 0 ]; then
+            echo "✅ No obvious security issues found"
+          else
+            echo "⚠️ Found $SECURITY_ISSUES potential security issues"
+            echo "💡 Review the findings above and ensure sensitive data uses Jenkins credentials"
+          fi
+
+      - name: Check for secure coding practices
+        run: |
+          echo "🛡️ Checking for secure coding practices..."
+          
+          PRACTICE_ISSUES=0
+          
+          # Check for parameter validation
+          echo "🔍 Checking for parameter validation..."
+          if ! grep -r "validateParameter" . --include="*.groovy" --include="Jenkinsfile*"; then
+            echo "⚠️ No parameter validation found - consider adding input validation"
+            PRACTICE_ISSUES=$((PRACTICE_ISSUES + 1))
+          else
+            echo "✅ Parameter validation found"
+          fi
+          
+          # Check for timeout usage
+          echo "🔍 Checking for timeout usage..."
+          if ! grep -r "timeout(" . --include="*.groovy" --include="Jenkinsfile*"; then
+            echo "⚠️ No timeouts found - consider adding timeouts to prevent hanging builds"
+            PRACTICE_ISSUES=$((PRACTICE_ISSUES + 1))
+          else
+            echo "✅ Timeout usage found"
+          fi
+          
+          # Check for error handling
+          echo "🔍 Checking for error handling..."
+          if ! grep -r "try {" . --include="*.groovy" --include="Jenkinsfile*"; then
+            echo "⚠️ No try-catch blocks found - consider adding error handling"
+            PRACTICE_ISSUES=$((PRACTICE_ISSUES + 1))
+          else
+            echo "✅ Error handling found"
+          fi
+          
+          if [ $PRACTICE_ISSUES -eq 0 ]; then
+            echo "✅ All secure coding practice checks passed"
+          else
+            echo "⚠️ $PRACTICE_ISSUES secure coding practice recommendations"
+          fi
+
+  validate-shared-library:
+    name: Validate Shared Library
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.shared-libs == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate shared library structure
+        run: |
+          echo "📚 Validating Jenkins shared library structure..."
+          
+          # Check for vars directory
+          if [ -d "vars" ]; then
+            echo "✅ vars directory found"
+            
+            # Check for Groovy files in vars
+            GROOVY_FILES=$(find vars -name "*.groovy" -type f | wc -l)
+            echo "📊 Found $GROOVY_FILES Groovy files in vars/"
+            
+            if [ $GROOVY_FILES -gt 0 ]; then
+              echo "✅ Shared library contains Groovy files"
+              
+              # Validate each Groovy file
+              for file in vars/*.groovy; do
+                if [ -f "$file" ]; then
+                  echo "🔍 Validating: $file"
+                  
+                  # Check for basic function definitions
+                  if grep -q "def " "$file"; then
+                    echo "✅ $file contains function definitions"
+                  else
+                    echo "⚠️ $file does not contain function definitions"
+                  fi
+                  
+                  # Check for documentation
+                  if grep -q "/\*\*" "$file"; then
+                    echo "✅ $file contains documentation"
+                  else
+                    echo "⚠️ $file missing documentation"
+                  fi
+                fi
+              done
+            else
+              echo "⚠️ No Groovy files found in vars directory"
+            fi
+          else
+            echo "ℹ️ No vars directory found (not a shared library)"
+          fi
+
+  pipeline-complexity-analysis:
+    name: Pipeline Complexity Analysis
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.jenkinsfiles == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Analyze pipeline complexity
+        run: |
+          echo "📊 Analyzing Jenkins pipeline complexity..."
+          
+          # Find all Jenkinsfiles
+          JENKINSFILES=$(find . -name "Jenkinsfile*" -type f)
+          
+          for jenkinsfile in $JENKINSFILES; do
+            if [ -f "$jenkinsfile" ]; then
+              echo ""
+              echo "🔍 Analyzing: $jenkinsfile"
+              
+              # Count stages
+              STAGES=$(grep -c "stage(" "$jenkinsfile" || true)
+              echo "   Stages: $STAGES"
+              
+              # Count nested blocks (complexity indicator)
+              BLOCKS=$(grep -c "script {" "$jenkinsfile" || true)
+              echo "   Script blocks: $BLOCKS"
+              
+              # Count conditional blocks
+              CONDITIONS=$(grep -c -E "if \(|when \{" "$jenkinsfile" || true)
+              echo "   Conditionals: $CONDITIONS"
+              
+              # Calculate basic complexity score
+              COMPLEXITY=$((STAGES + BLOCKS * 2 + CONDITIONS))
+              echo "   Complexity score: $COMPLEXITY"
+              
+              if [ $COMPLEXITY -le $MAX_PIPELINE_COMPLEXITY ]; then
+                echo "   ✅ Complexity within acceptable range (≤$MAX_PIPELINE_COMPLEXITY)"
+              else
+                echo "   ⚠️ High complexity (>$MAX_PIPELINE_COMPLEXITY) - consider refactoring"
+              fi
+            fi
+          done
+
+  generate-quality-report:
+    name: Generate Quality Report
+    runs-on: ubuntu-latest
+    needs: [validate-jenkinsfiles, lint-shell-scripts, security-scan, validate-shared-library, pipeline-complexity-analysis]
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate pipeline quality report
+        run: |
+          echo "📋 Generating Jenkins Pipeline Quality Report..."
+          
+          REPORT_FILE="pipeline-quality-report.md"
+          
+          cat > $REPORT_FILE << 'EOF'
+          # Jenkins Pipeline Quality Report
+          
+          Generated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          
+          ## Quality Checks Summary
+          
+          | Check | Status |
+          |-------|--------|
+          EOF
+          
+          # Add check results
+          if [ "${{ needs.validate-jenkinsfiles.result }}" = "success" ]; then
+            echo "| Jenkinsfile Validation | ✅ Passed |" >> $REPORT_FILE
+          else
+            echo "| Jenkinsfile Validation | ❌ Failed |" >> $REPORT_FILE
+          fi
+          
+          if [ "${{ needs.lint-shell-scripts.result }}" = "success" ]; then
+            echo "| Shell Script Linting | ✅ Passed |" >> $REPORT_FILE
+          elif [ "${{ needs.lint-shell-scripts.result }}" = "skipped" ]; then
+            echo "| Shell Script Linting | ⏭️ Skipped |" >> $REPORT_FILE
+          else
+            echo "| Shell Script Linting | ❌ Failed |" >> $REPORT_FILE
+          fi
+          
+          if [ "${{ needs.security-scan.result }}" = "success" ]; then
+            echo "| Security Scan | ✅ Passed |" >> $REPORT_FILE
+          else
+            echo "| Security Scan | ⚠️ Warnings |" >> $REPORT_FILE
+          fi
+          
+          if [ "${{ needs.validate-shared-library.result }}" = "success" ]; then
+            echo "| Shared Library | ✅ Passed |" >> $REPORT_FILE
+          elif [ "${{ needs.validate-shared-library.result }}" = "skipped" ]; then
+            echo "| Shared Library | ⏭️ Skipped |" >> $REPORT_FILE
+          else
+            echo "| Shared Library | ❌ Failed |" >> $REPORT_FILE
+          fi
+          
+          if [ "${{ needs.pipeline-complexity-analysis.result }}" = "success" ]; then
+            echo "| Complexity Analysis | ✅ Passed |" >> $REPORT_FILE
+          elif [ "${{ needs.pipeline-complexity-analysis.result }}" = "skipped" ]; then
+            echo "| Complexity Analysis | ⏭️ Skipped |" >> $REPORT_FILE
+          else
+            echo "| Complexity Analysis | ⚠️ Warnings |" >> $REPORT_FILE
+          fi
+          
+          cat >> $REPORT_FILE << 'EOF'
+          
+          ## Recommendations
+          
+          - Ensure all Jenkinsfiles use the shared library for common functionality
+          - Add comprehensive error handling and logging to all pipelines
+          - Use Jenkins credentials for all sensitive data
+          - Include timeout configurations for all long-running operations
+          - Add parameter validation for all user inputs
+          - Include post-build cleanup in all pipelines
+          - Document pipeline functionality and parameters
+          
+          ## Next Steps
+          
+          - Review any failed checks and address the issues
+          - Consider refactoring complex pipelines
+          - Add missing documentation where needed
+          - Implement security best practices
+          EOF
+          
+          echo "📊 Quality report generated: $REPORT_FILE"
+          cat $REPORT_FILE
+
+      - name: Upload quality report
+        uses: actions/upload-artifact@v3
+        with:
+          name: pipeline-quality-report
+          path: pipeline-quality-report.md
+          retention-days: 30

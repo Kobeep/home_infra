@@ -1,80 +1,171 @@
+/**
+ * Linux Deployment Pipeline
+ * 
+ * Deploys Ansible playbooks to Linux hosts with secure SSH key management,
+ * comprehensive error handling, and professional CI/CD practices.
+ * 
+ * Features:
+ * - Automatic SSH key generation and management
+ * - Secure connection testing before deployment
+ * - Robust error handling and logging
+ * - Parameter validation and sanitization
+ * 
+ * @version 2.0.0
+ * @author Jenkins CI
+ */
+
+@Library('homeInfraUtils') _
+
 pipeline {
-    agent { label 'slave' }
+    agent { 
+        label 'slave' 
+    }
 
     parameters {
-        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target Linux host from inventory')
-        string(name: 'PLAYBOOK', defaultValue: '', description: 'Playbook to run on Linux')
-        password(name: 'SSH_PASS', defaultValue: '', description: 'SSH password for the target host')
+        string(
+            name: 'TARGET_HOST', 
+            defaultValue: '', 
+            description: 'Target Linux host from inventory'
+        )
+        string(
+            name: 'PLAYBOOK', 
+            defaultValue: '', 
+            description: 'Ansible playbook to execute (.yml file)'
+        )
+        password(
+            name: 'SSH_PASS', 
+            defaultValue: '', 
+            description: 'SSH password for target host authentication'
+        )
     }
 
     environment {
+        // Standard paths and configuration
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-        PLAYBOOKS_DIR  = 'ansible/playbooks'
-        SSH_BASE_DIR   = '/var/jenkins_home/.ssh'
+        PLAYBOOKS_DIR = 'ansible/playbooks'
+        SSH_BASE_DIR = '/var/jenkins_home/.ssh'
+        
+        // Pipeline metadata
+        PIPELINE_VERSION = '2.0.0'
+        PIPELINE_NAME = 'Linux Deployment'
+        TARGET_PLATFORM = 'linux'
+    }
+
+    options {
+        // Build retention and timeout
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 45, unit: 'MINUTES')
+        skipStagesAfterUnstable()
+        
+        // Enhanced logging
+        ansiColor('xterm')
+        timestamps()
     }
 
     stages {
+        stage('Initialize and Validate') {
+            steps {
+                script {
+                    echo "🚀 Starting ${env.PIPELINE_NAME} v${env.PIPELINE_VERSION}"
+                    echo "🐧 Target Platform: Linux"
+                    echo "🎯 Target Host: ${params.TARGET_HOST}"
+                    echo "📖 Playbook: ${params.PLAYBOOK}"
+                    
+                    // Validate required parameters
+                    homeInfraUtils.validateParameters([
+                        TARGET_HOST: params.TARGET_HOST,
+                        PLAYBOOK: params.PLAYBOOK,
+                        SSH_PASS: params.SSH_PASS
+                    ])
+                    
+                    // Validate playbook extension
+                    if (!params.PLAYBOOK.endsWith('.yml')) {
+                        error "❌ Playbook must be a .yml file: ${params.PLAYBOOK}"
+                    }
+                    
+                    echo "✅ Parameter validation completed"
+                }
+            }
+        }
+
         stage('Checkout Repository') {
             steps {
                 echo "📥 Checking out repository for Linux deployment..."
                 checkout scm
+                
+                script {
+                    // Verify required files and directories exist
+                    def requiredPaths = [
+                        env.INVENTORY_FILE,
+                        env.PLAYBOOKS_DIR,
+                        "${env.PLAYBOOKS_DIR}/${params.PLAYBOOK}"
+                    ]
+                    
+                    requiredPaths.each { path ->
+                        if (!fileExists(path)) {
+                            error "❌ Required path not found: ${path}"
+                        }
+                    }
+                    
+                    echo "✅ Repository verification completed"
+                }
             }
         }
 
         stage('Parse Linux Inventory') {
             steps {
                 script {
-                    // Execute Python script to parse the inventory for the given Linux host
-                    def inventoryJson = sh(script: """
-                        python3 -c '
-import sys, yaml, json
-target = "${params.TARGET_HOST}"
-with open("${env.INVENTORY_FILE}") as f:
-    inv = yaml.safe_load(f)
-host_config = None
-if "linux" in inv["all"]["children"]:
-    group = inv["all"]["children"]["linux"]
-    if "hosts" in group and target in group["hosts"]:
-        host_config = group["hosts"][target]
-if host_config is None:
-    sys.exit("Host not found in linux group: " + target)
-print(json.dumps(host_config))
-                        '
-                    """, returnStdout: true).trim()
-
-                    def hostConfig = readJSON text: inventoryJson
-
-                    env.TARGET_IP   = hostConfig.ansible_host
-                    env.REMOTE_USER = hostConfig.ansible_user
-                    env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
-                    env.PUBLIC_KEY  = "${env.PRIVATE_KEY}.pub"
-
-                    echo "➡ Linux Host: ${params.TARGET_HOST}"
-                    echo "➡ IP: ${env.TARGET_IP}"
-                    echo "➡ Remote user: ${env.REMOTE_USER}"
+                    try {
+                        echo "🔍 Parsing inventory for Linux host: ${params.TARGET_HOST}"
+                        
+                        // Use shared library function for inventory parsing
+                        def hostConfig = homeInfraUtils.parseInventory(
+                            env.INVENTORY_FILE,
+                            env.TARGET_PLATFORM,
+                            params.TARGET_HOST
+                        )
+                        
+                        // Store host configuration in environment variables
+                        env.TARGET_IP = hostConfig.ansible_host
+                        env.REMOTE_USER = hostConfig.ansible_user
+                        env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
+                        env.PUBLIC_KEY = "${env.PRIVATE_KEY}.pub"
+                        
+                        echo "✅ Inventory parsing completed:"
+                        echo "   Host: ${params.TARGET_HOST}"
+                        echo "   IP: ${env.TARGET_IP}"
+                        echo "   User: ${env.REMOTE_USER}"
+                        
+                    } catch (Exception e) {
+                        error "❌ Failed to parse Linux inventory: ${e.getMessage()}"
+                    }
                 }
             }
         }
 
-        stage('Ensure SSH Key Exists') {
+        stage('Setup SSH Authentication') {
             steps {
                 script {
-                    def keyExists = sh(script: "[ -f '${env.PRIVATE_KEY}' ] && echo yes || echo no", returnStdout: true).trim()
-
-                    if (keyExists == "no") {
-                        echo "🔑 SSH key not found in ${env.PRIVATE_KEY}. Generating..."
-                        sh """
-                            mkdir -p \$(dirname "${env.PRIVATE_KEY}")
-                            ssh-keygen -t rsa -b 4096 -f "${env.PRIVATE_KEY}" -N ''
-                            chmod 600 "${env.PRIVATE_KEY}"
-                        """
-                        echo "📤 Sending public key to ${params.TARGET_HOST}..."
-                        sh """
-                            sshpass -p "${params.SSH_PASS}" ssh-copy-id -i "${env.PUBLIC_KEY}" ${env.REMOTE_USER}@${env.TARGET_IP} || true
-                        """
-                    } else {
-                        echo "✅ SSH key already exists."
-                        sh "chmod 600 ${env.PRIVATE_KEY}"
+                    try {
+                        echo "🔐 Setting up SSH authentication for ${params.TARGET_HOST}..."
+                        
+                        // Use shared library function for SSH key setup
+                        def sshKeys = homeInfraUtils.setupSSHKey(
+                            env.SSH_BASE_DIR,
+                            params.TARGET_HOST,
+                            env.TARGET_IP,
+                            env.REMOTE_USER,
+                            params.SSH_PASS
+                        )
+                        
+                        // Update environment with actual key paths
+                        env.PRIVATE_KEY = sshKeys.privateKey
+                        env.PUBLIC_KEY = sshKeys.publicKey
+                        
+                        echo "✅ SSH authentication setup completed"
+                        
+                    } catch (Exception e) {
+                        error "❌ Failed to setup SSH authentication: ${e.getMessage()}"
                     }
                 }
             }
@@ -83,34 +174,109 @@ print(json.dumps(host_config))
         stage('Test SSH Connection') {
             steps {
                 script {
-                    def sshTest = sh(script: """
-                        ssh -o StrictHostKeyChecking=no -i ${env.PRIVATE_KEY} ${env.REMOTE_USER}@${env.TARGET_IP} 'echo OK'
-                    """, returnStatus: true)
-
-                    if (sshTest != 0) {
-                        error "❌ ERROR: Unable to establish SSH connection to ${params.TARGET_HOST}."
-                        sh "rm -rfv ${env.SSH_BASE_DIR}/${params.TARGET_HOST}"
-                    } else {
-                        echo "✅ SSH connection successful."
+                    try {
+                        echo "🔌 Testing SSH connection to ${params.TARGET_HOST}..."
+                        
+                        // Use shared library function for connection testing
+                        def connectionSuccessful = homeInfraUtils.testSSHConnection(
+                            env.PRIVATE_KEY,
+                            env.REMOTE_USER,
+                            env.TARGET_IP,
+                            params.TARGET_HOST,
+                            30 // timeout in seconds
+                        )
+                        
+                        if (!connectionSuccessful) {
+                            // Clean up SSH keys on connection failure
+                            sh "rm -rf ${env.SSH_BASE_DIR}/${params.TARGET_HOST}"
+                            error "❌ Unable to establish SSH connection to ${params.TARGET_HOST} (${env.TARGET_IP})"
+                        }
+                        
+                        echo "✅ SSH connection test successful"
+                        
+                    } catch (Exception e) {
+                        error "❌ SSH connection test failed: ${e.getMessage()}"
                     }
                 }
             }
         }
 
-        stage('Run Ansible Playbook') {
+        stage('Execute Ansible Playbook') {
             steps {
-                echo "🚀 Running Linux playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
-                sh """
-                    cd ${env.PLAYBOOKS_DIR}
-                    sshpass -p "${params.SSH_PASS}" ansible-playbook -i ../inventories/hosts.yml ${params.PLAYBOOK} -K --limit ${params.TARGET_HOST} -e "hosts_to_deploy=${params.TARGET_HOST} -v"
-                """
+                script {
+                    try {
+                        echo "🚀 Executing Ansible playbook on Linux host..."
+                        echo "   Playbook: ${params.PLAYBOOK}"
+                        echo "   Target: ${params.TARGET_HOST}"
+                        echo "   Platform: Linux"
+                        
+                        // Use shared library function for Ansible execution
+                        homeInfraUtils.runAnsiblePlaybook([
+                            playbooksDir: env.PLAYBOOKS_DIR,
+                            inventoryFile: "../inventories/hosts.yml",
+                            playbook: params.PLAYBOOK,
+                            targetHost: params.TARGET_HOST,
+                            password: params.SSH_PASS,
+                            platform: 'linux',
+                            extraVars: [
+                                hosts_to_deploy: params.TARGET_HOST
+                            ]
+                        ])
+                        
+                        echo "✅ Ansible playbook execution completed successfully"
+                        
+                    } catch (Exception e) {
+                        error "❌ Ansible playbook execution failed: ${e.getMessage()}"
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Deployment finished."
+            script {
+                def duration = currentBuild.durationString.replace(' and counting', '')
+                echo "📊 ${env.PIPELINE_NAME} completed in ${duration}"
+                echo "📋 Build result: ${currentBuild.result ?: 'SUCCESS'}"
+                echo "🎯 Target: ${params.TARGET_HOST}"
+                echo "📖 Playbook: ${params.PLAYBOOK}"
+            }
+        }
+        
+        success {
+            echo "✅ Linux deployment completed successfully"
+            echo "🎉 Playbook ${params.PLAYBOOK} executed successfully on ${params.TARGET_HOST}"
+        }
+        
+        failure {
+            script {
+                echo "❌ Linux deployment failed"
+                echo "🔍 Check the logs above for detailed error information"
+                
+                // Clean up SSH keys on failure to prevent accumulation of invalid keys
+                if (env.SSH_BASE_DIR && params.TARGET_HOST) {
+                    homeInfraUtils.cleanup(env.SSH_BASE_DIR, params.TARGET_HOST, true)
+                }
+            }
+        }
+        
+        unstable {
+            echo "⚠️  Linux deployment completed with warnings"
+            echo "📋 Review the playbook output for potential issues"
+        }
+        
+        cleanup {
+            script {
+                // Clean up sensitive environment variables
+                env.SSH_PASS = null
+                env.TARGET_IP = null
+                
+                // Standard pipeline cleanup
+                homeInfraUtils.cleanup()
+                
+                echo "🧹 Pipeline cleanup completed"
+            }
         }
     }
 }

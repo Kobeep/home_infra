@@ -1,99 +1,387 @@
+/**
+ * Configuration Backup Pipeline
+ * 
+ * Backs up configurations from home infrastructure services including
+ * Home Assistant, Grafana, Dashy, AdGuard Home, OpenWebUI, and Jenkins pipelines.
+ * 
+ * Features:
+ * - Automated backup of multiple services
+ * - Secure SSH connection management
+ * - Git-based backup storage with proper authentication
+ * - Comprehensive error handling and logging
+ * - Professional CI/CD practices
+ * 
+ * @version 2.0.0
+ * @author Jenkins CI
+ */
+
+@Library('homeInfraUtils') _
+
 pipeline {
-  agent { label 'slave' }
-
-  environment {
-    INVENTORY_FILE    = 'ansible/inventories/hosts.yml'
-    HOST_NAME         = 'server'
-    SSH_BASE          = '/var/jenkins_home/.ssh'
-    REMOTE_KUBECONFIG = '/etc/rancher/k3s/k3s.yaml'
-    HASS_LOCAL        = 'hass-config'
-    DASHY_LOCAL       = 'dashy-config'
-    GRAFANA_LOCAL     = 'grafana-config'
-    ADGUARD_LOCAL     = 'adguard-config'
-    OPENWEBUI_LOCAL   = 'openwebui-config'
-    JENKINS_BACKUP    = 'jenkins-pipelines-backup'
-  }
-
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
+    agent { 
+        label 'slave' 
     }
 
-    stage('Parse Inventory') {
-      steps {
-        script {
-          def inv = readYaml file: INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-                             .find { it.hosts?.containsKey(HOST_NAME) }
-                             ?.hosts[HOST_NAME]
-          if (!hostEntry) error "Host '${HOST_NAME}' not found"
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
-          echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+    environment {
+        // Standard configuration
+        INVENTORY_FILE = 'ansible/inventories/hosts.yml'
+        HOST_NAME = 'server'
+        SSH_BASE = '/var/jenkins_home/.ssh'
+        REMOTE_KUBECONFIG = '/etc/rancher/k3s/k3s.yaml'
+        
+        // Backup directories
+        HASS_LOCAL = 'hass-config'
+        DASHY_LOCAL = 'dashy-config'
+        GRAFANA_LOCAL = 'grafana-config'
+        ADGUARD_LOCAL = 'adguard-config'
+        OPENWEBUI_LOCAL = 'openwebui-config'
+        JENKINS_BACKUP = 'jenkins-pipelines-backup'
+        
+        // Pipeline metadata
+        PIPELINE_VERSION = '2.0.0'
+        PIPELINE_NAME = 'Configuration Backup'
+    }
+
+    options {
+        // Build configuration
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        timeout(time: 45, unit: 'MINUTES')
+        skipStagesAfterUnstable()
+        
+        // Enhanced logging
+        ansiColor('xterm')
+        timestamps()
+    }
+
+    triggers {
+        // Run daily backup at 2 AM
+        cron('0 2 * * *')
+    }
+
+    stages {
+        stage('Initialize Backup Process') {
+            steps {
+                script {
+                    echo "🚀 Starting ${env.PIPELINE_NAME} v${env.PIPELINE_VERSION}"
+                    echo "🏠 Target Host: ${env.HOST_NAME}"
+                    echo "📅 Backup Date: ${new Date().format('yyyy-MM-dd HH:mm:ss UTC')}"
+                    
+                    // Validate Jenkins environment
+                    if (!env.JENKINS_HOME) {
+                        error "❌ Jenkins environment not properly configured"
+                    }
+                    
+                    echo "✅ Backup process initialization completed"
+                }
+            }
         }
-      }
-    }
 
-    stage('Clean old configs') {
-      steps {
-        sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP}"
-      }
-    }
-
-    stage('Backup via Script') {
-      steps {
-        sh 'chmod +x jf/scripts/backup_configs.sh'
-        sh './jf/scripts/backup_configs.sh'
-      }
-    }
-
-    stage('Backup Jenkins Pipelines') {
-      steps {
-        sh '''
-          # clean & recreate
-          rm -rf ${JENKINS_BACKUP}
-          mkdir -p ${JENKINS_BACKUP}
-
-          # tar jobs, excluding all builds (logs)
-          tar cf - \
-            --exclude='jobs/*/builds' \
-            -C /var/jenkins_home jobs \
-          | tar xf - -C ${JENKINS_BACKUP}
-        '''
-      }
-    }
-
-
-    stage('Commit & Push') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
-          usernameVariable: 'GIT_USER',
-          passwordVariable: 'GIT_PASS'
-        )]) {
-          sh '''
-            git config user.email "jenkins@localhost"
-            git config user.name  "Jenkins CI"
-
-            ORIG_URL=$(git remote get-url origin)
-            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
-            git remote set-url origin "$AUTH_URL"
-
-            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} ${JENKINS_BACKUP}
-            if git diff --cached --quiet; then
-              echo "✅ No changes to commit."
-            else
-              git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-              git push origin HEAD:main
-            fi
-          '''
+        stage('Checkout Repository') {
+            steps {
+                echo "📥 Checking out repository..."
+                checkout scm
+                
+                script {
+                    // Verify required files exist
+                    def requiredFiles = [env.INVENTORY_FILE, "jf/scripts/backup_configs.sh"]
+                    requiredFiles.each { file ->
+                        if (!fileExists(file)) {
+                            error "❌ Required file not found: ${file}"
+                        }
+                    }
+                    echo "✅ Repository checkout and validation completed"
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    success { echo "✅ Done." }
-    failure { echo "❌ Failed, check logs." }
-  }
+        stage('Parse Target Host Configuration') {
+            steps {
+                script {
+                    try {
+                        echo "🔍 Parsing inventory for backup target: ${env.HOST_NAME}"
+                        
+                        def inv = readYaml file: env.INVENTORY_FILE
+                        def hostEntry = inv.all.children.values()
+                            .find { it.hosts?.containsKey(env.HOST_NAME) }
+                            ?.hosts[env.HOST_NAME]
+                            
+                        if (!hostEntry) {
+                            error "❌ Host '${env.HOST_NAME}' not found in inventory"
+                        }
+                        
+                        // Validate required host configuration
+                        homeInfraUtils.validateParameters([
+                            ansible_host: hostEntry.ansible_host,
+                            ansible_user: hostEntry.ansible_user
+                        ])
+                        
+                        env.REMOTE_HOST = hostEntry.ansible_host
+                        env.REMOTE_USER = hostEntry.ansible_user
+                        
+                        echo "✅ Target host configuration parsed:"
+                        echo "   Host: ${env.HOST_NAME}"
+                        echo "   IP: ${env.REMOTE_HOST}"
+                        echo "   User: ${env.REMOTE_USER}"
+                        
+                    } catch (Exception e) {
+                        error "❌ Failed to parse target host configuration: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Clean Previous Backup Data') {
+            steps {
+                script {
+                    echo "🧹 Cleaning previous backup data..."
+                    
+                    def backupDirs = [
+                        env.HASS_LOCAL, 
+                        env.DASHY_LOCAL, 
+                        env.GRAFANA_LOCAL, 
+                        env.ADGUARD_LOCAL, 
+                        env.OPENWEBUI_LOCAL, 
+                        env.JENKINS_BACKUP
+                    ]
+                    
+                    backupDirs.each { dir ->
+                        sh "rm -rf ${dir}"
+                        echo "   Cleaned: ${dir}"
+                    }
+                    
+                    echo "✅ Previous backup data cleaned"
+                }
+            }
+        }
+
+        stage('Backup Service Configurations') {
+            steps {
+                script {
+                    try {
+                        echo "📦 Starting service configuration backup..."
+                        
+                        // Make backup script executable
+                        sh "chmod +x jf/scripts/backup_configs.sh"
+                        
+                        // Execute backup script with timeout
+                        timeout(time: 20, unit: 'MINUTES') {
+                            sh "./jf/scripts/backup_configs.sh"
+                        }
+                        
+                        echo "✅ Service configuration backup completed"
+                        
+                        // Verify backup data was created
+                        def backupDirs = [env.HASS_LOCAL, env.DASHY_LOCAL, env.GRAFANA_LOCAL, env.ADGUARD_LOCAL, env.OPENWEBUI_LOCAL]
+                        def successfulBackups = []
+                        def failedBackups = []
+                        
+                        backupDirs.each { dir ->
+                            if (fileExists(dir)) {
+                                def size = sh(script: "du -sh ${dir} | cut -f1", returnStdout: true).trim()
+                                successfulBackups.add("${dir} (${size})")
+                            } else {
+                                failedBackups.add(dir)
+                            }
+                        }
+                        
+                        echo "📊 Backup Summary:"
+                        echo "   Successful: ${successfulBackups.join(', ')}"
+                        if (failedBackups) {
+                            echo "   Failed: ${failedBackups.join(', ')}"
+                        }
+                        
+                    } catch (Exception e) {
+                        error "❌ Service configuration backup failed: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Backup Jenkins Pipelines') {
+            steps {
+                script {
+                    try {
+                        echo "🔧 Backing up Jenkins pipeline configurations..."
+                        
+                        sh """
+                            # Clean and recreate Jenkins backup directory
+                            rm -rf ${env.JENKINS_BACKUP}
+                            mkdir -p ${env.JENKINS_BACKUP}
+                            
+                            # Create tar archive of Jenkins jobs, excluding build logs
+                            tar cf - \
+                                --exclude='jobs/*/builds' \
+                                --exclude='jobs/*/lastStable' \
+                                --exclude='jobs/*/lastSuccessful' \
+                                --exclude='jobs/*/lastFailed' \
+                                --exclude='jobs/*/lastUnstable' \
+                                --exclude='jobs/*/lastUnsuccessful' \
+                                --exclude='jobs/*/modules' \
+                                -C /var/jenkins_home jobs \
+                            | tar xf - -C ${env.JENKINS_BACKUP}
+                        """
+                        
+                        // Verify Jenkins backup
+                        def backupSize = sh(script: "du -sh ${env.JENKINS_BACKUP} | cut -f1", returnStdout: true).trim()
+                        echo "✅ Jenkins pipeline backup completed (${backupSize})"
+                        
+                    } catch (Exception e) {
+                        error "❌ Jenkins pipeline backup failed: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Commit and Push Backups') {
+            steps {
+                script {
+                    try {
+                        echo "📤 Committing and pushing backup data to repository..."
+                        
+                        withCredentials([usernamePassword(
+                            credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_PASS'
+                        )]) {
+                            
+                            // Configure Git safely
+                            sh """
+                                git config user.email "jenkins@${env.HOST_NAME}.local"
+                                git config user.name "Jenkins Backup Service"
+                                
+                                # Setup authenticated Git URL
+                                ORIG_URL=\$(git remote get-url origin)
+                                AUTH_URL=\$(echo "\$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
+                                git remote set-url origin "\$AUTH_URL"
+                            """
+                            
+                            // Add backup files
+                            sh """
+                                git add ${env.HASS_LOCAL} ${env.DASHY_LOCAL} ${env.GRAFANA_LOCAL} ${env.ADGUARD_LOCAL} ${env.OPENWEBUI_LOCAL} ${env.JENKINS_BACKUP}
+                            """
+                            
+                            // Check if there are changes to commit
+                            def hasChanges = sh(
+                                script: "git diff --cached --quiet",
+                                returnStatus: true
+                            )
+                            
+                            if (hasChanges != 0) {
+                                def commitMessage = "Backup ${env.HOST_NAME}: ${new Date().format('yyyy-MM-dd HH:mm:ss UTC')}"
+                                sh """
+                                    git commit -m "${commitMessage}"
+                                    git push origin HEAD:main
+                                """
+                                echo "✅ Backup data committed and pushed successfully"
+                            } else {
+                                echo "ℹ️  No changes to commit - backup data is identical to previous version"
+                            }
+                        }
+                        
+                    } catch (Exception e) {
+                        error "❌ Failed to commit and push backup data: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Generate Backup Report') {
+            steps {
+                script {
+                    try {
+                        echo "📋 Generating backup report..."
+                        
+                        def backupDirs = [
+                            env.HASS_LOCAL, 
+                            env.DASHY_LOCAL, 
+                            env.GRAFANA_LOCAL, 
+                            env.ADGUARD_LOCAL, 
+                            env.OPENWEBUI_LOCAL, 
+                            env.JENKINS_BACKUP
+                        ]
+                        
+                        def reportLines = []
+                        reportLines.add("# Backup Report - ${new Date().format('yyyy-MM-dd HH:mm:ss UTC')}")
+                        reportLines.add("")
+                        reportLines.add("## Services Backed Up:")
+                        
+                        backupDirs.each { dir ->
+                            if (fileExists(dir)) {
+                                def size = sh(script: "du -sh ${dir} | cut -f1", returnStdout: true).trim()
+                                def fileCount = sh(script: "find ${dir} -type f | wc -l", returnStdout: true).trim()
+                                reportLines.add("- **${dir}**: ${size} (${fileCount} files)")
+                            } else {
+                                reportLines.add("- **${dir}**: ❌ FAILED")
+                            }
+                        }
+                        
+                        reportLines.add("")
+                        reportLines.add("## Backup Details:")
+                        reportLines.add("- Host: ${env.HOST_NAME} (${env.REMOTE_HOST})")
+                        reportLines.add("- Duration: ${currentBuild.durationString}")
+                        reportLines.add("- Jenkins Build: #${env.BUILD_NUMBER}")
+                        
+                        // Write report to file
+                        writeFile file: 'backup-report.md', text: reportLines.join('\n')
+                        
+                        // Display report in console
+                        echo "📊 Backup Report:"
+                        reportLines.each { line -> echo line }
+                        
+                    } catch (Exception e) {
+                        echo "⚠️  Failed to generate backup report (non-critical): ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                def duration = currentBuild.durationString.replace(' and counting', '')
+                echo "📊 ${env.PIPELINE_NAME} completed in ${duration}"
+                echo "📋 Build result: ${currentBuild.result ?: 'SUCCESS'}"
+                echo "🏠 Target: ${env.HOST_NAME}"
+                
+                // Archive the backup report
+                if (fileExists('backup-report.md')) {
+                    archiveArtifacts artifacts: 'backup-report.md', fingerprint: true
+                }
+            }
+        }
+        
+        success {
+            echo "✅ Configuration backup completed successfully"
+            echo "🎉 All service configurations have been backed up and committed to the repository"
+        }
+        
+        failure {
+            echo "❌ Configuration backup failed"
+            echo "🔍 Check the logs above for detailed error information"
+            echo "💡 Common issues:"
+            echo "   - SSH connectivity to target host"
+            echo "   - Kubernetes cluster accessibility"
+            echo "   - Git authentication problems"
+            echo "   - Insufficient disk space"
+        }
+        
+        unstable {
+            echo "⚠️  Configuration backup completed with warnings"
+            echo "📋 Some services may not have been backed up successfully"
+        }
+        
+        cleanup {
+            script {
+                // Clean up sensitive environment variables
+                env.REMOTE_HOST = null
+                env.REMOTE_USER = null
+                
+                // Standard pipeline cleanup
+                homeInfraUtils.cleanup()
+                
+                echo "🧹 Pipeline cleanup completed"
+            }
+        }
+    }
 }
