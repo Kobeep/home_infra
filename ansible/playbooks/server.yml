@@ -38,10 +38,6 @@
       include_role:
         name: server/influxDB
 
-    - name: Ingress
-      include_role:
-        name: server/ingress
-
     - name: Deploy OpenWebUI to K3S
       include_role:
         name: server/openwebui

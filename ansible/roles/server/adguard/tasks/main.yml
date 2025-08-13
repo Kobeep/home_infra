@@ -1,6 +1,6 @@
 - name: Copy AdGuard Home manifest file to the server
   ansible.builtin.template:
-    src: adguard-deployment.yml
+    src: adguard-deployment.yml.j2
     dest: /tmp/adguard-deployment.yml
     mode: '0644'
 
@@ -14,3 +14,8 @@
 - name: Display the result of the kubectl apply operation
   ansible.builtin.debug:
     msg: "{{ kubectl_apply_result.stdout_lines }}"
+
+- name: Deploy Ingress for AdGuard
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"
