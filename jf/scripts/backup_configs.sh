@@ -10,6 +10,8 @@ REMOTE_KUBECONFIG="${REMOTE_KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
 HASS_LOCAL="${HASS_LOCAL:-hass-config}"
 DASHY_LOCAL="${DASHY_LOCAL:-dashy-config}"
 GRAFANA_LOCAL="${GRAFANA_LOCAL:-grafana-config}"
+ADGUARD_LOCAL="${ADGUARD_LOCAL:-adguard-config}"
+OPENWEBUI_LOCAL="${OPENWEBUI_LOCAL:-openwebui-config}"
 
 KEY_PATH="${SSH_BASE}/${HOST_NAME}/id_rsa"
 
@@ -61,4 +63,23 @@ if [[ -n "$POD" ]]; then
   fetch_dir  monitoring "$POD" /var/lib/grafana   "${GRAFANA_LOCAL}"
 else
   echo "⚠️ Grafana pod not found; skipping."
+fi
+
+# AdGuard Home backup
+POD=$(find_pod default adguardhome)
+if [[ -n "$POD" ]]; then
+  echo "⟳ Backing up AdGuard Home configurations"
+  fetch_dir  default "$POD" /opt/adguardhome/work "${ADGUARD_LOCAL}/work"
+  fetch_dir  default "$POD" /opt/adguardhome/conf "${ADGUARD_LOCAL}/conf"
+else
+  echo "⚠️ AdGuard Home pod not found; skipping."
+fi
+
+# OpenWebUI backup
+POD=$(find_pod ai openwebui)
+if [[ -n "$POD" ]]; then
+  echo "⟳ Backing up OpenWebUI configurations"
+  fetch_dir  ai "$POD" /app/backend/data "${OPENWEBUI_LOCAL}"
+else
+  echo "⚠️ OpenWebUI pod not found; skipping."
 fi
