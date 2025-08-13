@@ -14,76 +14,80 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps { 
+        echo "📥 Checking out repository for backup operations..."
+        checkout scm 
+      }
     }
 
     stage('Parse Inventory') {
       steps {
         script {
-          def inv = readYaml file: INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-                             .find { it.hosts?.containsKey(HOST_NAME) }
-                             ?.hosts[HOST_NAME]
-          if (!hostEntry) error "Host '${HOST_NAME}' not found"
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
+          echo "🔍 Parsing inventory for host: ${env.HOST_NAME}"
+          def inventoryOutput = sh(script: """
+            chmod +x scripts/common/inventory-parser.py
+            python3 scripts/common/inventory-parser.py "${env.INVENTORY_FILE}" "${env.HOST_NAME}"
+          """, returnStdout: true).trim()
+          
+          def hostConfig = readJSON text: inventoryOutput
+          env.REMOTE_HOST = hostConfig.ansible_host
+          env.REMOTE_USER = hostConfig.ansible_user
+          
           echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
         }
       }
     }
 
-    stage('Clean old configs') {
+    stage('Clean Old Configs') {
       steps {
+        echo "🧹 Cleaning old configuration directories..."
         sh "rm -rf ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}"
       }
     }
 
-    stage('Backup via Script') {
+    stage('Backup Configurations') {
       steps {
-        sh 'chmod +x jf/scripts/backup_configs.sh'
-        sh './jf/scripts/backup_configs.sh'
+        echo "💾 Running configuration backup via script..."
+        sh '''
+          chmod +x jf/scripts/backup_configs.sh
+          ./jf/scripts/backup_configs.sh
+        '''
       }
     }
 
     stage('Backup Jenkins Pipelines') {
       steps {
+        echo "💾 Running Jenkins pipeline backup..."
         sh '''
-          # clean & recreate
-          rm -rf ${JENKINS_BACKUP}
-          mkdir -p ${JENKINS_BACKUP}
-
-          # tar jobs, excluding all builds (logs)
-          tar cf - \
-            --exclude='jobs/*/builds' \
-            -C /var/jenkins_home jobs \
-          | tar xf - -C ${JENKINS_BACKUP}
+          chmod +x scripts/backup/jenkins-backup.sh
+          scripts/backup/jenkins-backup.sh backup-pipelines "${JENKINS_BACKUP}"
         '''
       }
     }
 
-
-    stage('Commit & Push') {
+    stage('Commit & Push Changes') {
       steps {
+        echo "📤 Committing and pushing backup changes..."
         withCredentials([usernamePassword(
           credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d',
           usernameVariable: 'GIT_USER',
           passwordVariable: 'GIT_PASS'
         )]) {
           sh '''
-            git config user.email "jenkins@localhost"
-            git config user.name  "Jenkins CI"
-
-            ORIG_URL=$(git remote get-url origin)
-            AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
-            git remote set-url origin "$AUTH_URL"
-
-            git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${JENKINS_BACKUP}
-            if git diff --cached --quiet; then
-              echo "✅ No changes to commit."
-            else
-              git commit -m "Backup ${HOST_NAME}: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-              git push origin HEAD:main
-            fi
+            chmod +x scripts/common/git-operations.sh
+            
+            # Generate commit message with timestamp
+            COMMIT_MSG="Backup ${HOST_NAME}: $(scripts/common/git-operations.sh timestamp)"
+            
+            # Execute git workflow
+            scripts/common/git-operations.sh workflow \
+              "$COMMIT_MSG" \
+              "$GIT_USER" \
+              "$GIT_PASS" \
+              "${HASS_LOCAL}" \
+              "${DASHY_LOCAL}" \
+              "${GRAFANA_LOCAL}" \
+              "${JENKINS_BACKUP}"
           '''
         }
       }
@@ -91,7 +95,14 @@ pipeline {
   }
 
   post {
-    success { echo "✅ Done." }
-    failure { echo "❌ Failed, check logs." }
+    success { 
+      echo "✅ Backup completed successfully." 
+    }
+    failure { 
+      echo "❌ Backup failed - check logs for details." 
+    }
+    always {
+      echo "🏁 Backup pipeline finished."
+    }
   }
 }

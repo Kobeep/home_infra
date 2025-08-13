@@ -1,28 +1,49 @@
 pipeline {
     agent any
+    
+    environment {
+        AGENT_NAME = 'slave'
+        AGENT_SECRET = '5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2'
+        JENKINS_URL = 'http://192.168.0.122:8080/'
+        AGENT_WORK_DIR = '/var/jenkins_home'
+    }
+    
     stages {
-        stage('Start slave if offline') {
+        stage('Checkout Repository') {
             steps {
-                script {
-                    def node = Jenkins.instance.getNode("slave")
-                    def comp = node?.toComputer()
-
-                    if (!comp?.isOnline()) {
-                        echo "Slave is offline – triggering startup..."
-
-                        sh 'nohup java -jar agent.jar -url http://192.168.0.122:8080/ -secret 5b89654ec4e5e22a5a7ed38e022ef914493985f5edcc877624d14b63fd281fb2 -name slave -webSocket -workDir "/var/jenkins_home" &'
-                    } else {
-                        echo "Slave is online"
-                    }
-                }
+                echo "📥 Checking out repository for node management..."
+                checkout scm
+            }
+        }
+        
+        stage('Ensure Slave Node Running') {
+            steps {
+                echo "🔧 Ensuring Jenkins slave node is running..."
+                sh '''
+                    chmod +x scripts/node/start-slave.sh
+                    scripts/node/start-slave.sh ensure-running "${AGENT_NAME}" "${AGENT_SECRET}" "${JENKINS_URL}" "${AGENT_WORK_DIR}"
+                '''
             }
         }
 
-        stage('Build on slave') {
+        stage('Verify Node Status') {
             agent { label 'slave' }
             steps {
-                echo "Running on slave!"
+                echo "✅ Slave node is online and responding!"
+                sh 'echo "Running on slave node: $(hostname)"'
             }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ Slave node startup completed successfully."
+        }
+        failure {
+            echo "❌ Slave node startup failed."
+        }
+        always {
+            echo "🏁 Node management pipeline finished."
         }
     }
 }

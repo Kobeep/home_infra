@@ -20,46 +20,29 @@ pipeline {
             }
         }
 
-        stage('Parse Windows Inventory') {
+        stage('Validate Parameters') {
             steps {
                 script {
-                    // Execute Python script to parse the inventory for the given Windows host
-                    def inventoryJson = sh(script: """
-                        python3 -c '
-import sys, yaml, json
-target = "${params.TARGET_HOST}"
-with open("${env.INVENTORY_FILE}") as f:
-    inv = yaml.safe_load(f)
-host_config = None
-if "windows" in inv["all"]["children"]:
-    group = inv["all"]["children"]["windows"]
-    if "hosts" in group and target in group["hosts"]:
-        host_config = group["hosts"][target]
-if host_config is None:
-    sys.exit("Host not found in windows group: " + target)
-print(json.dumps(host_config))
-                        '
-                    """, returnStdout: true).trim()
-
-                    def hostConfig = readJSON text: inventoryJson
-
-                    env.TARGET_IP   = hostConfig.ansible_host
-                    env.REMOTE_USER = hostConfig.ansible_user
-
-                    echo "➡ Windows Host: ${params.TARGET_HOST}"
-                    echo "➡ IP: ${env.TARGET_IP}"
-                    echo "➡ Remote user: ${env.REMOTE_USER}"
+                    if (!params.TARGET_HOST) {
+                        error "TARGET_HOST parameter is required"
+                    }
+                    if (!params.PLAYBOOK) {
+                        error "PLAYBOOK parameter is required"
+                    }
+                    if (!params.WINRM_PASS) {
+                        error "WINRM_PASS parameter is required"
+                    }
                 }
             }
         }
 
-        stage('Run Ansible Playbook for Windows') {
+        stage('Deploy to Windows Host') {
             steps {
-                echo "🚀 Running Windows playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
-                sh """
-                    cd ${env.PLAYBOOKS_DIR}
-                    ansible-playbook -i ../inventories/hosts.yml ${params.PLAYBOOK} --limit ${params.TARGET_HOST} -e "ansible_password=${params.WINRM_PASS}"
-                """
+                echo "🚀 Deploying Windows playbook: ${params.PLAYBOOK} to host: ${params.TARGET_HOST}"
+                sh '''
+                    chmod +x scripts/windows/deploy-windows.sh
+                    scripts/windows/deploy-windows.sh deploy "${TARGET_HOST}" "${PLAYBOOK}" "${WINRM_PASS}"
+                '''
             }
         }
     }
@@ -67,6 +50,12 @@ print(json.dumps(host_config))
     post {
         always {
             echo "Windows deployment finished."
+        }
+        success {
+            echo "✅ Windows deployment completed successfully."
+        }
+        failure {
+            echo "❌ Windows deployment failed. Check logs for details."
         }
     }
 }

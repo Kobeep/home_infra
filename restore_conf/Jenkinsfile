@@ -13,34 +13,50 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps { 
+        echo "📥 Checking out repository for restore operations..."
+        checkout scm 
+      }
     }
 
     stage('Parse Inventory') {
       steps {
         script {
-          def inv = readYaml file: INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-                             .find { it.hosts?.containsKey(HOST_NAME) }
-                             ?.hosts[HOST_NAME]
-          if (!hostEntry) error "Host '${HOST_NAME}' not in inventory"
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
+          echo "🔍 Parsing inventory for host: ${env.HOST_NAME}"
+          def inventoryOutput = sh(script: """
+            chmod +x scripts/common/inventory-parser.py
+            python3 scripts/common/inventory-parser.py "${env.INVENTORY_FILE}" "${env.HOST_NAME}"
+          """, returnStdout: true).trim()
+          
+          def hostConfig = readJSON text: inventoryOutput
+          env.REMOTE_HOST = hostConfig.ansible_host
+          env.REMOTE_USER = hostConfig.ansible_user
+          
           echo "➡ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
         }
       }
     }
 
-    stage('Restore via Script') {
+    stage('Restore Configurations') {
       steps {
-        sh 'chmod +x restore_conf/scripts/restore_configs.sh'
-        sh './restore_conf/scripts/restore_configs.sh'
+        echo "♻️ Running configuration restore via script..."
+        sh '''
+          chmod +x restore_conf/scripts/restore_configs.sh
+          ./restore_conf/scripts/restore_configs.sh
+        '''
       }
     }
   }
 
   post {
-    success { echo "✅ Restore completed." }
-    failure { echo "❌ Restore failed — sprawdź logi." }
+    success { 
+      echo "✅ Restore completed successfully." 
+    }
+    failure { 
+      echo "❌ Restore failed - check logs for details." 
+    }
+    always {
+      echo "🏁 Restore pipeline finished."
+    }
   }
 }

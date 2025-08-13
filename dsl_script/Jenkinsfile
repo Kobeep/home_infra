@@ -14,8 +14,22 @@ pipeline {
     stages {
         stage('Checkout Repository') {
             steps {
-                echo "📥 Checking out repository..."
+                echo "📥 Checking out repository for dynamic deployment..."
                 checkout scm
+            }
+        }
+
+        stage('Validate OS Selection') {
+            steps {
+                echo "🔍 Validating OS selection: ${params.TARGET_OS}"
+                sh '''
+                    chmod +x scripts/common/dynamic-pipeline.sh
+                    if ! scripts/common/dynamic-pipeline.sh validate-group "${TARGET_OS}"; then
+                        echo "❌ No hosts found for group: ${TARGET_OS}"
+                        exit 1
+                    fi
+                    echo "✅ Group '${TARGET_OS}' validated successfully"
+                '''
             }
         }
 
@@ -23,31 +37,27 @@ pipeline {
         stage('Select Deployment Options') {
             steps {
                 script {
-                    // Read the YAML inventory file.
-                    def inv = readYaml file: "${env.INVENTORY_FILE}"
-                    def hosts = []
-
-                    // Build the list of hosts based on the selected TARGET_OS.
-                    if (params.TARGET_OS == 'windows') {
-                        if (inv.all.children.windows?.hosts) {
-                            hosts = inv.all.children.windows.hosts.keySet().toList()
-                        }
-                    } else {
-                        if (inv.all.children.linux?.hosts) {
-                            hosts = inv.all.children.linux.hosts.keySet().toList()
-                        }
-                    }
-
+                    echo "🎯 Preparing dynamic selection for ${params.TARGET_OS} deployment..."
+                    
+                    // Get available hosts and playbooks using our script
+                    def hostsJson = sh(
+                        script: "scripts/common/dynamic-pipeline.sh get-hosts '${params.TARGET_OS}'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    def playbooksJson = sh(
+                        script: "scripts/common/dynamic-pipeline.sh get-playbooks",
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Parse JSON responses
+                    def hosts = readJSON text: hostsJson
+                    def playbooks = readJSON text: playbooksJson
+                    
                     if (hosts.isEmpty()) {
                         error "No hosts found for group ${params.TARGET_OS} in inventory."
                     }
-
-                    // Retrieve the list of playbook files from the PLAYBOOKS_DIR.
-                    def playbooksShell = sh(
-                        script: "ls ${env.PLAYBOOKS_DIR}/*.yml | xargs -n1 basename",
-                        returnStdout: true
-                    ).trim()
-                    def playbooks = playbooksShell.tokenize("\n")
+                    
                     if (playbooks.isEmpty()) {
                         error "No playbooks found in directory ${env.PLAYBOOKS_DIR}"
                     }
@@ -75,11 +85,10 @@ pipeline {
                     // Save the user selections as environment variables.
                     env.TARGET_HOST = userSelection.TARGET_HOST
                     env.PLAYBOOK    = userSelection.PLAYBOOK
-                    // The entered password from input is stored in userSelection.AUTH_PASS.
                     env.AUTH_PASS   = userSelection.AUTH_PASS
 
-                    echo "Selected host: ${env.TARGET_HOST}"
-                    echo "Selected playbook: ${env.PLAYBOOK}"
+                    echo "✅ Selected host: ${env.TARGET_HOST}"
+                    echo "✅ Selected playbook: ${env.PLAYBOOK}"
                 }
             }
         }
@@ -88,8 +97,10 @@ pipeline {
         stage('Trigger Downstream Deployment') {
             steps {
                 script {
+                    echo "🚀 Triggering ${params.TARGET_OS} deployment..."
+                    
                     if (params.TARGET_OS == 'windows') {
-                        // Trigger downstream Windows job.
+                        echo "Triggering Windows deployment pipeline..."
                         build job: "CD-Windows",
                               parameters: [
                                   string(name: 'TARGET_HOST', value: env.TARGET_HOST),
@@ -97,7 +108,7 @@ pipeline {
                                   password(name: 'WINRM_PASS', value: env.AUTH_PASS)
                               ]
                     } else {
-                        // Trigger downstream Linux job.
+                        echo "Triggering Linux deployment pipeline..."
                         build job: "CD-Linux",
                               parameters: [
                                   string(name: 'TARGET_HOST', value: env.TARGET_HOST),
@@ -112,7 +123,13 @@ pipeline {
 
     post {
         always {
-            echo "Upstream Pipeline finished."
+            echo "🏁 Dynamic pipeline finished."
+        }
+        success {
+            echo "✅ Dynamic deployment completed successfully."
+        }
+        failure {
+            echo "❌ Dynamic deployment failed."
         }
     }
 }
