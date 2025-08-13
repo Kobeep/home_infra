@@ -1,72 +1,303 @@
+/**
+ * Windows Deployment Pipeline
+ * 
+ * Deploys Ansible playbooks to Windows hosts using WinRM authentication,
+ * with comprehensive error handling and professional CI/CD practices.
+ * 
+ * Features:
+ * - Secure WinRM authentication
+ * - Windows-specific inventory parsing
+ * - Robust error handling and logging
+ * - Parameter validation and sanitization
+ * 
+ * @version 2.0.0
+ * @author Jenkins CI
+ */
+
+@Library('homeInfraUtils') _
+
 pipeline {
-    agent { label 'slave' }
+    agent { 
+        label 'slave' 
+    }
 
     parameters {
-        string(name: 'TARGET_HOST', defaultValue: '', description: 'Target Windows host from inventory')
-        string(name: 'PLAYBOOK', defaultValue: '', description: 'Windows playbook to run (e.g. win_apps_deploy.yml)')
-        password(name: 'WINRM_PASS', defaultValue: '', description: 'WinRM password for the target host')
+        string(
+            name: 'TARGET_HOST', 
+            defaultValue: '', 
+            description: 'Target Windows host from inventory'
+        )
+        string(
+            name: 'PLAYBOOK', 
+            defaultValue: '', 
+            description: 'Windows Ansible playbook to execute (e.g., win_apps_deploy.yml)'
+        )
+        password(
+            name: 'WINRM_PASS', 
+            defaultValue: '', 
+            description: 'WinRM password for target Windows host'
+        )
     }
 
     environment {
+        // Standard paths and configuration
         INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-        PLAYBOOKS_DIR  = 'ansible/playbooks'
+        PLAYBOOKS_DIR = 'ansible/playbooks'
+        
+        // Pipeline metadata
+        PIPELINE_VERSION = '2.0.0'
+        PIPELINE_NAME = 'Windows Deployment'
+        TARGET_PLATFORM = 'windows'
+    }
+
+    options {
+        // Build retention and timeout (Windows deployments may take longer)
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 60, unit: 'MINUTES')
+        skipStagesAfterUnstable()
+        
+        // Enhanced logging
+        ansiColor('xterm')
+        timestamps()
     }
 
     stages {
+        stage('Initialize and Validate') {
+            steps {
+                script {
+                    echo "🚀 Starting ${env.PIPELINE_NAME} v${env.PIPELINE_VERSION}"
+                    echo "🪟 Target Platform: Windows"
+                    echo "🎯 Target Host: ${params.TARGET_HOST}"
+                    echo "📖 Playbook: ${params.PLAYBOOK}"
+                    
+                    // Validate required parameters
+                    homeInfraUtils.validateParameters([
+                        TARGET_HOST: params.TARGET_HOST,
+                        PLAYBOOK: params.PLAYBOOK,
+                        WINRM_PASS: params.WINRM_PASS
+                    ])
+                    
+                    // Validate playbook extension
+                    if (!params.PLAYBOOK.endsWith('.yml')) {
+                        error "❌ Playbook must be a .yml file: ${params.PLAYBOOK}"
+                    }
+                    
+                    // Validate Windows playbook naming convention
+                    if (!params.PLAYBOOK.toLowerCase().contains('win')) {
+                        echo "⚠️  Warning: Playbook '${params.PLAYBOOK}' doesn't follow Windows naming convention (should contain 'win')"
+                    }
+                    
+                    echo "✅ Parameter validation completed"
+                }
+            }
+        }
+
         stage('Checkout Repository') {
             steps {
                 echo "📥 Checking out repository for Windows deployment..."
                 checkout scm
+                
+                script {
+                    // Verify required files and directories exist
+                    def requiredPaths = [
+                        env.INVENTORY_FILE,
+                        env.PLAYBOOKS_DIR,
+                        "${env.PLAYBOOKS_DIR}/${params.PLAYBOOK}"
+                    ]
+                    
+                    requiredPaths.each { path ->
+                        if (!fileExists(path)) {
+                            error "❌ Required path not found: ${path}"
+                        }
+                    }
+                    
+                    echo "✅ Repository verification completed"
+                }
             }
         }
 
         stage('Parse Windows Inventory') {
             steps {
                 script {
-                    // Execute Python script to parse the inventory for the given Windows host
-                    def inventoryJson = sh(script: """
-                        python3 -c '
-import sys, yaml, json
-target = "${params.TARGET_HOST}"
-with open("${env.INVENTORY_FILE}") as f:
-    inv = yaml.safe_load(f)
-host_config = None
-if "windows" in inv["all"]["children"]:
-    group = inv["all"]["children"]["windows"]
-    if "hosts" in group and target in group["hosts"]:
-        host_config = group["hosts"][target]
-if host_config is None:
-    sys.exit("Host not found in windows group: " + target)
-print(json.dumps(host_config))
-                        '
-                    """, returnStdout: true).trim()
-
-                    def hostConfig = readJSON text: inventoryJson
-
-                    env.TARGET_IP   = hostConfig.ansible_host
-                    env.REMOTE_USER = hostConfig.ansible_user
-
-                    echo "➡ Windows Host: ${params.TARGET_HOST}"
-                    echo "➡ IP: ${env.TARGET_IP}"
-                    echo "➡ Remote user: ${env.REMOTE_USER}"
+                    try {
+                        echo "🔍 Parsing inventory for Windows host: ${params.TARGET_HOST}"
+                        
+                        // Use shared library function for inventory parsing
+                        def hostConfig = homeInfraUtils.parseInventory(
+                            env.INVENTORY_FILE,
+                            env.TARGET_PLATFORM,
+                            params.TARGET_HOST
+                        )
+                        
+                        // Store host configuration in environment variables
+                        env.TARGET_IP = hostConfig.ansible_host
+                        env.REMOTE_USER = hostConfig.ansible_user
+                        
+                        // Validate Windows-specific configuration
+                        if (!hostConfig.ansible_connection || hostConfig.ansible_connection != 'winrm') {
+                            echo "⚠️  Warning: ansible_connection not set to 'winrm' for Windows host ${params.TARGET_HOST}"
+                        }
+                        
+                        echo "✅ Windows inventory parsing completed:"
+                        echo "   Host: ${params.TARGET_HOST}"
+                        echo "   IP: ${env.TARGET_IP}"
+                        echo "   User: ${env.REMOTE_USER}"
+                        echo "   Connection: ${hostConfig.ansible_connection ?: 'Not specified'}"
+                        
+                    } catch (Exception e) {
+                        error "❌ Failed to parse Windows inventory: ${e.getMessage()}"
+                    }
                 }
             }
         }
 
-        stage('Run Ansible Playbook for Windows') {
+        stage('Test WinRM Connectivity') {
             steps {
-                echo "🚀 Running Windows playbook: ${params.PLAYBOOK} on host ${params.TARGET_HOST}"
-                sh """
-                    cd ${env.PLAYBOOKS_DIR}
-                    ansible-playbook -i ../inventories/hosts.yml ${params.PLAYBOOK} --limit ${params.TARGET_HOST} -e "ansible_password=${params.WINRM_PASS}"
-                """
+                script {
+                    try {
+                        echo "🔌 Testing WinRM connectivity to ${params.TARGET_HOST}..."
+                        
+                        // Test WinRM connection using a simple command
+                        timeout(time: 2, unit: 'MINUTES') {
+                            def testResult = sh(
+                                script: """
+                                    cd ${env.PLAYBOOKS_DIR}
+                                    ansible ${params.TARGET_HOST} -i ../inventories/hosts.yml \
+                                        -m win_ping \
+                                        -e "ansible_password=${params.WINRM_PASS}" \
+                                        --timeout=30
+                                """,
+                                returnStatus: true
+                            )
+                            
+                            if (testResult == 0) {
+                                echo "✅ WinRM connectivity test successful"
+                            } else {
+                                error "❌ WinRM connectivity test failed. Check network connectivity and credentials."
+                            }
+                        }
+                        
+                    } catch (Exception e) {
+                        error "❌ WinRM connectivity test failed: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Execute Ansible Playbook') {
+            steps {
+                script {
+                    try {
+                        echo "🚀 Executing Ansible playbook on Windows host..."
+                        echo "   Playbook: ${params.PLAYBOOK}"
+                        echo "   Target: ${params.TARGET_HOST}"
+                        echo "   Platform: Windows"
+                        
+                        // Use shared library function for Ansible execution
+                        homeInfraUtils.runAnsiblePlaybook([
+                            playbooksDir: env.PLAYBOOKS_DIR,
+                            inventoryFile: "../inventories/hosts.yml",
+                            playbook: params.PLAYBOOK,
+                            targetHost: params.TARGET_HOST,
+                            password: params.WINRM_PASS,
+                            platform: 'windows',
+                            extraVars: [
+                                hosts_to_deploy: params.TARGET_HOST
+                            ]
+                        ])
+                        
+                        echo "✅ Ansible playbook execution completed successfully"
+                        
+                    } catch (Exception e) {
+                        error "❌ Ansible playbook execution failed: ${e.getMessage()}"
+                    }
+                }
+            }
+        }
+
+        stage('Post-Deployment Verification') {
+            steps {
+                script {
+                    try {
+                        echo "🔍 Performing post-deployment verification..."
+                        
+                        // Verify the target host is still responsive after deployment
+                        timeout(time: 1, unit: 'MINUTES') {
+                            def verificationResult = sh(
+                                script: """
+                                    cd ${env.PLAYBOOKS_DIR}
+                                    ansible ${params.TARGET_HOST} -i ../inventories/hosts.yml \
+                                        -m win_ping \
+                                        -e "ansible_password=${params.WINRM_PASS}" \
+                                        --timeout=30
+                                """,
+                                returnStatus: true
+                            )
+                            
+                            if (verificationResult == 0) {
+                                echo "✅ Post-deployment verification successful - host is responsive"
+                            } else {
+                                echo "⚠️  Post-deployment verification failed - host may be rebooting or temporarily unavailable"
+                            }
+                        }
+                        
+                    } catch (Exception e) {
+                        echo "⚠️  Post-deployment verification failed (non-critical): ${e.getMessage()}"
+                    }
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Windows deployment finished."
+            script {
+                def duration = currentBuild.durationString.replace(' and counting', '')
+                echo "📊 ${env.PIPELINE_NAME} completed in ${duration}"
+                echo "📋 Build result: ${currentBuild.result ?: 'SUCCESS'}"
+                echo "🎯 Target: ${params.TARGET_HOST}"
+                echo "📖 Playbook: ${params.PLAYBOOK}"
+            }
+        }
+        
+        success {
+            echo "✅ Windows deployment completed successfully"
+            echo "🎉 Playbook ${params.PLAYBOOK} executed successfully on ${params.TARGET_HOST}"
+            echo "💡 Note: If the playbook installed updates, the target host may require a reboot"
+        }
+        
+        failure {
+            script {
+                echo "❌ Windows deployment failed"
+                echo "🔍 Check the logs above for detailed error information"
+                echo "💡 Common issues:"
+                echo "   - WinRM not enabled or properly configured on target host"
+                echo "   - Incorrect credentials or expired passwords"
+                echo "   - Network connectivity issues"
+                echo "   - Windows firewall blocking WinRM ports (5985/5986)"
+                
+                // Perform failure-specific cleanup
+                homeInfraUtils.cleanup()
+            }
+        }
+        
+        unstable {
+            echo "⚠️  Windows deployment completed with warnings"
+            echo "📋 Review the playbook output for potential issues"
+            echo "💡 The target host may require a reboot to complete some installations"
+        }
+        
+        cleanup {
+            script {
+                // Clean up sensitive environment variables
+                env.WINRM_PASS = null
+                env.TARGET_IP = null
+                
+                // Standard pipeline cleanup
+                homeInfraUtils.cleanup()
+                
+                echo "🧹 Pipeline cleanup completed"
+            }
         }
     }
 }
