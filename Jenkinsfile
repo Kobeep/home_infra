@@ -179,12 +179,13 @@ pipeline {
                         def simpleResult = homeInfraUtils.simpleTest()
                         echo "Simple test result: ${simpleResult}"
                         
-                        // Temporarily skip SSH key setup for basic testing
-                        echo "⏭️ SSH key setup skipped for basic library testing"
+                        // Test basic SSH key setup without shell commands
+                        def sshKeys = homeInfraUtils.setupSSHKey(env.SSH_BASE_DIR, params.TARGET_HOST, env.TARGET_IP, env.REMOTE_USER, params.SSH_PASS)
+                        echo "SSH Key setup returned: ${sshKeys}"
                         
-                        // Create dummy return values for now
-                        env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
-                        env.PUBLIC_KEY = "${env.PRIVATE_KEY}.pub"
+                        // Update environment with key paths
+                        env.PRIVATE_KEY = sshKeys.privateKey
+                        env.PUBLIC_KEY = sshKeys.publicKey
                         
                         echo "✅ SSH authentication setup completed"
                         
