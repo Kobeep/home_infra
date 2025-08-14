@@ -15,7 +15,7 @@
  */
 
 // Load shared library from current repository
-library identifier: 'homeInfraUtils@main', retriever: modernSCM([
+library identifier: 'homeInfraUtils@copilot/fix-ae2e0700-0007-4b6c-a29c-73ad93219bf9', retriever: modernSCM([
     $class: 'GitSCMSource',
     remote: 'https://github.com/Kobeep/home_infra.git'
 ]) _
