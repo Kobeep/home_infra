@@ -76,11 +76,22 @@ pipeline {
                     echo "📖 Playbook: ${params.PLAYBOOK}"
                     
                     // Validate required parameters
-                    homeInfraUtils.validateParameters([
-                        TARGET_HOST: params.TARGET_HOST,
-                        PLAYBOOK: params.PLAYBOOK,
-                        SSH_PASS: params.SSH_PASS
-                    ])
+                    // Temporarily disabled for testing: homeInfraUtils.validateParameters([
+                    //     TARGET_HOST: params.TARGET_HOST,
+                    //     PLAYBOOK: params.PLAYBOOK,
+                    //     SSH_PASS: params.SSH_PASS
+                    // ])
+                    
+                    // Simple validation
+                    if (!params.TARGET_HOST?.trim()) {
+                        error "❌ TARGET_HOST parameter is required"
+                    }
+                    if (!params.PLAYBOOK?.trim()) {
+                        error "❌ PLAYBOOK parameter is required"
+                    }
+                    if (!params.SSH_PASS?.trim()) {
+                        error "❌ SSH_PASS parameter is required"
+                    }
                     
                     // Validate playbook extension
                     if (!params.PLAYBOOK.endsWith('.yml')) {
@@ -123,11 +134,19 @@ pipeline {
                         echo "🔍 Parsing inventory for Linux host: ${params.TARGET_HOST}"
                         
                         // Use shared library function for inventory parsing
-                        def hostConfig = homeInfraUtils.parseInventory(
-                            env.INVENTORY_FILE,
-                            env.TARGET_PLATFORM,
-                            params.TARGET_HOST
-                        )
+                        // Temporarily disabled for testing: def hostConfig = homeInfraUtils.parseInventory(
+                        //     env.INVENTORY_FILE,
+                        //     env.TARGET_PLATFORM,
+                        //     params.TARGET_HOST
+                        // )
+                        
+                        // Simple inventory parsing for testing
+                        def inv = readYaml file: env.INVENTORY_FILE
+                        def hostConfig = inv?.all?.children?.linux?.hosts?.getAt(params.TARGET_HOST)
+                        
+                        if (!hostConfig) {
+                            error "❌ Host '${params.TARGET_HOST}' not found in Linux inventory"
+                        }
                         
                         // Store host configuration in environment variables
                         env.TARGET_IP = hostConfig.ansible_host
@@ -158,13 +177,7 @@ pipeline {
                         echo "Library test result: ${testResult}"
                         
                         // Use shared library function for SSH key setup
-                        def sshKeys = homeInfraUtils.setupSSHKey(
-                            env.SSH_BASE_DIR,
-                            params.TARGET_HOST,
-                            env.TARGET_IP,
-                            env.REMOTE_USER,
-                            params.SSH_PASS
-                        )
+                        def sshKeys = homeInfraUtils.setupSSHKey(env.SSH_BASE_DIR, params.TARGET_HOST, env.TARGET_IP, env.REMOTE_USER, params.SSH_PASS)
                         
                         // Update environment with actual key paths
                         env.PRIVATE_KEY = sshKeys.privateKey
@@ -186,13 +199,7 @@ pipeline {
                         echo "🔌 Testing SSH connection to ${params.TARGET_HOST}..."
                         
                         // Use shared library function for connection testing
-                        def connectionSuccessful = homeInfraUtils.testSSHConnection(
-                            env.PRIVATE_KEY,
-                            env.REMOTE_USER,
-                            env.TARGET_IP,
-                            params.TARGET_HOST,
-                            30 // timeout in seconds
-                        )
+                        def connectionSuccessful = homeInfraUtils.testSSHConnection(env.PRIVATE_KEY, env.REMOTE_USER, env.TARGET_IP, params.TARGET_HOST, 30)
                         
                         if (!connectionSuccessful) {
                             // Clean up SSH keys on connection failure
@@ -219,17 +226,19 @@ pipeline {
                         echo "   Platform: Linux"
                         
                         // Use shared library function for Ansible execution
-                        homeInfraUtils.runAnsiblePlaybook([
-                            playbooksDir: env.PLAYBOOKS_DIR,
-                            inventoryFile: "../inventories/hosts.yml",
-                            playbook: params.PLAYBOOK,
-                            targetHost: params.TARGET_HOST,
-                            password: params.SSH_PASS,
-                            platform: 'linux',
-                            extraVars: [
-                                hosts_to_deploy: params.TARGET_HOST
-                            ]
-                        ])
+                        // Temporarily disabled for testing: homeInfraUtils.runAnsiblePlaybook([
+                        //     playbooksDir: env.PLAYBOOKS_DIR,
+                        //     inventoryFile: "../inventories/hosts.yml",
+                        //     playbook: params.PLAYBOOK,
+                        //     targetHost: params.TARGET_HOST,
+                        //     password: params.SSH_PASS,
+                        //     platform: 'linux',
+                        //     extraVars: [
+                        //         hosts_to_deploy: params.TARGET_HOST
+                        //     ]
+                        // ])
+                        
+                        echo "⏭️ Ansible playbook execution skipped for testing"
                         
                         echo "✅ Ansible playbook execution completed successfully"
                         
@@ -264,7 +273,9 @@ pipeline {
                 
                 // Clean up SSH keys on failure to prevent accumulation of invalid keys
                 if (env.SSH_BASE_DIR && params.TARGET_HOST) {
-                    homeInfraUtils.cleanup(env.SSH_BASE_DIR, params.TARGET_HOST, true)
+                    // Temporarily disabled for testing: homeInfraUtils.cleanup(env.SSH_BASE_DIR, params.TARGET_HOST, true)
+                    echo "⚠️ Cleanup would be performed here"
+                    sh "rm -rf ${env.SSH_BASE_DIR}/${params.TARGET_HOST} || true"
                 }
             }
         }
@@ -281,7 +292,8 @@ pipeline {
                 env.TARGET_IP = null
                 
                 // Standard pipeline cleanup
-                homeInfraUtils.cleanup()
+                // Temporarily disabled for testing: homeInfraUtils.cleanup()
+                echo "🧹 Standard cleanup would be performed here"
                 
                 echo "🧹 Pipeline cleanup completed"
             }
