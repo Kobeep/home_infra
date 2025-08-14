@@ -7,6 +7,14 @@
  */
 
 /**
+ * Simple test method to verify library loading
+ */
+def test() {
+    echo "✅ homeInfraUtils library is working!"
+    return "success"
+}
+
+/**
  * Validate that required parameters are not null or empty
  */
 def validateParameters(Map params) {

@@ -153,6 +153,10 @@ pipeline {
                     try {
                         echo "🔐 Setting up SSH authentication for ${params.TARGET_HOST}..."
                         
+                        // Test shared library loading first
+                        def testResult = homeInfraUtils.test()
+                        echo "Library test result: ${testResult}"
+                        
                         // Use shared library function for SSH key setup
                         def sshKeys = homeInfraUtils.setupSSHKey(
                             env.SSH_BASE_DIR,
