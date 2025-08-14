@@ -7,6 +7,24 @@
  */
 
 /**
+ * Validate that required parameters are not null or empty
+ */
+def validateParameters(Map params) {
+    params.each { name, value ->
+        validateParameter(name, value)
+    }
+}
+
+/**
+ * Validate that a single parameter is not null or empty
+ */
+def validateParameter(String name, Object value) {
+    if (value == null || (value instanceof String && value.trim().isEmpty())) {
+        error "❌ Parameter '${name}' is required and cannot be null or empty"
+    }
+}
+
+/**
  * Parse Ansible inventory file and extract host configuration
  * @param inventoryFile Path to the YAML inventory file
  * @param hostGroup Group name (e.g., 'linux', 'windows')
@@ -273,24 +291,6 @@ def runAnsiblePlaybook(Map config) {
         
     } catch (Exception e) {
         error "❌ Failed to run Ansible playbook: ${e.getMessage()}"
-    }
-}
-
-/**
- * Validate that required parameters are not null or empty
- */
-def validateParameters(Map params) {
-    params.each { name, value ->
-        validateParameter(name, value)
-    }
-}
-
-/**
- * Validate that a single parameter is not null or empty
- */
-def validateParameter(String name, Object value) {
-    if (value == null || (value instanceof String && value.trim().isEmpty())) {
-        error "❌ Parameter '${name}' is required and cannot be null or empty"
     }
 }
 
