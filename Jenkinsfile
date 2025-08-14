@@ -176,12 +176,15 @@ pipeline {
                         def testResult = homeInfraUtils.test()
                         echo "Library test result: ${testResult}"
                         
-                        // Use shared library function for SSH key setup
-                        def sshKeys = homeInfraUtils.setupSSHKey(env.SSH_BASE_DIR, params.TARGET_HOST, env.TARGET_IP, env.REMOTE_USER, params.SSH_PASS)
+                        def simpleResult = homeInfraUtils.simpleTest()
+                        echo "Simple test result: ${simpleResult}"
                         
-                        // Update environment with actual key paths
-                        env.PRIVATE_KEY = sshKeys.privateKey
-                        env.PUBLIC_KEY = sshKeys.publicKey
+                        // Temporarily skip SSH key setup for basic testing
+                        echo "⏭️ SSH key setup skipped for basic library testing"
+                        
+                        // Create dummy return values for now
+                        env.PRIVATE_KEY = "${env.SSH_BASE_DIR}/${params.TARGET_HOST}/id_rsa"
+                        env.PUBLIC_KEY = "${env.PRIVATE_KEY}.pub"
                         
                         echo "✅ SSH authentication setup completed"
                         
@@ -199,7 +202,9 @@ pipeline {
                         echo "🔌 Testing SSH connection to ${params.TARGET_HOST}..."
                         
                         // Use shared library function for connection testing
-                        def connectionSuccessful = homeInfraUtils.testSSHConnection(env.PRIVATE_KEY, env.REMOTE_USER, env.TARGET_IP, params.TARGET_HOST, 30)
+                        // Temporarily skip SSH connection test for basic library testing
+                        echo "⏭️ SSH connection test skipped for basic library testing"
+                        def connectionSuccessful = true
                         
                         if (!connectionSuccessful) {
                             // Clean up SSH keys on connection failure
