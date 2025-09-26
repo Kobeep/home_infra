@@ -46,4 +46,4 @@ jobs:
           pip install ansible
 
       - name: Run Playbook in Check Mode
-        run: ansible-playbook playbooks/site.yml --check -i inventories/test_inventory.yml
+        run: ansible-playbook ansible/playbooks/server.yml --check -i ansible/inventories/hosts.yml
