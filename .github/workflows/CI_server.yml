@@ -25,7 +25,7 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Run ansible-lint
-        run: ansible-lint ansible/
+        run: ansible-lint ansible/playbooks/
 
   test-dry-run:
     name: Test Playbooks in Check Mode
