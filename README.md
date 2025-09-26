@@ -43,21 +43,6 @@ This repository contains professional-grade infrastructure as code for home lab 
 - **Features**: Agent status monitoring, automatic startup, functionality testing
 - **Security**: Secure credential management (no hardcoded secrets), connection verification
 
-## 🛡️ Security Improvements
-
-### Before (v1.0)
-- ❌ Hardcoded Jenkins agent secrets
-- ❌ Passwords in plain text
-- ❌ No input validation
-- ❌ No timeout protection
-- ❌ Limited error handling
-
-### After (v2.0)
-- ✅ Jenkins credentials for all sensitive data
-- ✅ Comprehensive parameter validation
-- ✅ Secure SSH key management
-- ✅ Timeout protection on all operations
-- ✅ Professional error handling and logging
 
 ## 📚 Shared Library (`vars/homeInfraUtils.groovy`)
 
