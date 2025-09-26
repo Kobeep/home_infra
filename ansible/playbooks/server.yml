@@ -34,6 +34,10 @@
       include_role:
         name: server/grafana
 
+    - name: Deploy Prometheus to K3S
+      include_role:
+        name: server/prometheus
+
     - name: Deploy Influxdb to K3S
       include_role:
         name: server/influxDB
