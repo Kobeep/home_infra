@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ grocy_service_name }}
+  namespace: {{ grocy_namespace }}
+  labels:
+    app: {{ grocy_release_name }}
+spec:
+  type: NodePort
+  ports:
+    - port: {{ grocy_service_port }}
+      targetPort: {{ grocy_container_port }}
+      nodePort: 30080
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ grocy_release_name }}

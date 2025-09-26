@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ grocy_release_name }}
+  namespace: {{ grocy_namespace }}
+  labels:
+    app: {{ grocy_release_name }}
+spec:
+  replicas: {{ grocy_replicas }}
+  selector:
+    matchLabels:
+      app: {{ grocy_release_name }}
+  template:
+    metadata:
+      labels:
+        app: {{ grocy_release_name }}
+    spec:
+      containers:
+        - name: {{ grocy_release_name }}
+          image: "{{ grocy_image }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ grocy_container_port }}
+          env:
+{% for e in grocy_env %}
+            - name: "{{ e.name }}"
+              value: "{{ e.value }}"
+{% endfor %}
+          volumeMounts:
+            - name: grocy-data
+              mountPath: "{{ grocy_mount_path }}"
+          resources:
+{% if grocy_resources %}
+{{ grocy_resources | to_nice_yaml(indent=12) }}
+{% else %}
+            {}
+{% endif %}
+      volumes:
+        - name: grocy-data
+          persistentVolumeClaim:
+            claimName: {{ grocy_pvc_name }}
