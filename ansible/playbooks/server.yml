@@ -46,9 +46,13 @@
       include_role:
         name: server/openwebui
 
-    # - name: Deploy AdGuard to K3S
-    #   include_role:
-    #     name: server/adguard
+    - name: Deploy Grocy to K3S
+      include_role:
+        name: server/grocy
+
+    - name: Deploy AdGuard to K3S
+      include_role:
+        name: server/adguard
 
     # - name: Configure firewall rules
     #   include_role:

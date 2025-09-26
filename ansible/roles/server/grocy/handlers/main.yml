@@ -1,0 +1,15 @@
+---
+- name: restart grocy
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ grocy_namespace }}"
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: "{{ grocy_release_name }}"
+      spec:
+        template:
+          metadata:
+            annotations:
+              kubernetes.io/restartedAt: "{{ lookup('pipe', 'date -Iseconds') }}"
