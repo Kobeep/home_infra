@@ -25,7 +25,7 @@ jobs:
           pip install ansible ansible-lint
 
       - name: Run ansible-lint
-        run: ansible-lint playbooks/
+        run: ansible-lint ansible/
 
   test-dry-run:
     name: Test Playbooks in Check Mode
@@ -45,5 +45,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible
 
-      - name: Run Playbook in Check Mode
-        run: ansible-playbook ./ansible/playbooks/server.yml --check -i ./ansible/inventories/hosts.yml
+      - name: Run Server.yml Playbook in Check Mode
+        run: ansible-playbook ansible/playbooks/server.yml --check -i ansible/inventories/hosts.yml
+
+      - name: Run hp.yml Playbook in Check Mode
+        run: ansible-playbook ansible/playbooks/hp.yml --check -i ansible/inventories/hosts.yml
+
+      - name: Run fedora.yml Playbook in Check Mode
+        run: ansible-playbook ansible/playbooks/fedora.yml --check -i ansible/inventories/hosts.yml
