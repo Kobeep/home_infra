@@ -1,164 +1,77 @@
 # Home Infrastructure
 
-This repository contains professional-grade infrastructure as code for home lab management, featuring comprehensive Jenkins CI/CD pipelines with industry best practices, security standards, and automated quality assurance.
+[![Test Ansible Server Playbook](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml/badge.svg)](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml)
 
-## 🚀 Features
+Automated home lab infrastructure using Ansible and Jenkins.
 
-- **Professional Jenkins Pipelines**: Transformed to industry standards with comprehensive error handling
-- **Security-First Approach**: No hardcoded secrets, secure credential management, parameter validation
-- **Zero Code Duplication**: Centralized shared library eliminates redundancy across pipelines
-- **Automated Quality Assurance**: GitHub Actions validate all changes before deployment
-- **Comprehensive Documentation**: Professional documentation with clear usage examples
-- **Enterprise-Grade Logging**: Structured logging with status indicators and progress tracking
+## Quick Start
 
-## 🏗️ Pipeline Architecture
+### Prerequisites
 
-### Main Orchestration Pipeline (`dsl_script/Jenkinsfile`)
-- **Purpose**: Central deployment orchestrator for both Linux and Windows targets
-- **Features**: Dynamic host/playbook selection, secure credential handling, downstream job triggering
-- **Security**: Parameter validation, timeout protection, credential masking
+- Ansible 2.9+
+- Python 3.x
+- K3S cluster (for server deployment)
+- Ansible vault password file
 
-### Linux Deployment Pipeline (`Jenkinsfile`)
-- **Purpose**: Deploy Ansible playbooks to Linux hosts
-- **Features**: Automated SSH key management, connection testing, comprehensive error handling
-- **Security**: Secure SSH key generation, connection verification, credential cleanup
+### Deploy Server Infrastructure
 
-### Windows Deployment Pipeline (`windows/Jenkinsfile`)
-- **Purpose**: Deploy Ansible playbooks to Windows hosts via WinRM
-- **Features**: WinRM connectivity testing, Windows-specific validation, post-deployment verification
-- **Security**: Secure WinRM authentication, credential validation, timeout protection
+```bash
+# 1. Clone repository
+git clone https://github.com/Kobeep/Home_infra.git
+cd Home_infra/ansible
 
-### Configuration Backup Pipeline (`jf/Jenkinsfile`)
-- **Purpose**: Automated backup of all service configurations
-- **Features**: Multi-service backup, Git-based storage, backup verification
-- **Schedule**: Daily at 2 AM with manual trigger option
+# 2. Configure inventory
+# Edit inventories/prod/hosts.yml with your server details
 
-### Configuration Restore Pipeline (`restore_conf/Jenkinsfile`)
-- **Purpose**: Restore service configurations with selective options
-- **Features**: Service-specific restore options, health verification, rollback capabilities
-- **Security**: Pre-restore validation, service health checks, comprehensive logging
+# 3. Create vault file with secrets
+# ansible/playbooks/group_vars/all/vault.yml should contain:
+# - vault_grafana_admin_password
+# - vault_influxdb_admin_password
+# - vault_jenkins_slave_secret
+# - vault_openai_api_key
+# - vault_google_api_key
 
-### Agent Management Pipeline (`autorun_node/Jenkinsfile`)
-- **Purpose**: Automated Jenkins agent management and health monitoring
-- **Features**: Agent status monitoring, automatic startup, functionality testing
-- **Security**: Secure credential management (no hardcoded secrets), connection verification
-
-
-## 📚 Shared Library (`vars/homeInfraUtils.groovy`)
-
-Central library providing common functionality:
-
-- **Inventory Management**: `parseInventory()`, `getAvailableHosts()`, `getAvailablePlaybooks()`
-- **SSH Operations**: `setupSSHKey()`, `testSSHConnection()`
-- **Ansible Integration**: `runAnsiblePlaybook()` with platform-specific handling
-- **Validation**: `validateParameters()`, `validateParameter()`
-- **Utilities**: `cleanup()`, standardized error handling
-
-[📖 Detailed Library Documentation](vars/README.md)
-
-## 🏠 Managed Services
-
-Automated backup and deployment for:
-
-- **Home Assistant** (`home` namespace) - Home automation platform
-- **Grafana** (`monitoring` namespace) - Monitoring and observability
-- **Dashy** (`monitoring` namespace) - Dashboard application
-- **AdGuard Home** (`default` namespace) - DNS ad blocker
-- **OpenWebUI** (`ai` namespace) - AI interface platform
-
-## 🔄 Automated Quality Assurance
-
-### GitHub Actions Workflows (`.github/workflows/`)
-
-- **Jenkins Pipeline Quality** - Comprehensive validation on every change:
-  - Jenkinsfile syntax validation
-  - Shell script linting with ShellCheck
-  - Security vulnerability scanning
-  - Shared library validation
-  - Pipeline complexity analysis
-  - Quality report generation
-
-### Quality Standards
-
-- **Security**: No hardcoded secrets, comprehensive credential management
-- **Documentation**: Minimum 80% documentation coverage
-- **Complexity**: Maximum 50 complexity score per pipeline
-- **Linting**: All shell scripts pass ShellCheck validation
-- **Testing**: Automated syntax and structure validation
-
-## 🚀 Usage Examples
-
-### Deploy to Linux Host
-```groovy
-// Triggered via main orchestration pipeline with dynamic selection
-// or directly with parameters:
-TARGET_HOST: 'server1'
-PLAYBOOK: 'site.yml'
-SSH_PASS: [secure credential]
+# 4. Run playbook
+ansible-playbook playbooks/server.yml \
+  -i inventories/prod/hosts.yml \
+  --vault-password-file ~/.vault_pass.txt
 ```
 
-### Deploy to Windows Host
-```groovy
-// Triggered via main orchestration pipeline with dynamic selection
-// or directly with parameters:
-TARGET_HOST: 'workstation1'
-PLAYBOOK: 'win_apps_deploy.yml'
-WINRM_PASS: [secure credential]
+## What Gets Deployed
+
+The server playbook deploys:
+
+- **K3S** - Lightweight Kubernetes
+- **Jenkins** - CI/CD server
+- **Home Assistant** - Home automation
+- **Grafana** - Monitoring dashboards
+- **Prometheus** - Metrics collection
+- **InfluxDB** - Time-series database
+- **Dashy** - Service dashboard
+- **AdGuard** - DNS ad blocker
+- **OpenWebUI** - AI interface
+- **Grocy** - Inventory management
+
+## Configuration
+
+All roles use variables from `defaults/main.yml`. Override in your playbook or inventory:
+
+```yaml
+# Example: Custom Grafana configuration
+grafana_storage_size: "10Gi"
+grafana_host: "grafana.example.com"
 ```
 
-### Backup All Services
-```groovy
-// Runs automatically daily at 2 AM
-// or trigger manually for immediate backup
-```
+## Jenkins Pipelines
 
-### Restore Specific Services
-```groovy
-// Selective restore with parameters:
-RESTORE_HOME_ASSISTANT: true
-RESTORE_GRAFANA: true
-VERIFY_SERVICES: true
-```
+Automated deployment and backup pipelines are available in:
 
-## 📊 Monitoring & Reporting
+- `Jenkinsfile` - Linux deployments
+- `windows/Jenkinsfile` - Windows deployments
+- `jf/Jenkinsfile` - Configuration backups
+- `restore_conf/Jenkinsfile` - Configuration restore
+- `dsl_script/Jenkinsfile` - Main orchestrator
 
-All pipelines generate comprehensive reports:
+## License
 
-- **Deployment Reports**: Success/failure status, duration, target details
-- **Backup Reports**: Service backup status, data sizes, verification results
-- **Quality Reports**: Pipeline validation results, security scan findings
-- **Agent Reports**: Node status, connectivity, health metrics
-
-## 🔧 Development & Contribution
-
-### Local Development
-1. Clone repository
-2. Review pipeline documentation in each directory
-3. Test changes using GitHub Actions quality checks
-4. Follow security best practices
-
-### Quality Gates
-- All Jenkinsfiles must pass syntax validation
-- Shell scripts must pass ShellCheck linting
-- No security vulnerabilities allowed
-- Shared library functions require documentation
-- Parameter validation mandatory for all inputs
-
-### Security Requirements
-- Use Jenkins credentials for all sensitive data
-- Implement parameter validation for all inputs
-- Add timeout protection for long-running operations
-- Include comprehensive error handling
-- Clean up sensitive data in post sections
-
-## 📈 Transformation Results
-
-This transformation achieves:
-
-- **100% Security Compliance**: No hardcoded secrets, comprehensive credential management
-- **Zero Code Duplication**: 90% reduction in duplicate code through shared library
-- **Professional Standards**: Industry-grade error handling, logging, and documentation
-- **Automated Quality**: Continuous validation ensures ongoing pipeline quality
-- **Complete Compatibility**: All existing functionality preserved and enhanced
-
-The pipelines now meet enterprise standards while maintaining complete functional compatibility with existing workflows.
+MIT
