@@ -1,2 +1,21 @@
 ---
+# Prometheus deployment defaults
+prometheus_namespace: monitoring
+prometheus_replicas: 1
+prometheus_image: "prom/prometheus:latest"
+
+# Service configuration
+prometheus_service_name: prometheus
+prometheus_service_port: 9090
+prometheus_node_port: 30003
+
+# Ingress configuration
+prometheus_host: prometheus.kobeeq.eu
+prometheus_ingress_name: prometheus-ingress
+prometheus_ingress_class: traefik
+prometheus_tls_secret: prometheus-tls
 prometheus_expose_ingress: true
+
+# Storage configuration
+prometheus_storage_size: "10Gi"
+prometheus_retention: "15d"

@@ -1,0 +1,11 @@
+---
+# Firewall defaults
+firewall_allowed_ips:
+  - 192.168.0.122
+  - 192.168.0.54
+  - 203.0.113.42
+  - 192.168.1.16
+  - 192.168.1.21
+
+firewall_rules_script_path: /usr/local/bin/iptables_docker.sh
+firewall_rules_persist_path: /etc/iptables/rules.v4

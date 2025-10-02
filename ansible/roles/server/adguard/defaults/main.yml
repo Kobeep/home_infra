@@ -1,0 +1,20 @@
+---
+# AdGuard Home deployment defaults
+adguard_namespace: adguard
+adguard_replicas: 1
+adguard_image: "adguard/adguardhome:latest"
+
+# Service configuration
+adguard_service_name: adguard-home
+adguard_dns_port: 53
+adguard_web_port: 3000
+
+# Ingress configuration
+adguard_host: adguard.kobeeq.eu
+adguard_ingress_name: adguard-ingress
+adguard_ingress_class: traefik
+adguard_tls_secret: adguard-tls
+
+# Storage configuration
+adguard_config_storage_size: "2Gi"
+adguard_data_storage_size: "5Gi"

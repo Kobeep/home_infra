@@ -1,83 +1,72 @@
 ---
 - name: Create directory for Jenkins CI/CD
-  file:
-    path: /srv/cicd
+  ansible.builtin.file:
+    path: "{{ jenkins_base_dir }}"
     state: directory
-    owner: server
-    group: server
-    mode: 0755
+    owner: "{{ jenkins_owner }}"
+    group: "{{ jenkins_group }}"
+    mode: '0755'
     recurse: true
 
 - name: Copy docker-compose.yml
-  copy:
+  ansible.builtin.copy:
     src: docker-compose.yml
-    dest: /srv/cicd/docker-compose.yml
-    owner: server
-    group: server
-    mode: 0644
+    dest: "{{ jenkins_base_dir }}/docker-compose.yml"
+    owner: "{{ jenkins_owner }}"
+    group: "{{ jenkins_group }}"
+    mode: '0644'
 
 - name: Copy Jenkins Dockerfile
-  copy:
+  ansible.builtin.copy:
     src: Dockerfile
-    dest: /srv/cicd/Dockerfile
-    owner: server
-    group: server
-    mode: 0644
+    dest: "{{ jenkins_base_dir }}/Dockerfile"
+    owner: "{{ jenkins_owner }}"
+    group: "{{ jenkins_group }}"
+    mode: '0644'
 
 - name: Create directories for config files and volumes
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
-    - ./jenkins_home
-    - ./jenkins_ssh
+    - "{{ jenkins_home_dir }}"
+    - "{{ jenkins_ssh_dir }}"
 
 - name: Set ownership and permissions to directories
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    recurse: yes
-    owner: 1000
-    group: 1000
+    recurse: true
+    owner: "{{ jenkins_user_id }}"
+    group: "{{ jenkins_group_id }}"
     mode: '0755'
   loop:
-    - ./jenkins_home
-    - ./jenkins_ssh
+    - "{{ jenkins_home_dir }}"
+    - "{{ jenkins_ssh_dir }}"
 
 - name: Check if iptables-persistent is installed
-  apt:
+  ansible.builtin.apt:
     name: iptables-persistent
     state: present
-  become: yes
 
 - name: Launch Jenkins via docker-compose
-  shell: docker compose -f /srv/cicd/docker-compose.yml up -d
+  ansible.builtin.command:
+    cmd: docker compose -f {{ jenkins_base_dir }}/docker-compose.yml up -d
+    chdir: "{{ jenkins_base_dir }}"
+  register: docker_compose_result
+  changed_when: "'Started' in docker_compose_result.stdout or 'Creating' in docker_compose_result.stdout"
 
 - name: Deploy slave agent start script
-  copy:
+  ansible.builtin.template:
     dest: /usr/local/bin/start_slave_agent.sh
-    content: |
-      #!/bin/bash
-      set -x
-      export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-      CONTAINER=$(docker ps --filter "name=jenkins_from_file" --format "{% raw %}{{.ID}}{% endraw %}")
-      if [ -z "$CONTAINER" ]; then
-          echo "Jenkins container not running."
-          exit 1
-      fi
-
-      if ! /usr/bin/docker exec "$CONTAINER" pgrep -f "agent.jar .* -name slave" > /dev/null; then
-          echo "Agent slave nie działa, rozpoczynam start." >> /var/log/jenkins_slave.log
-          /usr/bin/docker exec "$CONTAINER" curl -s -o /var/jenkins_home/agent.jar http://192.168.1.16:8080/jnlpJars/agent.jar
-          /usr/bin/docker exec "$CONTAINER" nohup java -jar /var/jenkins_home/agent.jar -url http://192.168.1.16:8080/ -secret 2b3a02d4d6ddc574a5926dbc0dae1f4588a344c0062ab2f27314ea6503ee8b0a -name slave -webSocket -workDir "/var/jenkins_home" &
-      fi
+    src: start_slave_agent.sh.j2
     mode: '0755'
 
 - name: Setup cron job for Jenkins Slave Agent Monitor
-  cron:
+  ansible.builtin.cron:
     name: "Run Jenkins Slave Agent Monitor"
-    minute: "*/1"
+    minute: "{{ jenkins_slave_monitor_interval }}"
     job: "/usr/local/bin/start_slave_agent.sh"
+
 ...

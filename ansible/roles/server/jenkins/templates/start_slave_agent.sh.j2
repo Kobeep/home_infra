@@ -1,0 +1,20 @@
+#!/bin/bash
+set -x
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+CONTAINER=$(docker ps --filter "name=jenkins_from_file" --format "{% raw %}{{.ID}}{% endraw %}")
+if [ -z "$CONTAINER" ]; then
+    echo "Jenkins container not running."
+    exit 1
+fi
+
+if ! /usr/bin/docker exec "$CONTAINER" pgrep -f "agent.jar .* -name {{ jenkins_slave_name }}" > /dev/null; then
+    echo "Agent {{ jenkins_slave_name }} not running, starting..." >> /var/log/jenkins_slave.log
+    /usr/bin/docker exec "$CONTAINER" curl -s -o /var/jenkins_home/agent.jar {{ jenkins_master_url }}/jnlpJars/agent.jar
+    /usr/bin/docker exec "$CONTAINER" nohup java -jar /var/jenkins_home/agent.jar \
+        -url {{ jenkins_master_url }}/ \
+        -secret {{ jenkins_slave_secret }} \
+        -name {{ jenkins_slave_name }} \
+        -webSocket \
+        -workDir "{{ jenkins_slave_workdir }}" &
+fi

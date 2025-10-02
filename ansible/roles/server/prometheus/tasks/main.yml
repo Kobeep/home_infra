@@ -1,20 +1,32 @@
 ---
-- name: Deploy Prometheus ConfigMap
-  k8s:
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ prometheus_namespace }}"
     state: present
+
+- name: Deploy Prometheus ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ prometheus_namespace }}"
     definition: "{{ lookup('template', 'prometheus-configmap.yml.j2') | from_yaml }}"
 
 - name: Deploy Prometheus Deployment
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ prometheus_namespace }}"
     definition: "{{ lookup('template', 'prometheus-deployment.yml.j2') | from_yaml }}"
 
 - name: Deploy Prometheus Service
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ prometheus_namespace }}"
     definition: "{{ lookup('template', 'prometheus-service.yml.j2') | from_yaml }}"
 
 - name: Deploy Prometheus Ingress
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ prometheus_namespace }}"
     definition: "{{ lookup('template', 'prometheus-ingress.yml.j2') | from_yaml }}"
+  when: prometheus_expose_ingress | bool

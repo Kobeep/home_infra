@@ -1,40 +1,40 @@
 ---
 - name: Schedule system update cron job
-  cron:
+  ansible.builtin.cron:
     name: "System update"
-    minute: "0"
-    hour: "3"
+    minute: "{{ cronjobs_system_update_minute }}"
+    hour: "{{ cronjobs_system_update_hour }}"
     job: "/usr/bin/apt update && /usr/bin/apt upgrade -y"
-    state: present
+    state: "{{ 'present' if cronjobs_system_update_enabled else 'absent' }}"
 
 - name: Schedule Jenkins update cron job
-  cron:
+  ansible.builtin.cron:
     name: "Jenkins update"
-    minute: "10"
-    hour: "4"
-    job: "/usr/local/bin/update-jenkins.sh"
-    state: present
+    minute: "{{ cronjobs_jenkins_update_minute }}"
+    hour: "{{ cronjobs_jenkins_update_hour }}"
+    job: "{{ cronjobs_jenkins_update_script }}"
+    state: "{{ 'present' if cronjobs_jenkins_update_enabled else 'absent' }}"
 
 - name: Schedule Dashy update cron job
-  cron:
+  ansible.builtin.cron:
     name: "Dashy update"
-    minute: "20"
-    hour: "4"
-    job: "/usr/local/bin/update-dashy.sh"
-    state: present
+    minute: "{{ cronjobs_dashy_update_minute }}"
+    hour: "{{ cronjobs_dashy_update_hour }}"
+    job: "{{ cronjobs_dashy_update_script }}"
+    state: "{{ 'present' if cronjobs_dashy_update_enabled else 'absent' }}"
 
 - name: Schedule Home Assistant update cron job
-  cron:
+  ansible.builtin.cron:
     name: "Home Assistant update"
-    minute: "30"
-    hour: "4"
-    job: "/usr/local/bin/update-homeassistant.sh"
-    state: present
+    minute: "{{ cronjobs_homeassistant_update_minute }}"
+    hour: "{{ cronjobs_homeassistant_update_hour }}"
+    job: "{{ cronjobs_homeassistant_update_script }}"
+    state: "{{ 'present' if cronjobs_homeassistant_update_enabled else 'absent' }}"
 
 - name: Schedule Splunk Forwarder restart cron job
-  cron:
+  ansible.builtin.cron:
     name: "Splunk Forwarder restart"
-    minute: "0"
-    hour: "*/6"
-    job: "/usr/local/bin/restart-splunk-forwarder.sh"
-    state: present
+    minute: "{{ cronjobs_splunk_restart_minute }}"
+    hour: "{{ cronjobs_splunk_restart_interval_hours }}"
+    job: "{{ cronjobs_splunk_restart_script }}"
+    state: "{{ 'present' if cronjobs_splunk_restart_enabled else 'absent' }}"

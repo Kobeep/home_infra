@@ -1,0 +1,25 @@
+---
+# Cron job defaults
+cronjobs_system_update_enabled: true
+cronjobs_system_update_hour: "3"
+cronjobs_system_update_minute: "0"
+
+cronjobs_jenkins_update_enabled: true
+cronjobs_jenkins_update_hour: "4"
+cronjobs_jenkins_update_minute: "10"
+cronjobs_jenkins_update_script: /usr/local/bin/update-jenkins.sh
+
+cronjobs_dashy_update_enabled: true
+cronjobs_dashy_update_hour: "4"
+cronjobs_dashy_update_minute: "20"
+cronjobs_dashy_update_script: /usr/local/bin/update-dashy.sh
+
+cronjobs_homeassistant_update_enabled: true
+cronjobs_homeassistant_update_hour: "4"
+cronjobs_homeassistant_update_minute: "30"
+cronjobs_homeassistant_update_script: /usr/local/bin/update-homeassistant.sh
+
+cronjobs_splunk_restart_enabled: true
+cronjobs_splunk_restart_interval_hours: "*/6"
+cronjobs_splunk_restart_minute: "0"
+cronjobs_splunk_restart_script: /usr/local/bin/restart-splunk-forwarder.sh

@@ -1,0 +1,28 @@
+---
+# Jenkins deployment defaults
+jenkins_base_dir: /srv/cicd
+jenkins_owner: server
+jenkins_group: server
+
+# Directory structure
+jenkins_home_dir: ./jenkins_home
+jenkins_ssh_dir: ./jenkins_ssh
+jenkins_user_id: 1000
+jenkins_group_id: 1000
+
+# Allowed IPs for Jenkins access
+jenkins_allowed_ips:
+  - 192.168.0.100
+  - 192.168.0.122
+  - 192.168.0.54
+  - 192.168.1.16
+  - 192.168.1.21
+
+# Jenkins slave agent configuration
+jenkins_master_url: "http://192.168.1.16:8080"
+jenkins_slave_secret: "{{ vault_jenkins_slave_secret | default('') }}"
+jenkins_slave_name: "slave"
+jenkins_slave_workdir: "/var/jenkins_home"
+
+# Cron configuration
+jenkins_slave_monitor_interval: "*/1"

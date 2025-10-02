@@ -1,24 +1,38 @@
 ---
-- name: Ensure namespace 'monitoring' exists
-  k8s:
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ grafana_namespace }}"
     state: present
+
+- name: Create Grafana PVC
+  kubernetes.core.k8s:
+    state: present
+    namespace: "{{ grafana_namespace }}"
     definition:
       apiVersion: v1
-      kind: Namespace
+      kind: PersistentVolumeClaim
       metadata:
-        name: monitoring
+        name: "{{ grafana_pvc_name }}"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: "{{ grafana_storage_size }}"
 
 - name: Deploy Grafana Deployment
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ grafana_namespace }}"
     definition:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: grafana
-        namespace: monitoring
+        name: "{{ grafana_service_name }}"
       spec:
-        replicas: 1
+        replicas: "{{ grafana_replicas }}"
         selector:
           matchLabels:
             app: grafana
@@ -29,56 +43,42 @@
           spec:
             containers:
               - name: grafana
-                image: grafana/grafana:latest
+                image: "{{ grafana_image }}"
                 ports:
-                  - containerPort: 3000
+                  - containerPort: "{{ grafana_container_port }}"
                 env:
                   - name: GF_SECURITY_ADMIN_USER
-                    value: "admin"
+                    value: "{{ grafana_admin_user }}"
                   - name: GF_SECURITY_ADMIN_PASSWORD
-                    value: "SuperSecret123"
+                    value: "{{ grafana_admin_password }}"
                 volumeMounts:
                   - name: grafana-storage
                     mountPath: /var/lib/grafana
             volumes:
               - name: grafana-storage
                 persistentVolumeClaim:
-                  claimName: grafana-pvc
-
-- name: Create Grafana PVC
-  k8s:
-    state: present
-    definition:
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: grafana-pvc
-        namespace: monitoring
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 5Gi
+                  claimName: "{{ grafana_pvc_name }}"
 
 - name: Expose Grafana via NodePort
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ grafana_namespace }}"
     definition:
       apiVersion: v1
       kind: Service
       metadata:
-        name: grafana
-        namespace: monitoring
+        name: "{{ grafana_service_name }}"
       spec:
         type: NodePort
         selector:
           app: grafana
         ports:
-          - port: 80
-            targetPort: 3000
-            nodePort: 30002
+          - port: "{{ grafana_service_port }}"
+            targetPort: "{{ grafana_container_port }}"
+            nodePort: "{{ grafana_node_port }}"
 
 - name: Deploy Ingress for Grafana
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ grafana_namespace }}"
     definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"

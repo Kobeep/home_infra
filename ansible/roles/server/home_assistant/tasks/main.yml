@@ -1,53 +1,60 @@
 ---
 - name: Check if home-assistant Helm release exists
-  shell: helm --kubeconfig /root/.kube/config status home-assistant -n home
+  ansible.builtin.shell: helm --kubeconfig /root/.kube/config status home-assistant -n {{ homeassistant_namespace }}
   register: home_assistant_status
-  ignore_errors: yes
+  ignore_errors: true
+  changed_when: false
+  when: homeassistant_cleanup_old_release | bool
 
 - name: Uninstall old Helm release if present
-  shell: helm --kubeconfig /root/.kube/config uninstall home-assistant -n home
-  when: home_assistant_status.rc == 0
+  ansible.builtin.shell: helm --kubeconfig /root/.kube/config uninstall home-assistant -n {{ homeassistant_namespace }}
+  when:
+    - homeassistant_cleanup_old_release | bool
+    - home_assistant_status.rc == 0
 
-- name: Delete old home-assistant resources in home namespace
-  shell: |
-    kubectl --kubeconfig /root/.kube/config delete deployment home-assistant svc home-assistant pvc home-assistant-pvc -n home --ignore-not-found
+- name: Delete old home-assistant resources
+  ansible.builtin.shell: |
+    kubectl --kubeconfig /root/.kube/config delete deployment {{ homeassistant_service_name }} \
+      svc {{ homeassistant_service_name }} pvc {{ homeassistant_pvc_name }} \
+      -n {{ homeassistant_namespace }} --ignore-not-found
   ignore_errors: true
+  changed_when: false
+  when: homeassistant_cleanup_old_release | bool
 
-- name: Ensure namespace "home" exists
-  k8s:
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ homeassistant_namespace }}"
     state: present
-    definition:
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: home
 
 - name: Create Home-Assistant PVC
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ homeassistant_namespace }}"
     definition:
       apiVersion: v1
       kind: PersistentVolumeClaim
       metadata:
-        name: home-assistant-pvc
-        namespace: home
+        name: "{{ homeassistant_pvc_name }}"
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
-            storage: 10Gi
+            storage: "{{ homeassistant_storage_size }}"
 
 - name: Deploy Home-Assistant Deployment
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ homeassistant_namespace }}"
     definition:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: home-assistant
-        namespace: home
+        name: "{{ homeassistant_service_name }}"
       spec:
-        replicas: 1
+        replicas: "{{ homeassistant_replicas }}"
         selector:
           matchLabels:
             app: home-assistant
@@ -58,36 +65,37 @@
           spec:
             containers:
               - name: home-assistant
-                image: homeassistant/home-assistant:latest
+                image: "{{ homeassistant_image }}"
                 ports:
-                  - containerPort: 8123
+                  - containerPort: "{{ homeassistant_service_port }}"
                 volumeMounts:
                   - name: config
                     mountPath: /config
             volumes:
               - name: config
                 persistentVolumeClaim:
-                  claimName: home-assistant-pvc
+                  claimName: "{{ homeassistant_pvc_name }}"
 
 - name: Expose Home-Assistant via NodePort
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ homeassistant_namespace }}"
     definition:
       apiVersion: v1
       kind: Service
       metadata:
-        name: home-assistant
-        namespace: home
+        name: "{{ homeassistant_service_name }}"
       spec:
         type: NodePort
         selector:
           app: home-assistant
         ports:
-          - port: 8123
-            targetPort: 8123
-            nodePort: 31234
+          - port: "{{ homeassistant_service_port }}"
+            targetPort: "{{ homeassistant_service_port }}"
+            nodePort: "{{ homeassistant_node_port }}"
 
 - name: Deploy Ingress for Home Assistant
-  k8s:
+  kubernetes.core.k8s:
     state: present
+    namespace: "{{ homeassistant_namespace }}"
     definition: "{{ lookup('template', 'ingress.yml.j2') | from_yaml }}"

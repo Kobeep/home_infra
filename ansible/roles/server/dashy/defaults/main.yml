@@ -1,0 +1,21 @@
+---
+# Dashy dashboard defaults
+dashy_namespace: monitoring
+dashy_replicas: 1
+dashy_image: "lissy93/dashy:latest"
+
+# Service configuration
+dashy_service_name: dashy
+dashy_service_port: 80
+dashy_container_port: 8080
+dashy_node_port: 30001
+
+# Ingress configuration
+dashy_host: dashy.kobeeq.eu
+dashy_ingress_name: dashy-ingress
+dashy_ingress_class: traefik
+dashy_tls_secret: dashy-tls
+
+# Configuration
+dashy_title: "Home Services"
+dashy_logo: ""

@@ -1,0 +1,23 @@
+---
+# Home Assistant deployment defaults
+homeassistant_namespace: home
+homeassistant_replicas: 1
+homeassistant_image: "homeassistant/home-assistant:latest"
+
+# Service configuration
+homeassistant_service_name: home-assistant
+homeassistant_service_port: 8123
+homeassistant_node_port: 31234
+
+# Ingress configuration
+homeassistant_host: homeassistant.kobeeq.eu
+homeassistant_ingress_name: homeassistant-ingress
+homeassistant_ingress_class: traefik
+homeassistant_tls_secret: homeassistant-tls
+
+# Storage configuration
+homeassistant_storage_size: "10Gi"
+homeassistant_pvc_name: home-assistant-pvc
+
+# Cleanup old helm release
+homeassistant_cleanup_old_release: true

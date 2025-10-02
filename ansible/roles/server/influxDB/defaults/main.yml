@@ -1,0 +1,23 @@
+---
+# InfluxDB deployment defaults
+influxdb_namespace: monitoring
+influxdb_release_name: influxdb
+influxdb_chart_repo: influxdata
+influxdb_chart_repo_url: https://helm.influxdata.com
+influxdb_chart_name: influxdb
+
+# Storage configuration
+influxdb_persistence_enabled: true
+influxdb_persistence_size: "5Gi"
+
+# Authentication
+influxdb_auth_enabled: true
+influxdb_admin_user: "hauser"
+influxdb_admin_password: "{{ vault_influxdb_admin_password | default('changeme') }}"
+
+# Service configuration
+influxdb_service_type: ClusterIP
+
+# Helm deployment configuration
+influxdb_helm_timeout: "120s"
+influxdb_helm_wait: true

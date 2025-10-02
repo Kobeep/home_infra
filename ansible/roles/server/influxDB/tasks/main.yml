@@ -1,27 +1,32 @@
 ---
-- name: Ensure namespace "monitoring" exists
-  k8s:
+- name: Ensure namespace exists
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ influxdb_namespace }}"
     state: present
-    definition:
-      apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: monitoring
 
-- name: Add InfluxData Helm repo (idempotent)
-  shell: |
-    helm --kubeconfig /root/.kube/config repo add influxdata https://helm.influxdata.com || true
-    helm --kubeconfig /root/.kube/config repo update
+- name: Add InfluxData Helm repo
+  kubernetes.core.helm_repository:
+    name: "{{ influxdb_chart_repo }}"
+    repo_url: "{{ influxdb_chart_repo_url }}"
+    state: present
 
-- name: Deploy InfluxDB via Helm CLI
-  shell: |
-    helm --kubeconfig /root/.kube/config upgrade --install influxdb influxdata/influxdb \
-      --namespace monitoring \
-      --create-namespace \
-      --wait --timeout 120s \
-      --set persistence.enabled=true \
-      --set persistence.size=5Gi \
-      --set auth.enabled=true \
-      --set auth.adminUser=hauser \
-      --set auth.adminPassword=SuperSecretInflux123 \
-      --set service.type=ClusterIP
+- name: Deploy InfluxDB via Helm
+  kubernetes.core.helm:
+    name: "{{ influxdb_release_name }}"
+    chart_ref: "{{ influxdb_chart_repo }}/{{ influxdb_chart_name }}"
+    release_namespace: "{{ influxdb_namespace }}"
+    create_namespace: true
+    wait: "{{ influxdb_helm_wait }}"
+    wait_timeout: "{{ influxdb_helm_timeout }}"
+    values:
+      persistence:
+        enabled: "{{ influxdb_persistence_enabled }}"
+        size: "{{ influxdb_persistence_size }}"
+      auth:
+        enabled: "{{ influxdb_auth_enabled }}"
+        adminUser: "{{ influxdb_admin_user }}"
+        adminPassword: "{{ influxdb_admin_password }}"
+      service:
+        type: "{{ influxdb_service_type }}"
