@@ -114,12 +114,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             python3-pip \
-            python3-kubernetes \
-            docker.io \
-            apt-transport-https \
-            ca-certificates \
-            curl \
-            gnupg
+            python3-kubernetes
 
       - name: Install Ansible and collections
         run: |
@@ -166,10 +161,6 @@ jobs:
           mkdir -p ansible/roles/server/jenkins/files
           touch ansible/roles/server/jenkins/files/docker-compose.yml
           touch ansible/roles/server/jenkins/files/Dockerfile
-
-          # Setup docker group
-          sudo groupadd -f docker || true
-          sudo usermod -aG docker $USER || true
 
       - name: Create dummy k3s.yml playbook
         run: |
