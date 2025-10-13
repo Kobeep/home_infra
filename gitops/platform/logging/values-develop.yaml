@@ -1,0 +1,16 @@
+# Development environment values for logging stack
+loki-stack:
+  loki:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 5Gi
+    config:
+      limits_config:
+        retention_period: 168h  # 7 days
+
+  promtail:
+    enabled: true
+
+  grafana:
+    enabled: false  # Using main Grafana instance

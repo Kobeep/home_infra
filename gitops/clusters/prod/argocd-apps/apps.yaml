@@ -1,0 +1,183 @@
+---
+# Home Assistant - Home automation
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/home-assistant/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Dashy - Service dashboard (ONLY SERVICE EXPOSED EXTERNALLY)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dashy-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/dashy/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dashy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Grafana - Monitoring dashboards
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/grafana/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grafana
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Prometheus - Metrics collection
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/prometheus/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prometheus
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# InfluxDB - Time-series database
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: influxdb-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/influxdb/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: influxdb
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# OpenWebUI - AI interface
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openwebui-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/openwebui/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openwebui
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Grocy - Inventory management
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grocy-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/grocy/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grocy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# AdGuard - DNS ad blocker
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: adguard-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/adguard/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: adguard
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

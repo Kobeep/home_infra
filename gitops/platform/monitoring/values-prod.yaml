@@ -1,0 +1,52 @@
+# Production environment values for monitoring stack
+kube-prometheus-stack:
+  prometheus:
+    prometheusSpec:
+      retention: 30d
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
+        limits:
+          cpu: 2000m
+          memory: 4Gi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 50Gi
+
+  grafana:
+    enabled: true
+    adminPassword: changeme  # Change this!
+    persistence:
+      enabled: true
+      size: 10Gi
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - grafana-monitoring.local
+
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://kube-prometheus-stack-prometheus.monitoring:9090
+          access: proxy
+          isDefault: true
+
+  alertmanager:
+    enabled: true
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 5Gi
