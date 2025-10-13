@@ -1,0 +1,253 @@
+---
+# Ansible Playbook to setup GitOps infrastructure with k3d + ArgoCD
+# This provisions a clean server with everything needed for Home Infrastructure
+- name: Setup GitOps Infrastructure with k3d and ArgoCD
+  hosts: server
+  become: true
+  vars:
+    k3d_version: "v5.6.0"
+    kubectl_version: "v1.28.0"
+    helm_version: "v3.13.0"
+    docker_compose_version: "v2.23.0"
+    home_infra_repo: "https://github.com/Kobeep/Home_infra.git"
+    home_infra_branch: "main"
+    gitops_user: "{{ ansible_user }}"
+
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - wget
+          - git
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+          - gnupg
+          - lsb-release
+          - python3-pip
+          - jq
+        state: present
+
+  tasks:
+    # Docker Installation
+    - name: Add Docker GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+        state: present
+        update_cache: true
+
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ gitops_user }}"
+        groups: docker
+        append: true
+
+    - name: Start and enable Docker service
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    # kubectl Installation
+    - name: Download kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /tmp/kubectl
+        mode: '0755'
+
+    - name: Install kubectl
+      ansible.builtin.copy:
+        src: /tmp/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+        remote_src: true
+
+    - name: Verify kubectl installation
+      ansible.builtin.command: kubectl version --client
+      register: kubectl_version_output
+      changed_when: false
+
+    # k3d Installation
+    - name: Download k3d installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh
+        dest: /tmp/k3d-install.sh
+        mode: '0755'
+
+    - name: Install k3d
+      ansible.builtin.shell: |
+        TAG={{ k3d_version }} /tmp/k3d-install.sh
+      args:
+        creates: /usr/local/bin/k3d
+
+    - name: Verify k3d installation
+      ansible.builtin.command: k3d version
+      register: k3d_version_output
+      changed_when: false
+
+    # Helm Installation
+    - name: Download Helm installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get-helm.sh
+        mode: '0755'
+
+    - name: Install Helm
+      ansible.builtin.shell: /tmp/get-helm.sh
+      args:
+        creates: /usr/local/bin/helm
+      environment:
+        DESIRED_VERSION: "{{ helm_version }}"
+
+    - name: Verify Helm installation
+      ansible.builtin.command: helm version
+      register: helm_version_output
+      changed_when: false
+
+    # Setup GitOps repository
+    - name: Create home-infra directory
+      ansible.builtin.file:
+        path: "/home/{{ gitops_user }}/home-infra"
+        state: directory
+        owner: "{{ gitops_user }}"
+        group: "{{ gitops_user }}"
+        mode: '0755'
+
+    - name: Clone Home Infrastructure repository
+      ansible.builtin.git:
+        repo: "{{ home_infra_repo }}"
+        dest: "/home/{{ gitops_user }}/home-infra"
+        version: "{{ home_infra_branch }}"
+        force: true
+      become: true
+      become_user: "{{ gitops_user }}"
+
+    # Create persistent volumes directories
+    - name: Create persistent volume directories
+      ansible.builtin.file:
+        path: "/var/lib/home-infra/{{ item }}"
+        state: directory
+        owner: "{{ gitops_user }}"
+        group: "{{ gitops_user }}"
+        mode: '0755'
+      loop:
+        - home-assistant
+        - grafana
+        - prometheus
+        - influxdb
+        - jenkins
+        - adguard
+        - openwebui
+        - grocy
+        - dashy
+
+    # Make scripts executable
+    - name: Make bootstrap scripts executable
+      ansible.builtin.file:
+        path: "/home/{{ gitops_user }}/home-infra/gitops/scripts/{{ item }}"
+        mode: '0755'
+      loop:
+        - bootstrap.sh
+        - destroy.sh
+        - status.sh
+
+    # Bootstrap clusters
+    - name: Bootstrap k3d clusters with ArgoCD
+      ansible.builtin.shell: |
+        cd /home/{{ gitops_user }}/home-infra/gitops
+        ./scripts/bootstrap.sh {{ cluster_mode | default('prod') }}
+      become: true
+      become_user: "{{ gitops_user }}"
+      args:
+        creates: /home/{{ gitops_user }}/.k3d-bootstrapped
+      environment:
+        KUBECONFIG: "/home/{{ gitops_user }}/.kube/config"
+
+    - name: Create bootstrap marker file
+      ansible.builtin.file:
+        path: "/home/{{ gitops_user }}/.k3d-bootstrapped"
+        state: touch
+        owner: "{{ gitops_user }}"
+        group: "{{ gitops_user }}"
+      when: not ansible_check_mode
+
+    # Setup kubectl config
+    - name: Ensure .kube directory exists
+      ansible.builtin.file:
+        path: "/home/{{ gitops_user }}/.kube"
+        state: directory
+        owner: "{{ gitops_user }}"
+        group: "{{ gitops_user }}"
+        mode: '0700'
+
+    - name: Set correct permissions on kubeconfig
+      ansible.builtin.file:
+        path: "/home/{{ gitops_user }}/.kube/config"
+        owner: "{{ gitops_user }}"
+        group: "{{ gitops_user }}"
+        mode: '0600'
+      when: not ansible_check_mode
+
+  post_tasks:
+    - name: Display installation summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================"
+          - "GitOps Infrastructure Setup Complete! 🚀"
+          - "================================================"
+          - ""
+          - "Installed components:"
+          - "  ✓ Docker {{ docker_compose_version }}"
+          - "  ✓ kubectl {{ kubectl_version }}"
+          - "  ✓ k3d {{ k3d_version }}"
+          - "  ✓ Helm {{ helm_version }}"
+          - ""
+          - "k3d Clusters:"
+          - "  - home-prod (Production)"
+          - "  - home-develop (Development) - if bootstrapped both"
+          - ""
+          - "ArgoCD is installed and managing applications via GitOps"
+          - ""
+          - "Next steps:"
+          - "  1. SSH to server: ssh {{ gitops_user }}@{{ ansible_host }}"
+          - "  2. Check cluster status: ~/home-infra/gitops/scripts/status.sh"
+          - "  3. Port-forward ArgoCD:"
+          - "     kubectl port-forward svc/argocd-server -n argocd 8080:443 --context k3d-home-prod"
+          - "  4. Get ArgoCD password:"
+          - "     kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+          - ""
+          - "Repository: /home/{{ gitops_user }}/home-infra"
+          - "GitOps directory: /home/{{ gitops_user }}/home-infra/gitops"
+          - ""
+
+    - name: Save ArgoCD credentials
+      ansible.builtin.shell: |
+        kubectl config use-context k3d-home-prod
+        ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d || echo "N/A")
+        echo "ArgoCD Admin Password: $ARGOCD_PASSWORD" > /home/{{ gitops_user }}/argocd-credentials.txt
+        chmod 600 /home/{{ gitops_user }}/argocd-credentials.txt
+      become: true
+      become_user: "{{ gitops_user }}"
+      when: not ansible_check_mode
+      changed_when: true
+      failed_when: false

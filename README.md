@@ -2,18 +2,35 @@
 
 [![Test Ansible Server Playbook](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml/badge.svg)](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml)
 
-Automated home lab infrastructure using Ansible and Jenkins.
+Automated home lab infrastructure using Ansible, k3d, and GitOps with ArgoCD.
 
-## Quick Start
+## 🚀 Two Deployment Options
 
-### Prerequisites
+### Option 1: GitOps with k3d + ArgoCD (Recommended for new setups)
 
-- Ansible 2.9+
-- Python 3.x
-- K3S cluster (for server deployment)
-- Ansible vault password file
+Modern cloud-native approach with GitOps principles, multi-environment support, and declarative infrastructure.
 
-### Deploy Server Infrastructure
+**Features:**
+- ✅ GitOps workflow (infrastructure as code)
+- ✅ Multi-environment (develop + prod)
+- ✅ ArgoCD for continuous deployment
+- ✅ k3d clusters (k3s in Docker)
+- ✅ Automated setup with Ansible
+
+```bash
+# Quick start with Ansible
+cd ansible
+ansible-playbook playbooks/server_gitops.yml -i inventories/prod/hosts.yml
+
+# See detailed instructions
+cat gitops/GETTING_STARTED.md
+```
+
+📖 **[GitOps Documentation](gitops/README.md)** | 📝 **[Getting Started Guide](gitops/GETTING_STARTED.md)** | 📋 **[Cheat Sheet](gitops/CHEATSHEET.md)**
+
+### Option 2: Traditional Ansible + K3S
+
+Classic approach with direct Ansible deployment to native K3S cluster.
 
 ```bash
 # 1. Clone repository
@@ -39,9 +56,10 @@ ansible-playbook playbooks/server.yml \
 
 ## What Gets Deployed
 
-The server playbook deploys:
+The infrastructure deploys:
 
-- **K3S** - Lightweight Kubernetes
+- **K3S/k3d** - Lightweight Kubernetes
+- **ArgoCD** - GitOps continuous delivery (GitOps mode only)
 - **Jenkins** - CI/CD server
 - **Home Assistant** - Home automation
 - **Grafana** - Monitoring dashboards

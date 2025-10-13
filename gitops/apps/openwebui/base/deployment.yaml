@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openwebui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openwebui
+  template:
+    metadata:
+      labels:
+        app: openwebui
+    spec:
+      containers:
+      - name: openwebui
+        image: ghcr.io/open-webui/open-webui:main
+        ports:
+        - containerPort: 8080
+        env:
+        - name: OPENAI_API_KEY
+          value: "your-api-key-here"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"

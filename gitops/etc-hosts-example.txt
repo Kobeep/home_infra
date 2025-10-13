@@ -1,0 +1,27 @@
+# /etc/hosts configuration for GitOps Home Infrastructure
+#
+# Add these entries to access services:
+#
+# Linux/Mac:
+#   sudo vim /etc/hosts
+#
+# Windows (as Administrator):
+#   notepad C:\Windows\System32\drivers\etc\hosts
+#
+# Replace <SERVER_IP> with your actual server IP
+
+# PRODUCTION CLUSTER - External Access
+<SERVER_IP> dashy.local      # Main Dashboard - Gateway to all services
+<SERVER_IP> argocd.local     # GitOps Management UI
+
+# DEVELOPMENT CLUSTER - External Access (if running develop cluster)
+<SERVER_IP> dashy-dev.local  # Dev Dashboard
+<SERVER_IP> argocd-dev.local # Dev GitOps UI
+
+# Example with actual IP (192.168.1.100):
+# 192.168.1.100 dashy.local
+# 192.168.1.100 argocd.local
+
+# All other services (Home Assistant, Grafana, Prometheus, etc.)
+# are accessible ONLY through Dashy dashboard via ClusterIP
+# for security reasons.

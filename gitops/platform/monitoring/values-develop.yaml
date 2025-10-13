@@ -1,0 +1,34 @@
+# Development environment values for monitoring stack
+kube-prometheus-stack:
+  prometheus:
+    prometheusSpec:
+      retention: 7d
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+  grafana:
+    enabled: true
+    adminPassword: admin123
+    persistence:
+      enabled: true
+      size: 5Gi
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - grafana-dev.local
+
+  alertmanager:
+    enabled: false
