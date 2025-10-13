@@ -1,6 +1,6 @@
 # Home Infrastructure
 
-[![Test Ansible Server Playbook](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml/badge.svg)](https://github.com/Kobeep/Home_infra/actions/workflows/test-ansible.yml)
+[![CI GitOps](https://github.com/Kobeep/Home_infra/actions/workflows/gitops-validation.yml/badge.svg)](https://github.com/Kobeep/Home_infra/actions/workflows/gitops-validation.yml)
 
 Automated home lab infrastructure using Ansible, k3d, and GitOps with ArgoCD.
 
