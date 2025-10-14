@@ -181,3 +181,24 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+
+---
+# ArgoCD Ingress - External access to ArgoCD UI
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-ingress-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/argocd-ingress/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

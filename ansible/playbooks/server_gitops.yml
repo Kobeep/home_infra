@@ -169,7 +169,6 @@
       loop:
         - bootstrap.sh
         - destroy.sh
-        - status.sh
 
     # Bootstrap clusters
     - name: Bootstrap k3d clusters with ArgoCD
