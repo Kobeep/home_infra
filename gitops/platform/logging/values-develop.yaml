@@ -13,4 +13,4 @@ loki-stack:
     enabled: true
 
   grafana:
-    enabled: false  # Using main Grafana instance
+    enabled: false

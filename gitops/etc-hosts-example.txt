@@ -7,21 +7,38 @@
 #
 # Windows (as Administrator):
 #   notepad C:\Windows\System32\drivers\etc\hosts
-#
-# Replace <SERVER_IP> with your actual server IP
 
+# ============================================
 # PRODUCTION CLUSTER - External Access
-<SERVER_IP> dashy.local      # Main Dashboard - Gateway to all services
-<SERVER_IP> argocd.local     # GitOps Management UI
+# ============================================
+127.0.0.1 dashy.local        # Main Dashboard - Gateway to all services
+127.0.0.1 argocd.local       # GitOps Management UI (Admin only)
+127.0.0.1 grafana.local      # Monitoring Dashboard (from kube-prometheus-stack)
 
-# DEVELOPMENT CLUSTER - External Access (if running develop cluster)
-<SERVER_IP> dashy-dev.local  # Dev Dashboard
-<SERVER_IP> argocd-dev.local # Dev GitOps UI
+# ============================================
+# DEVELOPMENT CLUSTER - External Access
+# ============================================
+# Note: Dev cluster uses port 8080 instead of 80
+# Access via: http://dashy-dev.local:8080
+127.0.0.1 dashy-dev.local    # Dev Dashboard
+127.0.0.1 argocd-dev.local   # Dev GitOps UI
+127.0.0.1 grafana-dev.local  # Dev Monitoring
 
-# Example with actual IP (192.168.1.100):
+# ============================================
+# SECURITY NOTE
+# ============================================
+# All other services (Home Assistant, InfluxDB, OpenWebUI, Grocy, AdGuard)
+# are accessible ONLY through Dashy dashboard via ClusterIP for security.
+# They do NOT have external ingress configured.
+#
+# If you need direct access to these services, use kubectl port-forward:
+# Example: kubectl port-forward -n home-assistant svc/home-assistant 8123:8123
+
+# ============================================
+# REMOTE ACCESS (if server is on different machine)
+# ============================================
+# Replace 127.0.0.1 with your server's IP address:
+# Example:
 # 192.168.1.100 dashy.local
 # 192.168.1.100 argocd.local
-
-# All other services (Home Assistant, Grafana, Prometheus, etc.)
-# are accessible ONLY through Dashy dashboard via ClusterIP
-# for security reasons.
+# 192.168.1.100 grafana.local

@@ -2,33 +2,38 @@
 kube-prometheus-stack:
   prometheus:
     prometheusSpec:
-      retention: 30d
+      retention: 15d
       resources:
         requests:
-          cpu: 500m
-          memory: 1Gi
+          cpu: 200m
+          memory: 512Mi
         limits:
-          cpu: 2000m
-          memory: 4Gi
+          cpu: 1000m
+          memory: 2Gi
       storageSpec:
         volumeClaimTemplate:
           spec:
             accessModes: ["ReadWriteOnce"]
+            storageClassName: local-path
             resources:
               requests:
-                storage: 50Gi
+                storage: 20Gi
 
   grafana:
     enabled: true
-    adminPassword: changeme  # Change this!
+    adminPassword: admin123
     persistence:
       enabled: true
-      size: 10Gi
+      storageClassName: local-path
+      size: 5Gi
+
     ingress:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - grafana-monitoring.local
+        - grafana.local
+      path: /
+      pathType: Prefix
 
     datasources:
       datasources.yaml:
@@ -43,10 +48,18 @@ kube-prometheus-stack:
   alertmanager:
     enabled: true
     alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
       storage:
         volumeClaimTemplate:
           spec:
             accessModes: ["ReadWriteOnce"]
+            storageClassName: local-path
             resources:
               requests:
-                storage: 5Gi
+                storage: 2Gi

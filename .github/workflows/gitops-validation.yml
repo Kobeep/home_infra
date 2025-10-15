@@ -40,12 +40,11 @@ jobs:
         app:
           - home-assistant
           - dashy
-          - grafana
-          - prometheus
           - influxdb
           - openwebui
           - grocy
           - adguard
+          - argocd-ingress
         overlay:
           - develop
           - prod
@@ -75,7 +74,7 @@ jobs:
         run: |
           echo "INFO=> Checking application structure..."
 
-          APPS=(home-assistant dashy grafana prometheus influxdb openwebui grocy adguard)
+          APPS=(home-assistant dashy influxdb openwebui grocy adguard argocd-ingress)
           OVERLAYS=(develop prod)
 
           for app in "${APPS[@]}"; do

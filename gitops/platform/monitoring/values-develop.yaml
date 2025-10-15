@@ -5,8 +5,8 @@ kube-prometheus-stack:
       retention: 7d
       resources:
         requests:
-          cpu: 200m
-          memory: 512Mi
+          cpu: 100m
+          memory: 256Mi
         limits:
           cpu: 500m
           memory: 1Gi
@@ -14,21 +14,26 @@ kube-prometheus-stack:
         volumeClaimTemplate:
           spec:
             accessModes: ["ReadWriteOnce"]
+            storageClassName: local-path
             resources:
               requests:
-                storage: 10Gi
+                storage: 5Gi
 
   grafana:
     enabled: true
     adminPassword: admin123
     persistence:
       enabled: true
-      size: 5Gi
+      storageClassName: local-path
+      size: 2Gi
+
     ingress:
       enabled: true
       ingressClassName: nginx
       hosts:
         - grafana-dev.local
+      path: /
+      pathType: Prefix
 
   alertmanager:
     enabled: false
