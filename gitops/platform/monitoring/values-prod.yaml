@@ -35,15 +35,26 @@ kube-prometheus-stack:
       path: /
       pathType: Prefix
 
+    # Disable default datasources from kube-prometheus-stack
+    defaultDashboardsEnabled: false
+    sidecar:
+      datasources:
+        enabled: false
+
     datasources:
       datasources.yaml:
         apiVersion: 1
         datasources:
         - name: Prometheus
           type: prometheus
-          url: http://kube-prometheus-stack-prometheus.monitoring:9090
+          url: http://monitoring-prod-kube-prome-prometheus.monitoring:9090
           access: proxy
           isDefault: true
+        - name: Alertmanager
+          type: alertmanager
+          url: http://monitoring-prod-kube-prome-alertmanager.monitoring:9093
+          access: proxy
+          isDefault: false
 
   alertmanager:
     enabled: true
@@ -63,3 +74,7 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 2Gi
+
+  # Disable node-exporter for k3d (hostPath mount issues)
+  prometheus-node-exporter:
+    enabled: false
