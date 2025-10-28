@@ -181,6 +181,9 @@
         creates: /home/{{ gitops_user }}/.k3d-bootstrapped
       environment:
         KUBECONFIG: "/home/{{ gitops_user }}/.kube/config"
+      async: 1800  # 30 minutes timeout
+      poll: 10     # Check every 10 seconds
+      register: bootstrap_result
 
     - name: Create bootstrap marker file
       ansible.builtin.file:
@@ -188,7 +191,11 @@
         state: touch
         owner: "{{ gitops_user }}"
         group: "{{ gitops_user }}"
-      when: not ansible_check_mode
+      when:
+        - not ansible_check_mode
+        - bootstrap_result is defined
+        - bootstrap_result.rc is defined
+        - bootstrap_result.rc == 0
 
     # Setup kubectl config
     - name: Ensure .kube directory exists
@@ -239,6 +246,19 @@
           - "GitOps directory: /home/{{ gitops_user }}/home-infra/gitops"
           - ""
 
+    - name: Wait for ArgoCD initial admin secret to be created
+      ansible.builtin.command: |
+        kubectl get secret argocd-initial-admin-secret -n argocd --context k3d-home-prod
+      become: true
+      become_user: "{{ gitops_user }}"
+      register: argocd_secret_check
+      until: argocd_secret_check.rc == 0
+      retries: 30
+      delay: 10
+      changed_when: false
+      failed_when: false
+      when: not ansible_check_mode
+
     - name: Save ArgoCD credentials
       ansible.builtin.shell: |
         kubectl config use-context k3d-home-prod
@@ -247,6 +267,9 @@
         chmod 600 /home/{{ gitops_user }}/argocd-credentials.txt
       become: true
       become_user: "{{ gitops_user }}"
-      when: not ansible_check_mode
+      when:
+        - not ansible_check_mode
+        - argocd_secret_check is defined
+        - argocd_secret_check.rc == 0
       changed_when: true
       failed_when: false
