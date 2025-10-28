@@ -1,26 +1,24 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: argocd-server
-  namespace: argocd
+  name: openwebui
   annotations:
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - argocd.kobeep.pl
-    secretName: argocd-tls
+    - openwebui.kobeep.pl
+    secretName: openwebui-tls
   rules:
-  - host: argocd.kobeep.pl
+  - host: openwebui.kobeep.pl
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: argocd-server
+            name: openwebui
             port:
-              name: https
+              number: 8080

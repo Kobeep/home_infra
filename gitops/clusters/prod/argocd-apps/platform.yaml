@@ -25,6 +25,61 @@ spec:
       - CreateNamespace=true
 
 ---
+# Cert-Manager for SSL/TLS certificates
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/platform/cert-manager
+    helm:
+      valueFiles:
+        - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+# Let's Encrypt ClusterIssuers
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: letsencrypt-issuers-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/platform/cert-manager/clusterissuers
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  # This depends on cert-manager being installed first
+  ignoreDifferences:
+  - group: cert-manager.io
+    kind: ClusterIssuer
+    jsonPointers:
+    - /status
+
+---
 # Monitoring stack for production
 apiVersion: argoproj.io/v1alpha1
 kind: Application

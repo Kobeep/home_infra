@@ -1,26 +1,24 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: argocd-server
-  namespace: argocd
+  name: home-assistant
   annotations:
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - argocd.kobeep.pl
-    secretName: argocd-tls
+    - home-assistant.kobeep.pl
+    secretName: home-assistant-tls
   rules:
-  - host: argocd.kobeep.pl
+  - host: home-assistant.kobeep.pl
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: argocd-server
+            name: home-assistant
             port:
-              name: https
+              number: 8123

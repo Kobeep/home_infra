@@ -31,9 +31,15 @@ kube-prometheus-stack:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - grafana.local
+        - grafana.kobeep.pl
       path: /
       pathType: Prefix
+      annotations:
+        cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      tls:
+        - secretName: grafana-tls
+          hosts:
+            - grafana.kobeep.pl
 
     # Disable default datasources from kube-prometheus-stack
     defaultDashboardsEnabled: false
