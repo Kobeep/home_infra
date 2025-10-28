@@ -4,10 +4,15 @@ metadata:
   name: dashy
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - dashy.kobeep.pl
+    secretName: dashy-tls
   rules:
-  - host: dashy.local
+  - host: dashy.kobeep.pl
     http:
       paths:
       - path: /

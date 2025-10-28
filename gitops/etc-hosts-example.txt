@@ -1,44 +1,32 @@
-# /etc/hosts configuration for GitOps Home Infrastructure
-#
-# Add these entries to access services:
-#
-# Linux/Mac:
-#   sudo vim /etc/hosts
-#
-# Windows (as Administrator):
-#   notepad C:\Windows\System32\drivers\etc\hosts
 
 # ============================================
-# PRODUCTION CLUSTER - External Access
+# PRODUCTION CLUSTER - kobeep.pl Domain
 # ============================================
-127.0.0.1 dashy.local        # Main Dashboard - Gateway to all services
-127.0.0.1 argocd.local       # GitOps Management UI (Admin only)
-127.0.0.1 grafana.local      # Monitoring Dashboard (from kube-prometheus-stack)
+# Replace 127.0.0.1 with your server's IP address
+
+127.0.0.1 dashy.kobeep.pl              # Main Dashboard - Gateway to all services
+127.0.0.1 argocd.kobeep.pl             # GitOps Management UI (Admin)
+127.0.0.1 grafana.kobeep.pl            # Monitoring Dashboard
+127.0.0.1 home-assistant.kobeep.pl     # Smart Home Platform
+127.0.0.1 adguard.kobeep.pl            # DNS Ad Blocker
+127.0.0.1 grocy.kobeep.pl              # Inventory Management
+127.0.0.1 openwebui.kobeep.pl          # AI Chat Interface
 
 # ============================================
 # DEVELOPMENT CLUSTER - External Access
 # ============================================
 # Note: Dev cluster uses port 8080 instead of 80
 # Access via: http://dashy-dev.local:8080
-127.0.0.1 dashy-dev.local    # Dev Dashboard
-127.0.0.1 argocd-dev.local   # Dev GitOps UI
-127.0.0.1 grafana-dev.local  # Dev Monitoring
+127.0.0.1 dashy-dev.local              # Dev Dashboard
+127.0.0.1 argocd-dev.local             # Dev GitOps UI
+127.0.0.1 grafana-dev.local            # Dev Monitoring
 
 # ============================================
-# SECURITY NOTE
+# SECURITY RECOMMENDATIONS
 # ============================================
-# All other services (Home Assistant, InfluxDB, OpenWebUI, Grocy, AdGuard)
-# are accessible ONLY through Dashy dashboard via ClusterIP for security.
-# They do NOT have external ingress configured.
-#
-# If you need direct access to these services, use kubectl port-forward:
-# Example: kubectl port-forward -n home-assistant svc/home-assistant 8123:8123
-
-# ============================================
-# REMOTE ACCESS (if server is on different machine)
-# ============================================
-# Replace 127.0.0.1 with your server's IP address:
-# Example:
-# 192.168.1.100 dashy.local
-# 192.168.1.100 argocd.local
-# 192.168.1.100 grafana.local
+# 1. Enable HTTPS with Let's Encrypt/cert-manager
+# 2. Add authentication to all services (OAuth2 Proxy, Authelia, etc.)
+# 3. Restrict access by IP for admin services (ArgoCD, Prometheus)
+# 4. Use VPN for sensitive services (Home Assistant, AdGuard admin)
+# 5. Enable rate limiting in Ingress NGINX
+# 6. Regular security updates and monitoring

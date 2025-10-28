@@ -11,7 +11,7 @@ data:
         - title: GitHub
           path: https://github.com/Kobeep/Home_infra
         - title: ArgoCD
-          path: http://argocd.local
+          path: https://argocd.kobeep.pl
 
     appConfig:
       theme: matrix
@@ -26,13 +26,13 @@ data:
           - title: Home Assistant
             description: Smart Home Platform
             icon: favicon
-            url: http://home-assistant.home-assistant.svc.cluster.local:8123
+            url: https://home-assistant.kobeep.pl
             target: newtab
 
           - title: AdGuard Home
             description: Network-wide DNS and Ad Blocker
             icon: favicon
-            url: http://adguard.adguard.svc.cluster.local:3000
+            url: https://adguard.kobeep.pl
             target: newtab
 
       - name: Monitoring & Observability
@@ -41,22 +41,7 @@ data:
           - title: Grafana
             description: Metrics Visualization
             icon: favicon
-            url: http://grafana.grafana.svc.cluster.local:3000
-            target: newtab
-
-          - title: Prometheus
-            description: Metrics Collection
-            icon: favicon
-            url: http://prometheus.prometheus.svc.cluster.local:9090
-            target: newtab
-
-      - name: Data & Storage
-        icon: fas fa-database
-        items:
-          - title: InfluxDB
-            description: Time Series Database
-            icon: favicon
-            url: http://influxdb.influxdb.svc.cluster.local:8086
+            url: https://grafana.kobeep.pl
             target: newtab
 
       - name: Applications
@@ -65,13 +50,13 @@ data:
           - title: OpenWebUI
             description: AI Chat Interface
             icon: favicon
-            url: http://openwebui.openwebui.svc.cluster.local:8080
+            url: https://openwebui.kobeep.pl
             target: newtab
 
           - title: Grocy
             description: Grocery & Household Management
             icon: favicon
-            url: http://grocy.grocy.svc.cluster.local:80
+            url: https://grocy.kobeep.pl
             target: newtab
 
       - name: GitOps
@@ -80,5 +65,5 @@ data:
           - title: ArgoCD
             description: GitOps Continuous Delivery
             icon: favicon
-            url: http://argocd.local
+            url: https://argocd.kobeep.pl
             target: newtab
