@@ -12,13 +12,8 @@ ingress-nginx:
         memory: 256Mi
 
     service:
-      type: NodePort
-
-    hostPort:
-      enabled: true
-      ports:
-        http: 8080
-        https: 8443
+      type: LoadBalancer
+      externalTrafficPolicy: Local
 
     metrics:
       enabled: true
