@@ -65,7 +65,7 @@ install_argocd() {
 
     echo "INFO=> Patching ArgoCD to run in insecure mode..."
     kubectl patch deployment argocd-server -n argocd --type='json' \
-        -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/command", "value": ["argocd-server"]},{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": ["--insecure"]}]'
+        -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
 
     kubectl rollout status deployment/argocd-server -n argocd
     echo "INFO=> ArgoCD installed on $cluster_name"
