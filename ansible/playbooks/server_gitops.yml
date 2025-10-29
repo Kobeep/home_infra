@@ -170,6 +170,16 @@
         - bootstrap.sh
         - destroy.sh
 
+    # Check if cluster already exists
+    - name: Check if k3d cluster exists
+      ansible.builtin.shell: |
+        k3d cluster list | grep -q "home-{{ cluster_mode | default('prod') }}"
+      become: true
+      become_user: "{{ gitops_user }}"
+      register: cluster_exists
+      changed_when: false
+      failed_when: false
+
     # Bootstrap clusters
     - name: Bootstrap k3d clusters with ArgoCD
       ansible.builtin.shell: |
@@ -177,25 +187,12 @@
         ./scripts/bootstrap.sh {{ cluster_mode | default('prod') }}
       become: true
       become_user: "{{ gitops_user }}"
-      args:
-        creates: /home/{{ gitops_user }}/.k3d-bootstrapped
       environment:
         KUBECONFIG: "/home/{{ gitops_user }}/.kube/config"
       async: 1800  # 30 minutes timeout
       poll: 10     # Check every 10 seconds
       register: bootstrap_result
-
-    - name: Create bootstrap marker file
-      ansible.builtin.file:
-        path: "/home/{{ gitops_user }}/.k3d-bootstrapped"
-        state: touch
-        owner: "{{ gitops_user }}"
-        group: "{{ gitops_user }}"
-      when:
-        - not ansible_check_mode
-        - bootstrap_result is defined
-        - bootstrap_result.rc is defined
-        - bootstrap_result.rc == 0
+      when: cluster_exists.rc != 0 or force_bootstrap | default(false)
 
     # Setup kubectl config
     - name: Ensure .kube directory exists
