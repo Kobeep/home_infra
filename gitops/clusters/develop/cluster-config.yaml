@@ -9,12 +9,14 @@ servers: 1
 agents: 1
 
 ports:
-  - port: 8080:80
+  - port: 8080:8080
     nodeFilters:
-      - loadbalancer
-  - port: 8443:443
+      - server:0
+      - agent:*
+  - port: 8443:8443
     nodeFilters:
-      - loadbalancer
+      - server:0
+      - agent:*
   - port: 30000-30010:30000-30010
     nodeFilters:
       - server:0
