@@ -63,9 +63,28 @@ install_argocd() {
     echo "INFO=> Waiting for ArgoCD to be ready (this may take a few minutes)..."
     kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 
-    echo "INFO=> Patching ArgoCD to run in insecure mode..."
-    kubectl patch deployment argocd-server -n argocd --type='json' \
-        -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--insecure"}]'
+    echo "INFO=> Patching ArgoCD to run in insecure mode (idempotent)..."
+
+    # Get existing args and command for the first container
+    existing_args=$(kubectl -n argocd get deployment argocd-server -o jsonpath='{range .spec.template.spec.containers[0].args[*]}{.}\n{end}' 2>/dev/null || true)
+    existing_cmd=$(kubectl -n argocd get deployment argocd-server -o jsonpath='{range .spec.template.spec.containers[0].command[*]}{.}\n{end}' 2>/dev/null || true)
+
+    if echo "$existing_args" | grep -qx -- "--insecure"; then
+        echo "INFO=> --insecure already present on argocd-server args, skipping patch"
+    else
+        if [ -n "$existing_cmd" ]; then
+            echo "INFO=> command found in container spec, replacing it with args including --insecure"
+            kubectl patch deployment argocd-server -n argocd --type=json -p='[{"op":"remove","path":"/spec/template/spec/containers/0/command"},{"op":"add","path":"/spec/template/spec/containers/0/args","value":["/usr/local/bin/argocd-server","--insecure"]}]'
+        else
+            if [ -n "$existing_args" ]; then
+                echo "INFO=> adding --insecure to existing args"
+                kubectl patch deployment argocd-server -n argocd --type=json -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--insecure"}]'
+            else
+                echo "INFO=> no args present, setting args to include --insecure"
+                kubectl patch deployment argocd-server -n argocd --type=json -p='[{"op":"add","path":"/spec/template/spec/containers/0/args","value":["/usr/local/bin/argocd-server","--insecure"]}]'
+            fi
+        fi
+    fi
 
     kubectl rollout status deployment/argocd-server -n argocd
     echo "INFO=> ArgoCD installed on $cluster_name"
