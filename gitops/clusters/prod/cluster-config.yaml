@@ -9,7 +9,12 @@ servers: 1
 agents: 2
 
 ports:
-  # HTTP/HTTPS handled by hostPort in ingress-nginx
+  - port: 80:30080
+    nodeFilters:
+      - loadbalancer
+  - port: 443:30443
+    nodeFilters:
+      - loadbalancer
   - port: 31000-31010:31000-31010
     nodeFilters:
       - server:0

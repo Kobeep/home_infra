@@ -17,12 +17,6 @@ ingress-nginx:
         http: 30080
         https: 30443
 
-    hostPort:
-      enabled: true
-      ports:
-        http: 80
-        https: 443
-
     metrics:
       enabled: true
       serviceMonitor:
