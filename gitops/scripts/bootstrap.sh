@@ -63,8 +63,9 @@ install_argocd() {
     echo "INFO=> Waiting for ArgoCD to be ready (this may take a few minutes)..."
     kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 
+    echo "INFO=> Patching ArgoCD to run in insecure mode..."
     kubectl patch deployment argocd-server -n argocd --type='json' \
-        -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--insecure"}]'
+        -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/command", "value": ["argocd-server"]},{"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": ["--insecure"]}]'
 
     kubectl rollout status deployment/argocd-server -n argocd
     echo "INFO=> ArgoCD installed on $cluster_name"

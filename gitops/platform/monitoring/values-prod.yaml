@@ -35,11 +35,7 @@ kube-prometheus-stack:
       path: /
       pathType: Prefix
       annotations:
-        cert-manager.io/cluster-issuer: "letsencrypt-prod"
-      tls:
-        - secretName: grafana-tls
-          hosts:
-            - grafana.kobeep.pl
+        nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
     # Disable default datasources from kube-prometheus-stack
     defaultDashboardsEnabled: false

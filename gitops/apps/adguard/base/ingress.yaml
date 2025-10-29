@@ -4,13 +4,9 @@ metadata:
   name: adguard
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - adguard.kobeep.pl
-    secretName: adguard-tls
   rules:
   - host: adguard.kobeep.pl
     http:

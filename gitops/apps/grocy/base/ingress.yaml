@@ -4,13 +4,9 @@ metadata:
   name: grocy
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - grocy.kobeep.pl
-    secretName: grocy-tls
   rules:
   - host: grocy.kobeep.pl
     http:
