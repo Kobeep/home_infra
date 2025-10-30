@@ -9,7 +9,7 @@
     kubectl_version: "v1.28.0"
     helm_version: "v3.13.0"
     docker_compose_version: "v2.23.0"
-    home_infra_repo: "https://github.com/Kobeep/Home_infra.git"
+    home_infra_repo: "git@github.com:Kobeep/home_infra.git"
     home_infra_branch: "main"
     gitops_user: "{{ ansible_user }}"
 
