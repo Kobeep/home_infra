@@ -211,7 +211,7 @@ restore_home_assistant() {
     fi
 
     log_info "=== Restoring Home Assistant ==="
-    restore_dir "${NAMESPACE_HA}" "home-assistant" "/config" "${HASS_LOCAL}"
+    restore_dir "${NAMESPACE_HA}" "home-assistant" "/config" "${HASS_LOCAL}" "home-assistant"
 }
 
 # Restore Dashy
@@ -233,7 +233,7 @@ restore_grafana() {
     fi
 
     log_info "=== Restoring Grafana ==="
-    restore_dir "${NAMESPACE_GRAFANA}" "grafana" "/var/lib/grafana" "${GRAFANA_LOCAL}"
+    restore_dir "${NAMESPACE_GRAFANA}" "grafana" "/var/lib/grafana" "${GRAFANA_LOCAL}" "monitoring-prod-grafana"
 }
 
 # Restore AdGuard Home
@@ -245,20 +245,42 @@ restore_adguard() {
 
     log_info "=== Restoring AdGuard Home ==="
 
+    # Check if we have a valid backup (AdGuardHome.yaml must exist)
+    if [[ ! -f "${ADGUARD_LOCAL}/conf/AdGuardHome.yaml" ]]; then
+        log_warn "AdGuard backup incomplete - missing AdGuardHome.yaml config file"
+        log_warn "Skipping restore to avoid overwriting fresh installation"
+        log_info "  → Configure AdGuard manually, then run backup to capture the config"
+        return 0
+    fi
+
     local success=true
+    local restored=false
 
     # Restore work directory
     if [[ -d "${ADGUARD_LOCAL}/work" ]]; then
-        restore_dir "${NAMESPACE_ADGUARD}" "adguard" "/opt/adguardhome/work" "${ADGUARD_LOCAL}/work" || success=false
+        if restore_dir "${NAMESPACE_ADGUARD}" "adguard" "/opt/adguardhome/work" "${ADGUARD_LOCAL}/work"; then
+            restored=true
+        else
+            success=false
+        fi
     else
         log_warn "AdGuard work directory not found: ${ADGUARD_LOCAL}/work"
     fi
 
     # Restore conf directory
     if [[ -d "${ADGUARD_LOCAL}/conf" ]]; then
-        restore_dir "${NAMESPACE_ADGUARD}" "adguard" "/opt/adguardhome/conf" "${ADGUARD_LOCAL}/conf" || success=false
+        if restore_dir "${NAMESPACE_ADGUARD}" "adguard" "/opt/adguardhome/conf" "${ADGUARD_LOCAL}/conf"; then
+            restored=true
+        else
+            success=false
+        fi
     else
         log_warn "AdGuard conf directory not found: ${ADGUARD_LOCAL}/conf"
+    fi
+
+    # Restart deployment only once if anything was restored
+    if [[ "${restored}" == "true" ]]; then
+        restart_deployment "${NAMESPACE_ADGUARD}" "adguard"
     fi
 
     [[ "${success}" == "true" ]]
@@ -273,7 +295,7 @@ verify_backups() {
     [[ "${RESTORE_HOME_ASSISTANT}" == "true" && ! -d "${HASS_LOCAL}" ]] && missing+=("Home Assistant (${HASS_LOCAL})")
     [[ "${RESTORE_DASHY}" == "true" && ! -f "${DASHY_LOCAL}/conf.yml" ]] && missing+=("Dashy (${DASHY_LOCAL}/conf.yml)")
     [[ "${RESTORE_GRAFANA}" == "true" && ! -d "${GRAFANA_LOCAL}" ]] && missing+=("Grafana (${GRAFANA_LOCAL})")
-    [[ "${RESTORE_ADGUARD}" == "true" && ! -d "${ADGUARD_LOCAL}" ]] && missing+=("AdGuard Home (${ADGUARD_LOCAL})")
+    # Note: AdGuard validation is done in restore_adguard() to allow skipping without failing
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_error "Missing backup data:"
