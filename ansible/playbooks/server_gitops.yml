@@ -169,6 +169,9 @@
       loop:
         - bootstrap.sh
         - destroy.sh
+        - backup-pvcs.sh
+        - restore-pvcs.sh
+        - trigger-backup.sh
 
     # Check if cluster already exists
     - name: Check if k3d cluster exists
@@ -210,6 +213,79 @@
         group: "{{ gitops_user }}"
         mode: '0600'
       when: not ansible_check_mode
+
+    # Wait for ArgoCD to sync all applications
+    - name: Wait for ArgoCD applications to sync
+      ansible.builtin.shell: |
+        kubectl wait --for=condition=Synced application --all -n argocd --timeout=300s --context k3d-home-{{ cluster_mode | default('prod') }}
+      become: true
+      become_user: "{{ gitops_user }}"
+      register: argocd_apps_synced
+      retries: 3
+      delay: 30
+      failed_when: false
+      changed_when: false
+      when: not ansible_check_mode
+
+    # Wait for pods to be ready before restoring
+    - name: Wait for all service pods to be ready
+      ansible.builtin.shell: |
+        for ns in home-assistant dashy monitoring adguard openwebui grocy; do
+          echo "Waiting for pods in namespace: $ns"
+          kubectl wait --for=condition=Ready pods --all -n $ns --timeout=300s --context k3d-home-{{ cluster_mode | default('prod') }} 2>/dev/null || echo "No pods in $ns yet"
+        done
+      become: true
+      become_user: "{{ gitops_user }}"
+      register: pods_ready
+      retries: 3
+      delay: 30
+      failed_when: false
+      changed_when: false
+      when: not ansible_check_mode
+
+    # Restore backups if available
+    - name: Check if backup data exists
+      ansible.builtin.stat:
+        path: "/home/{{ gitops_user }}/home-infra/{{ item }}"
+      loop:
+        - hass-config
+        - dashy-config
+        - grafana-config
+        - adguard-config
+        - openwebui-config
+      register: backup_dirs
+      become: true
+      become_user: "{{ gitops_user }}"
+
+    - name: Count available backups
+      ansible.builtin.set_fact:
+        backup_count: "{{ backup_dirs.results | selectattr('stat.exists') | list | length }}"
+
+    - name: Display backup status
+      ansible.builtin.debug:
+        msg: "Found {{ backup_count }}/5 backup directories available for restore"
+
+    - name: Restore service configurations from backups
+      ansible.builtin.shell: |
+        cd /home/{{ gitops_user }}/home-infra/gitops
+        CLUSTER_NAME=home-{{ cluster_mode | default('prod') }} ./scripts/restore-pvcs.sh
+      become: true
+      become_user: "{{ gitops_user }}"
+      environment:
+        KUBECONFIG: "/home/{{ gitops_user }}/.kube/config"
+      register: restore_result
+      when:
+        - not ansible_check_mode
+        - backup_count | int > 0
+        - restore_backups | default(true)
+      failed_when: false  # Don't fail playbook if restore has issues
+
+    - name: Display restore result
+      ansible.builtin.debug:
+        msg: "{{ restore_result.stdout_lines }}"
+      when:
+        - restore_result is defined
+        - restore_result.stdout_lines is defined
 
   post_tasks:
     - name: Display installation summary

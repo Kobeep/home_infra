@@ -135,3 +135,24 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+
+---
+# Backup CronJob - Automated PVC backups
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backup-cronjob-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kobeep/Home_infra.git
+    targetRevision: main
+    path: gitops/apps/backup-cronjob
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
