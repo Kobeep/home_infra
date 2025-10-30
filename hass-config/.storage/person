@@ -5,12 +5,10 @@
   "data": {
     "items": [
       {
-        "id": "jakub_pospieszny",
-        "name": "Jakub Pospieszny",
-        "user_id": "0a0487e952d44636bbab2db0ca26cdc6",
-        "device_trackers": [
-          "device_tracker.iphone_kuba"
-        ]
+        "id": "kobeep",
+        "name": "Kobeep",
+        "user_id": "f5da04675b26459d93f4d820d0608cff",
+        "device_trackers": []
       }
     ]
   }

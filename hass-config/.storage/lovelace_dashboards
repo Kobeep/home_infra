@@ -9,25 +9,9 @@
         "icon": "mdi:map",
         "title": "Map",
         "url_path": "map",
-        "show_in_sidebar": true,
-        "require_admin": false,
-        "mode": "storage"
-      },
-      {
-        "id": "dashboard_kobee",
-        "show_in_sidebar": true,
-        "title": "Kobee",
-        "require_admin": false,
         "mode": "storage",
-        "url_path": "dashboard-kobee"
-      },
-      {
-        "id": "dashboard_szymon",
         "show_in_sidebar": true,
-        "title": "Szymon",
-        "require_admin": false,
-        "mode": "storage",
-        "url_path": "dashboard-szymon"
+        "require_admin": false
       }
     ]
   }

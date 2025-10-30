@@ -1,9 +1,63 @@
-title: "Home Services"
-logo: ""
-services:
-  - name: Jenkins
-    url: "http://192.168.0.122:8080"
-  - name: Grafana
-    url: "http://192.168.0.229:30002"
-  - name: Home Assistant
-    url: "http://192.168.0.229:8123"
+pageInfo:
+  title: Home Infrastructure Dashboard
+  description: GitOps Home Lab - k3d + ArgoCD
+  navLinks:
+    - title: GitHub
+      path: https://github.com/Kobeep/Home_infra
+    - title: ArgoCD
+      path: https://argocd.kobeep.pl
+
+appConfig:
+  theme: matrix
+  layout: auto
+  iconSize: medium
+  language: pl
+
+sections:
+  - name: Core Services
+    icon: fas fa-server
+    items:
+      - title: Home Assistant
+        description: Smart Home Platform
+        icon: favicon
+        url: https://home-assistant.kobeep.pl
+        target: newtab
+
+      - title: AdGuard Home
+        description: Network-wide DNS and Ad Blocker
+        icon: favicon
+        url: https://adguard.kobeep.pl
+        target: newtab
+
+  - name: Monitoring & Observability
+    icon: fas fa-chart-line
+    items:
+      - title: Grafana
+        description: Metrics Visualization
+        icon: favicon
+        url: https://grafana.kobeep.pl
+        target: newtab
+
+  - name: Applications
+    icon: fas fa-cubes
+    items:
+      - title: OpenWebUI
+        description: AI Chat Interface
+        icon: favicon
+        url: https://openwebui.kobeep.pl
+        target: newtab
+
+      - title: Grocy
+        description: Grocery & Household Management
+        icon: favicon
+        url: https://grocy.kobeep.pl
+        target: newtab
+
+  - name: GitOps
+    icon: fas fa-code-branch
+    items:
+      - title: ArgoCD
+        description: GitOps Continuous Delivery
+        icon: favicon
+        url: https://argocd.kobeep.pl
+        target: newtab

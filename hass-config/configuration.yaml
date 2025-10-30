@@ -10,28 +10,10 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-logger:
-  default: info
-  logs:
-    homeassistant.components.influxdb: debug
-
-recorder:
-  purge_keep_days: 7  
-
-influxdb:
-  host: influxdb.monitoring.svc.cluster.local
-  port: 8086
-  database: home_assistant
-  username: hauser
-  password: SuperSecretInflux123
-  default_measurement: state
-  include:
-    entities:
-      - light.led_bulb_w509z2
-      - light.lsc_smart_a60_rgb_cct
-      - light.lsc_smart_a60_rgb_cct_2
-      - light.lsc_smart_a60_rgb_cct_3
-      - switch.lsc_smart_power_plug_socket_1
-      - sensor.system_monitor_processor_use
-      - sensor.system_monitor_memory_usage
-      - sensor.system_monitor_disk_usage
+# HTTP Configuration for reverse proxy
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 10.42.0.0/16
+    - 10.43.0.0/16
+    - 172.19.0.0/16
