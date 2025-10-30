@@ -15,7 +15,7 @@ HASS_LOCAL="${BACKUP_BASE_DIR}/hass-config"
 DASHY_LOCAL="${BACKUP_BASE_DIR}/dashy-config"
 GRAFANA_LOCAL="${BACKUP_BASE_DIR}/grafana-config"
 ADGUARD_LOCAL="${BACKUP_BASE_DIR}/adguard-config"
-OPENWEBUI_LOCAL="${BACKUP_BASE_DIR}/openwebui-config"
+# OPENWEBUI_LOCAL="${BACKUP_BASE_DIR}/openwebui-config"
 
 # Namespace mappings for k3d GitOps
 NAMESPACE_HA="home-assistant"
@@ -29,7 +29,7 @@ RESTORE_HOME_ASSISTANT="${RESTORE_HOME_ASSISTANT:-true}"
 RESTORE_DASHY="${RESTORE_DASHY:-true}"
 RESTORE_GRAFANA="${RESTORE_GRAFANA:-true}"
 RESTORE_ADGUARD="${RESTORE_ADGUARD:-true}"
-RESTORE_OPENWEBUI="${RESTORE_OPENWEBUI:-true}"
+# RESTORE_OPENWEBUI="${RESTORE_OPENWEBUI:-true}"
 
 # Wait settings
 MAX_WAIT_PODS="${MAX_WAIT_PODS:-300}"  # 5 minutes max wait for pods
@@ -243,22 +243,22 @@ restore_adguard() {
     [[ "${success}" == "true" ]]
 }
 
-# Restore OpenWebUI
-restore_openwebui() {
-    if [[ "${RESTORE_OPENWEBUI}" != "true" ]]; then
-        log_info "Skipping OpenWebUI restore (disabled)"
-        return 0
-    fi
+# # Restore OpenWebUI
+# restore_openwebui() {
+#     if [[ "${RESTORE_OPENWEBUI}" != "true" ]]; then
+#         log_info "Skipping OpenWebUI restore (disabled)"
+#         return 0
+#     fi
 
-    log_info "=== Restoring OpenWebUI ==="
+#     log_info "=== Restoring OpenWebUI ==="
 
-    if [[ -d "${OPENWEBUI_LOCAL}" ]]; then
-        restore_dir "${NAMESPACE_OPENWEBUI}" "openwebui" "/app/backend/data" "${OPENWEBUI_LOCAL}"
-    else
-        log_warn "OpenWebUI backup directory not found: ${OPENWEBUI_LOCAL}"
-        return 1
-    fi
-}
+#     if [[ -d "${OPENWEBUI_LOCAL}" ]]; then
+#         restore_dir "${NAMESPACE_OPENWEBUI}" "openwebui" "/app/backend/data" "${OPENWEBUI_LOCAL}"
+#     else
+#         log_warn "OpenWebUI backup directory not found: ${OPENWEBUI_LOCAL}"
+#         return 1
+#     fi
+# }
 
 # Verify backups exist
 verify_backups() {
@@ -270,7 +270,7 @@ verify_backups() {
     [[ "${RESTORE_DASHY}" == "true" && ! -f "${DASHY_LOCAL}/conf.yml" ]] && missing+=("Dashy (${DASHY_LOCAL}/conf.yml)")
     [[ "${RESTORE_GRAFANA}" == "true" && ! -d "${GRAFANA_LOCAL}" ]] && missing+=("Grafana (${GRAFANA_LOCAL})")
     [[ "${RESTORE_ADGUARD}" == "true" && ! -d "${ADGUARD_LOCAL}" ]] && missing+=("AdGuard Home (${ADGUARD_LOCAL})")
-    [[ "${RESTORE_OPENWEBUI}" == "true" && ! -d "${OPENWEBUI_LOCAL}" ]] && missing+=("OpenWebUI (${OPENWEBUI_LOCAL})")
+    # [[ "${RESTORE_OPENWEBUI}" == "true" && ! -d "${OPENWEBUI_LOCAL}" ]] && missing+=("OpenWebUI (${OPENWEBUI_LOCAL})")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_error "Missing backup data:"
@@ -300,7 +300,7 @@ generate_report() {
     [[ "${RESTORE_DASHY}" == "true" ]] && echo "  ✓ Dashy"
     [[ "${RESTORE_GRAFANA}" == "true" ]] && echo "  ✓ Grafana"
     [[ "${RESTORE_ADGUARD}" == "true" ]] && echo "  ✓ AdGuard Home"
-    [[ "${RESTORE_OPENWEBUI}" == "true" ]] && echo "  ✓ OpenWebUI"
+    # [[ "${RESTORE_OPENWEBUI}" == "true" ]] && echo "  ✓ OpenWebUI"
 
     echo ""
     echo "Note: Services may take a few minutes to fully restart with restored configurations"
@@ -351,8 +351,8 @@ main() {
     restore_adguard || failed_services+=("AdGuard Home")
     echo ""
 
-    restore_openwebui || failed_services+=("OpenWebUI")
-    echo ""
+    # restore_openwebui || failed_services+=("OpenWebUI")
+    # echo ""
 
     # Generate report
     generate_report
