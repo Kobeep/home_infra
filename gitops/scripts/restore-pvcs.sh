@@ -3,7 +3,7 @@ set -euo pipefail
 
 # GitOps PVC Restore Script for k3d Clusters
 # Restores persistent data from git repository to running services
-# Version: 1.0.0 (adapted from Jenkins restore pipeline)
+# Version: 1.0.1 (fixed output capture issue)
 
 # Configuration
 CLUSTER_NAME="${CLUSTER_NAME:-home-prod}"
@@ -15,7 +15,6 @@ HASS_LOCAL="${BACKUP_BASE_DIR}/hass-config"
 DASHY_LOCAL="${BACKUP_BASE_DIR}/dashy-config"
 GRAFANA_LOCAL="${BACKUP_BASE_DIR}/grafana-config"
 ADGUARD_LOCAL="${BACKUP_BASE_DIR}/adguard-config"
-# OPENWEBUI_LOCAL="${BACKUP_BASE_DIR}/openwebui-config"
 
 # Namespace mappings for k3d GitOps
 NAMESPACE_HA="home-assistant"
@@ -29,7 +28,6 @@ RESTORE_HOME_ASSISTANT="${RESTORE_HOME_ASSISTANT:-true}"
 RESTORE_DASHY="${RESTORE_DASHY:-true}"
 RESTORE_GRAFANA="${RESTORE_GRAFANA:-true}"
 RESTORE_ADGUARD="${RESTORE_ADGUARD:-true}"
-# RESTORE_OPENWEBUI="${RESTORE_OPENWEBUI:-true}"
 
 # Wait settings
 MAX_WAIT_PODS="${MAX_WAIT_PODS:-300}"  # 5 minutes max wait for pods
@@ -42,19 +40,19 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $*"
+    echo -e "${GREEN}[INFO]${NC} $*" >&2
 }
 
 log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
+    echo -e "${YELLOW}[WARN]${NC} $*" >&2
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
+    echo -e "${RED}[ERROR]${NC} $*" >&2
 }
 
 log_debug() {
-    echo -e "${BLUE}[DEBUG]${NC} $*"
+    echo -e "${BLUE}[DEBUG]${NC} $*" >&2
 }
 
 # Wrapper for kubectl with context awareness
@@ -99,12 +97,29 @@ wait_for_pod() {
     return 1
 }
 
+# Restart deployment after successful restore
+restart_deployment() {
+    local ns=$1
+    local deployment=$2
+
+    log_info "Restarting deployment ${deployment} in namespace ${ns}..."
+
+    if kc -n "${ns}" rollout restart deployment "${deployment}" &>/dev/null; then
+        log_info "  ✓ Deployment ${deployment} restarted successfully"
+        return 0
+    else
+        log_warn "  ✗ Failed to restart deployment ${deployment}"
+        return 1
+    fi
+}
+
 # Restore entire directory from local to pod
 restore_dir() {
     local ns=$1
     local fragment=$2
     local path=$3
     local dir=$4
+    local deployment=$5  # Optional: deployment name to restart after restore
 
     if [[ ! -d "${dir}" ]]; then
         log_warn "Local directory ${dir} does not exist, skipping restore"
@@ -127,6 +142,12 @@ restore_dir() {
     if [[ $? -eq 0 ]]; then
         local file_count=$(find "${dir}" -type f | wc -l)
         log_info "  ✓ Restored ${file_count} files"
+
+        # Restart deployment if specified
+        if [[ -n "${deployment}" ]]; then
+            restart_deployment "${ns}" "${deployment}"
+        fi
+
         return 0
     else
         log_error "  ✗ Restore failed for ${ns}/${pod}"
@@ -243,23 +264,6 @@ restore_adguard() {
     [[ "${success}" == "true" ]]
 }
 
-# # Restore OpenWebUI
-# restore_openwebui() {
-#     if [[ "${RESTORE_OPENWEBUI}" != "true" ]]; then
-#         log_info "Skipping OpenWebUI restore (disabled)"
-#         return 0
-#     fi
-
-#     log_info "=== Restoring OpenWebUI ==="
-
-#     if [[ -d "${OPENWEBUI_LOCAL}" ]]; then
-#         restore_dir "${NAMESPACE_OPENWEBUI}" "openwebui" "/app/backend/data" "${OPENWEBUI_LOCAL}"
-#     else
-#         log_warn "OpenWebUI backup directory not found: ${OPENWEBUI_LOCAL}"
-#         return 1
-#     fi
-# }
-
 # Verify backups exist
 verify_backups() {
     log_info "=== Verifying Backup Data ==="
@@ -270,7 +274,6 @@ verify_backups() {
     [[ "${RESTORE_DASHY}" == "true" && ! -f "${DASHY_LOCAL}/conf.yml" ]] && missing+=("Dashy (${DASHY_LOCAL}/conf.yml)")
     [[ "${RESTORE_GRAFANA}" == "true" && ! -d "${GRAFANA_LOCAL}" ]] && missing+=("Grafana (${GRAFANA_LOCAL})")
     [[ "${RESTORE_ADGUARD}" == "true" && ! -d "${ADGUARD_LOCAL}" ]] && missing+=("AdGuard Home (${ADGUARD_LOCAL})")
-    # [[ "${RESTORE_OPENWEBUI}" == "true" && ! -d "${OPENWEBUI_LOCAL}" ]] && missing+=("OpenWebUI (${OPENWEBUI_LOCAL})")
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_error "Missing backup data:"
@@ -290,21 +293,20 @@ generate_report() {
 
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
 
-    echo ""
-    echo "Restore completed: ${timestamp}"
-    echo "Cluster: ${CLUSTER_NAME}"
-    echo ""
-    echo "Services Restored:"
+    echo "" >&2
+    echo "Restore completed: ${timestamp}" >&2
+    echo "Cluster: ${CLUSTER_NAME}" >&2
+    echo "" >&2
+    echo "Services Restored:" >&2
 
-    [[ "${RESTORE_HOME_ASSISTANT}" == "true" ]] && echo "  ✓ Home Assistant"
-    [[ "${RESTORE_DASHY}" == "true" ]] && echo "  ✓ Dashy"
-    [[ "${RESTORE_GRAFANA}" == "true" ]] && echo "  ✓ Grafana"
-    [[ "${RESTORE_ADGUARD}" == "true" ]] && echo "  ✓ AdGuard Home"
-    # [[ "${RESTORE_OPENWEBUI}" == "true" ]] && echo "  ✓ OpenWebUI"
+    [[ "${RESTORE_HOME_ASSISTANT}" == "true" ]] && echo "  ✓ Home Assistant" >&2
+    [[ "${RESTORE_DASHY}" == "true" ]] && echo "  ✓ Dashy" >&2
+    [[ "${RESTORE_GRAFANA}" == "true" ]] && echo "  ✓ Grafana" >&2
+    [[ "${RESTORE_ADGUARD}" == "true" ]] && echo "  ✓ AdGuard Home" >&2
 
-    echo ""
-    echo "Note: Services may take a few minutes to fully restart with restored configurations"
-    echo ""
+    echo "" >&2
+    echo "Note: Services may take a few minutes to fully restart with restored configurations" >&2
+    echo "" >&2
 }
 
 # Main execution
@@ -316,7 +318,7 @@ main() {
     if ! kubectl config get-contexts "k3d-${CLUSTER_NAME}" &>/dev/null; then
         log_error "k3d cluster context 'k3d-${CLUSTER_NAME}' not found"
         log_error "Available contexts:"
-        kubectl config get-contexts
+        kubectl config get-contexts >&2
         exit 1
     fi
 
@@ -327,32 +329,29 @@ main() {
     fi
 
     log_info "Cluster connection verified ✓"
-    echo ""
+    echo "" >&2
 
     # Verify backup data exists
     if ! verify_backups; then
         log_error "Cannot proceed without backup data"
         exit 1
     fi
-    echo ""
+    echo "" >&2
 
     # Execute restores (continue on individual failures but track them)
     local failed_services=()
 
     restore_home_assistant || failed_services+=("Home Assistant")
-    echo ""
+    echo "" >&2
 
     restore_dashy || failed_services+=("Dashy")
-    echo ""
+    echo "" >&2
 
     restore_grafana || failed_services+=("Grafana")
-    echo ""
+    echo "" >&2
 
     restore_adguard || failed_services+=("AdGuard Home")
-    echo ""
-
-    # restore_openwebui || failed_services+=("OpenWebUI")
-    # echo ""
+    echo "" >&2
 
     # Generate report
     generate_report
