@@ -172,6 +172,29 @@
         - backup-pvcs.sh
         - restore-pvcs.sh
         - trigger-backup.sh
+        - fix-iptables-on-boot.sh
+        - fix-networking.sh
+
+    # Install iptables fix systemd service
+    - name: Copy iptables fix script to /usr/local/bin
+      ansible.builtin.copy:
+        src: "/home/{{ gitops_user }}/home-infra/gitops/scripts/fix-iptables-on-boot.sh"
+        dest: /usr/local/bin/fix-iptables-k3d.sh
+        mode: '0755'
+        remote_src: true
+
+    - name: Copy iptables fix systemd service
+      ansible.builtin.copy:
+        src: "/home/{{ gitops_user }}/home-infra/gitops/systemd/fix-iptables-k3d.service"
+        dest: /etc/systemd/system/fix-iptables-k3d.service
+        mode: '0644'
+        remote_src: true
+
+    - name: Enable and start iptables fix service
+      ansible.builtin.systemd:
+        name: fix-iptables-k3d
+        enabled: true
+        daemon_reload: true
 
     # Check if cluster already exists
     - name: Check if k3d cluster exists

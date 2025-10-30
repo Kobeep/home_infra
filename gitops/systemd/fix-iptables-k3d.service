@@ -1,0 +1,14 @@
+[Unit]
+Description=Fix iptables for k3d networking
+After=network.target
+Before=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fix-iptables-k3d.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
