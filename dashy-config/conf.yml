@@ -5,7 +5,7 @@ pageInfo:
     - title: GitHub
       path: https://github.com/Kobeep/Home_infra
     - title: ArgoCD
-      path: https://argocd.kobeep.pl
+      path: http://argocd-server.argocd.svc.cluster.local
 
 appConfig:
   theme: matrix
@@ -20,13 +20,13 @@ sections:
       - title: Home Assistant
         description: Smart Home Platform
         icon: favicon
-        url: https://home-assistant.kobeep.pl
+        url: http://home-assistant.home-assistant.svc.cluster.local:8123
         target: newtab
 
       - title: AdGuard Home
         description: Network-wide DNS and Ad Blocker
         icon: favicon
-        url: https://adguard.kobeep.pl
+        url: http://adguard.adguard.svc.cluster.local
         target: newtab
 
   - name: Monitoring & Observability
@@ -35,7 +35,13 @@ sections:
       - title: Grafana
         description: Metrics Visualization
         icon: favicon
-        url: https://grafana.kobeep.pl
+        url: http://monitoring-prod-grafana.monitoring.svc.cluster.local
+        target: newtab
+
+      - title: Prometheus
+        description: Metrics Collection
+        icon: favicon
+        url: http://monitoring-prod-kube-prome-prometheus.monitoring.svc.cluster.local:9090
         target: newtab
 
   - name: Applications
@@ -44,13 +50,13 @@ sections:
       - title: OpenWebUI
         description: AI Chat Interface
         icon: favicon
-        url: https://openwebui.kobeep.pl
+        url: http://openwebui.openwebui.svc.cluster.local
         target: newtab
 
       - title: Grocy
         description: Grocery & Household Management
         icon: favicon
-        url: https://grocy.kobeep.pl
+        url: http://grocy.grocy.svc.cluster.local
         target: newtab
 
   - name: GitOps
@@ -59,5 +65,5 @@ sections:
       - title: ArgoCD
         description: GitOps Continuous Delivery
         icon: favicon
-        url: https://argocd.kobeep.pl
+        url: http://argocd-server.argocd.svc.cluster.local
         target: newtab

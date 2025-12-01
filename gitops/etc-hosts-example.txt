@@ -1,16 +1,45 @@
 
 # ============================================
-# PRODUCTION CLUSTER - kobeep.pl Domain
+# HOME LAB - Local Access via Ingress
 # ============================================
-# Replace 127.0.0.1 with your server's IP address
+# Add this to your /etc/hosts file for local access
+# Replace 127.0.0.1 with your k3d cluster IP if different
 
-127.0.0.1 dashy.kobeep.pl              # Main Dashboard - Gateway to all services
-127.0.0.1 argocd.kobeep.pl             # GitOps Management UI (Admin)
+127.0.0.1 dashy.kobeep.pl              # Main Dashboard (External Access)
+127.0.0.1 argocd.kobeep.pl             # GitOps Management UI
 127.0.0.1 grafana.kobeep.pl            # Monitoring Dashboard
 127.0.0.1 home-assistant.kobeep.pl     # Smart Home Platform
 127.0.0.1 adguard.kobeep.pl            # DNS Ad Blocker
 127.0.0.1 grocy.kobeep.pl              # Inventory Management
 127.0.0.1 openwebui.kobeep.pl          # AI Chat Interface
+
+# ============================================
+# INTERNAL KUBERNETES DNS (No /etc/hosts needed!)
+# ============================================
+# Dashy ConfigMap now uses internal Kubernetes DNS:
+# - http://home-assistant.default.svc.cluster.local:8123
+# - http://adguard.default.svc.cluster.local
+# - http://monitoring-prod-grafana.monitoring.svc.cluster.local
+# - http://monitoring-prod-kube-prome-prometheus.monitoring.svc.cluster.local:9090
+# - http://openwebui.default.svc.cluster.local
+# - http://grocy.default.svc.cluster.local
+# - http://argocd-server.argocd.svc.cluster.local
+
+# ============================================
+# USAGE SCENARIOS
+# ============================================
+# 1. EXTERNAL ACCESS (from your laptop/desktop):
+#    - Add entries above to /etc/hosts
+#    - Access via: http://dashy.kobeep.pl
+#    - Links in Dashy will use internal k8s DNS (work from pod)
+#
+# 2. INTERNAL ACCESS (from within cluster):
+#    - No /etc/hosts needed
+#    - Access services via *.svc.cluster.local
+#
+# 3. PORT FORWARDING (alternative to ingress):
+#    kubectl port-forward -n default svc/dashy 8080:80
+#    Access via: http://localhost:8080
 
 # ============================================
 # DEVELOPMENT CLUSTER - External Access
