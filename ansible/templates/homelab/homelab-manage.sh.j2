@@ -1,0 +1,260 @@
+#!/bin/bash
+# Homelab Management Script
+# Managed by Ansible
+
+set -e
+
+HOMELAB_DIR="/opt/homelab"
+COMPOSE_FILE="$HOMELAB_DIR/docker-compose.yml"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Helper functions
+info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        error "Docker is not installed!"
+        exit 1
+    fi
+}
+
+check_compose_file() {
+    if [ ! -f "$COMPOSE_FILE" ]; then
+        error "Docker compose file not found at $COMPOSE_FILE"
+        exit 1
+    fi
+}
+
+# Commands
+cmd_start() {
+    info "Starting all homelab services..."
+    cd "$HOMELAB_DIR"
+    docker compose up -d
+    info "Services started. Check status with: $0 status"
+}
+
+cmd_stop() {
+    info "Stopping all homelab services..."
+    cd "$HOMELAB_DIR"
+    docker compose stop
+    info "Services stopped."
+}
+
+cmd_restart() {
+    if [ -n "$1" ]; then
+        info "Restarting service: $1"
+        cd "$HOMELAB_DIR"
+        docker compose restart "$1"
+    else
+        info "Restarting all homelab services..."
+        cd "$HOMELAB_DIR"
+        docker compose restart
+    fi
+    info "Restart complete."
+}
+
+cmd_status() {
+    info "Checking homelab services status..."
+    cd "$HOMELAB_DIR"
+    docker compose ps
+}
+
+cmd_logs() {
+    info "Showing logs for homelab services..."
+    cd "$HOMELAB_DIR"
+    if [ -n "$1" ]; then
+        docker compose logs -f --tail=100 "$1"
+    else
+        docker compose logs -f --tail=100
+    fi
+}
+
+cmd_update() {
+    info "Updating homelab services..."
+    cd "$HOMELAB_DIR"
+
+    info "Pulling latest images..."
+    docker compose pull
+
+    info "Recreating containers..."
+    docker compose up -d
+
+    info "Pruning old images..."
+    docker image prune -f
+
+    info "Update complete!"
+}
+
+cmd_backup() {
+    BACKUP_DIR="${1:-/backup/homelab-$(date +%Y%m%d-%H%M%S)}"
+
+    info "Creating backup in $BACKUP_DIR..."
+    mkdir -p "$BACKUP_DIR"
+
+    info "Stopping services..."
+    cmd_stop
+
+    info "Backing up data..."
+    tar czf "$BACKUP_DIR/homeassistant.tar.gz" -C "$HOMELAB_DIR" homeassistant/config 2>/dev/null || warn "Homeassistant backup failed"
+    tar czf "$BACKUP_DIR/grafana.tar.gz" -C "$HOMELAB_DIR" grafana/data 2>/dev/null || warn "Grafana backup failed"
+    tar czf "$BACKUP_DIR/jenkins.tar.gz" -C "$HOMELAB_DIR" jenkins/home 2>/dev/null || warn "Jenkins backup failed"
+    tar czf "$BACKUP_DIR/grocy.tar.gz" -C "$HOMELAB_DIR" grocy/data 2>/dev/null || warn "Grocy backup failed"
+    tar czf "$BACKUP_DIR/prometheus.tar.gz" -C "$HOMELAB_DIR" prometheus/data 2>/dev/null || warn "Prometheus backup failed"
+
+    info "Starting services..."
+    cmd_start
+
+    info "Backup complete at: $BACKUP_DIR"
+    du -sh "$BACKUP_DIR"
+}
+
+cmd_restore() {
+    if [ -z "$1" ]; then
+        error "Usage: $0 restore <backup_directory>"
+        exit 1
+    fi
+
+    BACKUP_DIR="$1"
+
+    if [ ! -d "$BACKUP_DIR" ]; then
+        error "Backup directory not found: $BACKUP_DIR"
+        exit 1
+    fi
+
+    warn "This will restore data from: $BACKUP_DIR"
+    read -p "Are you sure? (yes/no): " -r
+    if [[ ! $REPLY =~ ^[Yy]es$ ]]; then
+        info "Restore cancelled."
+        exit 0
+    fi
+
+    info "Stopping services..."
+    cmd_stop
+
+    info "Restoring data..."
+    [ -f "$BACKUP_DIR/homeassistant.tar.gz" ] && tar xzf "$BACKUP_DIR/homeassistant.tar.gz" -C "$HOMELAB_DIR"
+    [ -f "$BACKUP_DIR/grafana.tar.gz" ] && tar xzf "$BACKUP_DIR/grafana.tar.gz" -C "$HOMELAB_DIR"
+    [ -f "$BACKUP_DIR/jenkins.tar.gz" ] && tar xzf "$BACKUP_DIR/jenkins.tar.gz" -C "$HOMELAB_DIR"
+    [ -f "$BACKUP_DIR/grocy.tar.gz" ] && tar xzf "$BACKUP_DIR/grocy.tar.gz" -C "$HOMELAB_DIR"
+    [ -f "$BACKUP_DIR/prometheus.tar.gz" ] && tar xzf "$BACKUP_DIR/prometheus.tar.gz" -C "$HOMELAB_DIR"
+
+    info "Fixing permissions..."
+    chown -R 1000:1000 "$HOMELAB_DIR"/{homeassistant,grafana,jenkins,grocy,prometheus}/
+
+    info "Starting services..."
+    cmd_start
+
+    info "Restore complete!"
+}
+
+cmd_clean() {
+    warn "This will remove all stopped containers, unused networks, and dangling images."
+    read -p "Are you sure? (yes/no): " -r
+    if [[ ! $REPLY =~ ^[Yy]es$ ]]; then
+        info "Clean cancelled."
+        exit 0
+    fi
+
+    info "Cleaning up..."
+    docker system prune -f
+    info "Cleanup complete!"
+}
+
+cmd_urls() {
+    info "Homelab Service URLs:"
+    echo ""
+    echo "  Dashy Dashboard:  http://$(hostname -I | awk '{print $1}'):4000"
+    echo "  Home Assistant:   http://$(hostname -I | awk '{print $1}'):8123"
+    echo "  Grafana:          http://$(hostname -I | awk '{print $1}'):3000"
+    echo "  Prometheus:       http://$(hostname -I | awk '{print $1}'):9090"
+    echo "  Jenkins:          http://$(hostname -I | awk '{print $1}'):8080"
+    echo "  Grocy:            http://$(hostname -I | awk '{print $1}'):9283"
+    echo ""
+}
+
+cmd_health() {
+    info "Checking service health..."
+    cd "$HOMELAB_DIR"
+    docker compose ps --format json | jq -r '.[] | "\(.Service): \(.State) - \(.Health)"'
+}
+
+# Main
+check_docker
+check_compose_file
+
+case "${1:-}" in
+    start)
+        cmd_start
+        ;;
+    stop)
+        cmd_stop
+        ;;
+    restart)
+        cmd_restart "$2"
+        ;;
+    status)
+        cmd_status
+        ;;
+    logs)
+        cmd_logs "$2"
+        ;;
+    update)
+        cmd_update
+        ;;
+    backup)
+        cmd_backup "$2"
+        ;;
+    restore)
+        cmd_restore "$2"
+        ;;
+    clean)
+        cmd_clean
+        ;;
+    urls)
+        cmd_urls
+        ;;
+    health)
+        cmd_health
+        ;;
+    *)
+        echo "Homelab Management Script"
+        echo ""
+        echo "Usage: $0 <command> [options]"
+        echo ""
+        echo "Commands:"
+        echo "  start              Start all services"
+        echo "  stop               Stop all services"
+        echo "  restart [service]  Restart all or specific service"
+        echo "  status             Show service status"
+        echo "  logs [service]     Show logs (all or specific service)"
+        echo "  update             Update all services to latest images"
+        echo "  backup [dir]       Backup all data (default: /backup/homelab-DATE)"
+        echo "  restore <dir>      Restore data from backup"
+        echo "  clean              Clean up unused Docker resources"
+        echo "  urls               Show service URLs"
+        echo "  health             Show health status of all services"
+        echo ""
+        echo "Examples:"
+        echo "  $0 start"
+        echo "  $0 restart grafana"
+        echo "  $0 logs homeassistant"
+        echo "  $0 backup /backup/my-backup"
+        echo "  $0 restore /backup/homelab-20231201-120000"
+        exit 1
+        ;;
+esac

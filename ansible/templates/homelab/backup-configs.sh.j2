@@ -1,0 +1,201 @@
+#!/bin/bash
+# Homelab Configuration Backup Script
+# Managed by Ansible
+
+set -e
+
+HOMELAB_DIR="/opt/homelab"
+REPO_BASE="{{ playbook_dir }}/../.."
+BACKUP_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="${1:-/tmp/homelab-config-backup-${BACKUP_TIMESTAMP}}"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Create backup directory
+info "Creating backup directory: $BACKUP_DIR"
+mkdir -p "$BACKUP_DIR"
+
+# Backup Home Assistant configuration
+if [ -d "$HOMELAB_DIR/homeassistant/config" ]; then
+    info "Backing up Home Assistant configuration..."
+    mkdir -p "$BACKUP_DIR/homeassistant"
+
+    # Main config files
+    for file in configuration.yaml automations.yaml scripts.yaml scenes.yaml secrets.yaml; do
+        if [ -f "$HOMELAB_DIR/homeassistant/config/$file" ]; then
+            cp "$HOMELAB_DIR/homeassistant/config/$file" "$BACKUP_DIR/homeassistant/"
+            info "  ✓ Backed up $file"
+        fi
+    done
+
+    # Custom components
+    if [ -d "$HOMELAB_DIR/homeassistant/config/custom_components" ]; then
+        cp -r "$HOMELAB_DIR/homeassistant/config/custom_components" "$BACKUP_DIR/homeassistant/"
+        info "  ✓ Backed up custom_components"
+    fi
+
+    # Themes
+    if [ -d "$HOMELAB_DIR/homeassistant/config/themes" ]; then
+        cp -r "$HOMELAB_DIR/homeassistant/config/themes" "$BACKUP_DIR/homeassistant/"
+        info "  ✓ Backed up themes"
+    fi
+else
+    warn "Home Assistant config directory not found"
+fi
+
+# Backup Dashy configuration
+if [ -f "$HOMELAB_DIR/dashy/conf.yml" ]; then
+    info "Backing up Dashy configuration..."
+    mkdir -p "$BACKUP_DIR/dashy"
+    cp "$HOMELAB_DIR/dashy/conf.yml" "$BACKUP_DIR/dashy/"
+    info "  ✓ Backed up Dashy config"
+else
+    warn "Dashy config not found"
+fi
+
+# Backup Grafana configuration
+if [ -d "$HOMELAB_DIR/grafana/data" ]; then
+    info "Backing up Grafana configuration..."
+    mkdir -p "$BACKUP_DIR/grafana"
+
+    # Database
+    if [ -f "$HOMELAB_DIR/grafana/data/grafana.db" ]; then
+        cp "$HOMELAB_DIR/grafana/data/grafana.db" "$BACKUP_DIR/grafana/"
+        info "  ✓ Backed up Grafana database"
+    fi
+
+    # Datasources
+    if [ -f "$HOMELAB_DIR/grafana/data/datasources.yml" ]; then
+        cp "$HOMELAB_DIR/grafana/data/datasources.yml" "$BACKUP_DIR/grafana/"
+        info "  ✓ Backed up datasources"
+    fi
+
+    # Dashboards (if using file provisioning)
+    if [ -d "$HOMELAB_DIR/grafana/data/dashboards" ]; then
+        cp -r "$HOMELAB_DIR/grafana/data/dashboards" "$BACKUP_DIR/grafana/"
+        info "  ✓ Backed up dashboards"
+    fi
+else
+    warn "Grafana data directory not found"
+fi
+
+# Backup Prometheus configuration
+if [ -f "$HOMELAB_DIR/prometheus/config/prometheus.yml" ]; then
+    info "Backing up Prometheus configuration..."
+    mkdir -p "$BACKUP_DIR/prometheus"
+    cp "$HOMELAB_DIR/prometheus/config/prometheus.yml" "$BACKUP_DIR/prometheus/"
+
+    # Alert rules if exist
+    if [ -d "$HOMELAB_DIR/prometheus/config/rules" ]; then
+        cp -r "$HOMELAB_DIR/prometheus/config/rules" "$BACKUP_DIR/prometheus/"
+        info "  ✓ Backed up Prometheus config and rules"
+    else
+        info "  ✓ Backed up Prometheus config"
+    fi
+else
+    warn "Prometheus config not found"
+fi
+
+# Backup Loki configuration
+if [ -f "$HOMELAB_DIR/loki/loki-config.yml" ]; then
+    info "Backing up Loki configuration..."
+    mkdir -p "$BACKUP_DIR/loki"
+    cp "$HOMELAB_DIR/loki/loki-config.yml" "$BACKUP_DIR/loki/"
+    info "  ✓ Backed up Loki config"
+else
+    warn "Loki config not found"
+fi
+
+# Backup Promtail configuration
+if [ -f "$HOMELAB_DIR/promtail/config/promtail-config.yml" ]; then
+    info "Backing up Promtail configuration..."
+    mkdir -p "$BACKUP_DIR/promtail"
+    cp "$HOMELAB_DIR/promtail/config/promtail-config.yml" "$BACKUP_DIR/promtail/"
+    info "  ✓ Backed up Promtail config"
+else
+    warn "Promtail config not found"
+fi
+
+# Backup Jenkins configuration (selective)
+if [ -d "$HOMELAB_DIR/jenkins/home" ]; then
+    info "Backing up Jenkins configuration..."
+    mkdir -p "$BACKUP_DIR/jenkins"
+
+    # Main config
+    if [ -f "$HOMELAB_DIR/jenkins/home/config.xml" ]; then
+        cp "$HOMELAB_DIR/jenkins/home/config.xml" "$BACKUP_DIR/jenkins/"
+    fi
+
+    # Jobs (without workspace/builds)
+    if [ -d "$HOMELAB_DIR/jenkins/home/jobs" ]; then
+        mkdir -p "$BACKUP_DIR/jenkins/jobs"
+        find "$HOMELAB_DIR/jenkins/home/jobs" -maxdepth 2 -name "config.xml" -exec \
+            bash -c 'job=$(dirname {}); cp {} "$0/jenkins/jobs/$(basename $job).xml"' "$BACKUP_DIR" \;
+        info "  ✓ Backed up Jenkins jobs config"
+    fi
+
+    # Credentials
+    if [ -f "$HOMELAB_DIR/jenkins/home/credentials.xml" ]; then
+        cp "$HOMELAB_DIR/jenkins/home/credentials.xml" "$BACKUP_DIR/jenkins/"
+        warn "  ⚠ Jenkins credentials backed up (contains sensitive data!)"
+    fi
+else
+    warn "Jenkins home directory not found"
+fi
+
+# Backup Grocy data (database only)
+if [ -d "$HOMELAB_DIR/grocy/data" ]; then
+    info "Backing up Grocy data..."
+    mkdir -p "$BACKUP_DIR/grocy"
+
+    if [ -f "$HOMELAB_DIR/grocy/data/data/grocy.db" ]; then
+        cp "$HOMELAB_DIR/grocy/data/data/grocy.db" "$BACKUP_DIR/grocy/"
+        info "  ✓ Backed up Grocy database"
+    fi
+else
+    warn "Grocy data directory not found"
+fi
+
+# Backup docker-compose.yml
+if [ -f "$HOMELAB_DIR/docker-compose.yml" ]; then
+    info "Backing up docker-compose.yml..."
+    cp "$HOMELAB_DIR/docker-compose.yml" "$BACKUP_DIR/"
+    info "  ✓ Backed up docker-compose.yml"
+fi
+
+# Create archive
+info "Creating backup archive..."
+ARCHIVE_NAME="homelab-config-backup-${BACKUP_TIMESTAMP}.tar.gz"
+tar czf "/tmp/${ARCHIVE_NAME}" -C "$(dirname $BACKUP_DIR)" "$(basename $BACKUP_DIR)"
+
+info "✅ Backup complete!"
+info "Backup directory: $BACKUP_DIR"
+info "Backup archive: /tmp/${ARCHIVE_NAME}"
+echo ""
+info "To restore, use:"
+echo "  tar xzf /tmp/${ARCHIVE_NAME} -C /tmp"
+echo "  # Then manually copy files back to $HOMELAB_DIR"
+echo ""
+info "To copy to git repo (review changes before committing!):"
+echo "  # Home Assistant"
+echo "  cp -r $BACKUP_DIR/homeassistant/* $REPO_BASE/hass-config/"
+echo "  # Dashy"
+echo "  cp $BACKUP_DIR/dashy/conf.yml $REPO_BASE/dashy-config/"
+echo "  # Grafana"
+echo "  cp $BACKUP_DIR/grafana/grafana.db $REPO_BASE/grafana-config/"

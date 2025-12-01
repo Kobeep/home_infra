@@ -1,0 +1,84 @@
+# Prometheus Configuration
+# Managed by Ansible
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'homelab'
+    environment: 'production'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+# rule_files:
+#   - "rules/*.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Home Assistant metrics
+  - job_name: 'homeassistant'
+    metrics_path: /api/prometheus
+    scheme: http
+    static_configs:
+      - targets: ['{{ ansible_host }}:{{ homeassistant_port }}']
+        labels:
+          service: 'homeassistant'
+    # Add bearer token if required
+    # bearer_token: 'YOUR_LONG_LIVED_ACCESS_TOKEN'
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+  # Jenkins metrics (requires Prometheus plugin)
+  - job_name: 'jenkins'
+    metrics_path: '/prometheus'
+    static_configs:
+      - targets: ['jenkins:8080']
+        labels:
+          service: 'jenkins'
+
+  # Node Exporter - System metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['{{ ansible_host }}:9100']
+        labels:
+          service: 'node_exporter'
+          instance: 'homelab-server'
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['{{ ansible_host }}:8088']
+        labels:
+          service: 'cadvisor'
+          instance: 'homelab-server'
+
+  # Loki metrics
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+        labels:
+          service: 'loki'
+
+  # Promtail metrics
+  - job_name: 'promtail'
+    static_configs:
+      - targets: ['promtail:9080']
+        labels:
+          service: 'promtail'

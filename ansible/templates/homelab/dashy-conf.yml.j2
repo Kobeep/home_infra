@@ -1,0 +1,91 @@
+pageInfo:
+  title: Homelab Dashboard
+  description: Light Homelab - Docker Compose Stack
+  navLinks:
+    - title: GitHub
+      path: https://github.com/Kobeep/Home_infra
+    - title: Documentation
+      path: https://github.com/Kobeep/Home_infra/blob/main/README.md
+
+appConfig:
+  theme: matrix
+  layout: auto
+  iconSize: medium
+  language: pl
+
+sections:
+  - name: Smart Home
+    icon: fas fa-home
+    items:
+      - title: Home Assistant
+        description: Smart Home Platform
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ homeassistant_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ homeassistant_port }}
+
+  - name: Monitoring & Observability
+    icon: fas fa-chart-line
+    items:
+      - title: Grafana
+        description: Metrics & Logs Visualization
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ grafana_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ grafana_port }}/api/health
+
+      - title: Prometheus
+        description: Metrics Collection & Alerting
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ prometheus_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ prometheus_port }}/-/healthy
+
+      - title: Loki
+        description: Log Aggregation System
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ loki_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ loki_port }}/ready
+
+  - name: DevOps & Automation
+    icon: fas fa-robot
+    items:
+      - title: Jenkins
+        description: CI/CD Automation Server
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ jenkins_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ jenkins_port }}/login
+
+  - name: Applications
+    icon: fas fa-cubes
+    items:
+      - title: Grocy
+        description: Grocery & Household Management
+        icon: favicon
+        url: http://{{ ansible_host }}:{{ grocy_port }}
+        target: newtab
+        statusCheck: true
+        statusCheckUrl: http://{{ ansible_host }}:{{ grocy_port }}
+
+  - name: System Resources
+    icon: fas fa-server
+    items:
+      - title: Docker Host
+        description: Server @ {{ ansible_host }}
+        icon: fas fa-docker
+        url: http://{{ ansible_host }}
+        target: newtab
+
+      - title: Portainer (Optional)
+        description: Docker Management UI
+        icon: favicon
+        url: http://{{ ansible_host }}:9000
+        target: newtab
+        statusCheck: false

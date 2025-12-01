@@ -1,0 +1,49 @@
+# Home Assistant Configuration
+# Managed by Ansible - DO NOT EDIT MANUALLY
+
+# Loads default set of integrations
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# HTTP Configuration
+http:
+  use_x_forwarded_for: false
+  trusted_proxies: []
+  server_port: {{ homeassistant_port }}
+
+# System Health
+system_health:
+
+# Logger
+logger:
+  default: info
+  logs:
+    homeassistant.core: info
+
+# Recorder - SQLite database
+recorder:
+  db_url: sqlite:////config/home-assistant_v2.db
+  purge_keep_days: 7
+  commit_interval: 1
+
+# History
+history:
+  include:
+    domains:
+      - sensor
+      - switch
+      - light
+
+# Prometheus metrics export
+prometheus:
+  namespace: homeassistant
+
+# Energy management
+energy:

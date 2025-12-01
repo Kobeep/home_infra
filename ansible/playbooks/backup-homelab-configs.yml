@@ -1,0 +1,68 @@
+---
+- name: Backup Homelab Configurations to Git Repo
+  hosts: server
+  become: false
+  vars:
+    homelab_base_dir: /opt/homelab
+    repo_base: "{{ playbook_dir }}/../.."
+    backup_timestamp: "{{ ansible_date_time.iso8601_basic_short }}"
+
+  tasks:
+    - name: Ensure backup directories exist in repo
+      delegate_to: localhost
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ repo_base }}/hass-config"
+        - "{{ repo_base }}/dashy-config"
+        - "{{ repo_base }}/grafana-config"
+      tags: ['backup']
+
+    - name: Fetch Home Assistant configuration files
+      fetch:
+        src: "{{ homelab_base_dir }}/homeassistant/config/{{ item }}"
+        dest: "{{ repo_base }}/hass-config/{{ item }}"
+        flat: true
+      loop:
+        - configuration.yaml
+        - automations.yaml
+        - scripts.yaml
+        - scenes.yaml
+      ignore_errors: true
+      tags: ['backup', 'homeassistant']
+
+    - name: Fetch Dashy configuration
+      fetch:
+        src: "{{ homelab_base_dir }}/dashy/conf.yml"
+        dest: "{{ repo_base }}/dashy-config/conf.yml"
+        flat: true
+      ignore_errors: true
+      tags: ['backup', 'dashy']
+
+    - name: Fetch Grafana database
+      fetch:
+        src: "{{ homelab_base_dir }}/grafana/data/grafana.db"
+        dest: "{{ repo_base }}/grafana-config/grafana.db"
+        flat: true
+      ignore_errors: true
+      tags: ['backup', 'grafana']
+
+    - name: Display backup summary
+      delegate_to: localhost
+      debug:
+        msg:
+          - "=== Configuration Backup Complete ==="
+          - "Files backed up to: {{ repo_base }}"
+          - ""
+          - "Review changes:"
+          - "  cd {{ repo_base }}"
+          - "  git status"
+          - "  git diff"
+          - ""
+          - "Commit if satisfied:"
+          - "  git add hass-config/ dashy-config/ grafana-config/"
+          - "  git commit -m 'backup: homelab configs {{ backup_timestamp }}'"
+          - "  git push"
+      tags: ['backup']
