@@ -31,7 +31,7 @@ kube-prometheus-stack:
       enabled: true
       ingressClassName: nginx
       hosts:
-        - grafana.kobeep.pl
+        - grafana.kobecloud.pl
       path: /
       pathType: Prefix
       annotations:

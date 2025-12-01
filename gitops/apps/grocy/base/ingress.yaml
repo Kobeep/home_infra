@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: grocy.kobeep.pl
+  - host: grocy.kobecloud.pl
     http:
       paths:
       - path: /

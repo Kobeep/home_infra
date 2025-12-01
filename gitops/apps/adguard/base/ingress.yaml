@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: adguard.kobeep.pl
+  - host: adguard.kobecloud.pl
     http:
       paths:
       - path: /

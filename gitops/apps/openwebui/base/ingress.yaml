@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: openwebui.kobeep.pl
+  - host: openwebui.kobecloud.pl
     http:
       paths:
       - path: /

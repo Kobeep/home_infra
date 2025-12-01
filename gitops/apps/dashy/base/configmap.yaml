@@ -11,7 +11,7 @@ data:
         - title: GitHub
           path: https://github.com/Kobeep/Home_infra
         - title: ArgoCD
-          path: http://argocd-server.argocd.svc.cluster.local
+          path: http://argocd.kobecloud.pl
 
     appConfig:
       theme: matrix
@@ -26,13 +26,13 @@ data:
           - title: Home Assistant
             description: Smart Home Platform
             icon: favicon
-            url: http://home-assistant.home-assistant.svc.cluster.local:8123
+            url: http://home-assistant.kobecloud.pl
             target: newtab
 
           - title: AdGuard Home
             description: Network-wide DNS and Ad Blocker
             icon: favicon
-            url: http://adguard.adguard.svc.cluster.local
+            url: http://adguard.kobecloud.pl
             target: newtab
 
       - name: Monitoring & Observability
@@ -41,7 +41,7 @@ data:
           - title: Grafana
             description: Metrics Visualization
             icon: favicon
-            url: http://monitoring-prod-grafana.monitoring.svc.cluster.local
+            url: http://grafana.kobecloud.pl
             target: newtab
 
           - title: Prometheus
@@ -56,13 +56,13 @@ data:
           - title: OpenWebUI
             description: AI Chat Interface
             icon: favicon
-            url: http://openwebui.openwebui.svc.cluster.local
+            url: http://openwebui.kobecloud.pl
             target: newtab
 
           - title: Grocy
             description: Grocery & Household Management
             icon: favicon
-            url: http://grocy.grocy.svc.cluster.local
+            url: http://grocy.kobecloud.pl
             target: newtab
 
       - name: GitOps
@@ -71,5 +71,5 @@ data:
           - title: ArgoCD
             description: GitOps Continuous Delivery
             icon: favicon
-            url: http://argocd-server.argocd.svc.cluster.local
+            url: http://argocd.kobecloud.pl
             target: newtab

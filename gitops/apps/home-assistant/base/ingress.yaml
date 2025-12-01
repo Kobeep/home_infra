@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: home-assistant.kobeep.pl
+  - host: home-assistant.kobecloud.pl
     http:
       paths:
       - path: /
