@@ -4,8 +4,16 @@ metadata:
   name: home-assistant
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Home Assistant'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+  - hosts:
+    - home-assistant.kobecloud.pl
+    secretName: home-assistant-kobecloud-pl-tls
   ingressClassName: nginx
   rules:
   - host: home-assistant.kobecloud.pl

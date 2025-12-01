@@ -24,3 +24,11 @@ openwebui-config/*
 # OS
 .DS_Store
 Thumbs.db
+# SOPS encryption keys - NEVER COMMIT!
+.config/sops/
+**/*_plain
+**/*_decrypted
+*.key
+*.pem
+!**/*.pub
+.age/

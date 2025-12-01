@@ -4,8 +4,16 @@ metadata:
   name: adguard
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - AdGuard'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+  - hosts:
+    - adguard.kobecloud.pl
+    secretName: adguard-kobecloud-pl-tls
   ingressClassName: nginx
   rules:
   - host: adguard.kobecloud.pl

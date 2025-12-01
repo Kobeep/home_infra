@@ -4,8 +4,16 @@ metadata:
   name: grocy
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Grocy'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+  - hosts:
+    - grocy.kobecloud.pl
+    secretName: grocy-kobecloud-pl-tls
   ingressClassName: nginx
   rules:
   - host: grocy.kobecloud.pl

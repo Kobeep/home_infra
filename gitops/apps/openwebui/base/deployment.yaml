@@ -19,7 +19,11 @@ spec:
         - containerPort: 8080
         env:
         - name: OPENAI_API_KEY
-          value: "your-api-key-here"
+          valueFrom:
+            secretKeyRef:
+              name: openwebui-secrets
+              key: openai-api-key
+              optional: true
         resources:
           requests:
             memory: "256Mi"

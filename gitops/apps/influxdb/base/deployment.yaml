@@ -23,13 +23,25 @@ spec:
         - name: DOCKER_INFLUXDB_INIT_MODE
           value: "setup"
         - name: DOCKER_INFLUXDB_INIT_USERNAME
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-admin
+              key: admin-username
         - name: DOCKER_INFLUXDB_INIT_PASSWORD
-          value: "changeme123"
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-admin
+              key: admin-password
         - name: DOCKER_INFLUXDB_INIT_ORG
-          value: "home"
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-admin
+              key: org
         - name: DOCKER_INFLUXDB_INIT_BUCKET
-          value: "homeassistant"
+          valueFrom:
+            secretKeyRef:
+              name: influxdb-admin
+              key: bucket
         volumeMounts:
         - name: data
           mountPath: /var/lib/influxdb2
