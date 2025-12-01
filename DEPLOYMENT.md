@@ -3,7 +3,7 @@
 ## 📋 Wymagania początkowe
 
 - [ ] Domena **kobecloud.pl** (home.pl)
-- [ ] Serwer z k3d (IP: `83.25.45.232`)
+- [ ] Serwer z k3d (SSH dostępny)
 - [ ] Router ConnectBox (Orange)
 - [ ] SSH dostęp do serwera
 
@@ -52,7 +52,7 @@ Powinno pokazać: ACCEPT dla portów 22, 80, 443
 
 ### Login: https://panel.home.pl
 
-Dodaj **7 rekordów A** → `83.25.45.232`:
+Dodaj **7 rekordów A** → `<TWOJE-PUBLICZNE-IP>`:
 
 ```
 dashy.kobecloud.pl
@@ -64,12 +64,17 @@ grocy.kobecloud.pl
 openwebui.kobecloud.pl
 ```
 
+**Sprawdź swoje publiczne IP:**
+```bash
+curl ifconfig.me
+```
+
 ⏱️ **Poczekaj 5-15 min** na propagację DNS
 
 **Weryfikacja:**
 ```bash
 dig dashy.kobecloud.pl +short
-# Powinno zwrócić: 83.25.45.232
+# Powinno zwrócić Twoje publiczne IP
 ```
 
 ---
@@ -120,7 +125,7 @@ Powinno działać:
 
 ---
 
-## 🔄 Jeśli IP się zmieni
+## 🔄 Jeśli dynamiczne IP się zmieni
 
 1. **Sprawdź nowe IP:**
    ```bash
@@ -129,9 +134,9 @@ Powinno działać:
 
 2. **Zaktualizuj DNS w home.pl:**
    - Login → Domeny → kobecloud.pl → DNS
-   - Edytuj wszystkie rekordy A na nowe IP
+   - Edytuj wszystkie 7 rekordów A na nowe IP
 
-3. **Poczekaj 5-15 min**
+3. **Poczekaj 5-15 min** na propagację DNS
 
 4. **SSL odnowi się automatycznie** (cert-manager)
 
