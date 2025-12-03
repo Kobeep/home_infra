@@ -60,19 +60,23 @@ pipeline {
             // Look at next few lines for ansible_host and ansible_user
             for (int i = hostLineIdx + 1; i < Math.min(hostLineIdx + 5, lines.size()); i++) {
               def line = lines[i].trim()
+              echo "DEBUG: Line ${i}: '${line}'"
 
               if (line.startsWith('ansible_host:')) {
-                env.REMOTE_HOST = line.split(':\\s*')[1].trim()
+                def parts = line.split(':\\s*', 2)
+                env.REMOTE_HOST = parts.length > 1 ? parts[1].trim() : ''
                 echo "DEBUG: Found ansible_host: ${env.REMOTE_HOST}"
               }
 
               if (line.startsWith('ansible_user:')) {
-                env.REMOTE_USER = line.split(':\\s*')[1].trim()
+                def parts = line.split(':\\s*', 2)
+                env.REMOTE_USER = parts.length > 1 ? parts[1].trim() : ''
                 echo "DEBUG: Found ansible_user: ${env.REMOTE_USER}"
               }
 
               // Stop if we hit another host or empty section
               if (line.endsWith(':') && !line.startsWith('ansible')) {
+                echo "DEBUG: Stopping at next host definition"
                 break
               }
             }
