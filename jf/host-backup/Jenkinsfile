@@ -37,17 +37,31 @@ pipeline {
     stage('Detect Target') {
       steps {
         script {
-          def inv = readYaml file: env.INVENTORY_FILE
-          def hostEntry = inv.all.children.values()
-            .find { it.hosts?.containsKey(env.HOST_NAME) }
-            ?.hosts[env.HOST_NAME]
+          // Parse inventory YAML manually (no Pipeline Utility Steps plugin needed)
+          def inventoryContent = readFile(env.INVENTORY_FILE)
 
-          if (!hostEntry) {
-            error "Host ${env.HOST_NAME} not found in inventory"
+          // Extract ansible_host for 'server'
+          def hostMatch = (inventoryContent =~ /server:\s+ansible_host:\s+(\S+)/)
+          if (hostMatch.find()) {
+            env.REMOTE_HOST = hostMatch.group(1)
+          } else {
+            error "Could not find ansible_host for ${env.HOST_NAME} in inventory"
           }
 
-          env.REMOTE_HOST = hostEntry.ansible_host
-          env.REMOTE_USER = hostEntry.ansible_user
+          // Extract ansible_user for 'server'
+          def userMatch = (inventoryContent =~ /server:\s+.*?ansible_user:\s+(\S+)/)
+          if (userMatch.find()) {
+            env.REMOTE_USER = userMatch.group(1)
+          } else {
+            // Try alternative pattern
+            userMatch = (inventoryContent =~ /ansible_user:\s+(\S+)/)
+            if (userMatch.find()) {
+              env.REMOTE_USER = userMatch.group(1)
+            } else {
+              error "Could not find ansible_user in inventory"
+            }
+          }
+
           echo "Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
         }
       }
