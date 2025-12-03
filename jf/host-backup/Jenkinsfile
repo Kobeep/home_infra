@@ -1,0 +1,101 @@
+// Jenkins pipeline: Host-based Configuration Backup
+// Uses jf/scripts/backup_configs_host.sh to fetch backups from a docker-compose homelab host
+
+pipeline {
+  agent { label 'slave' }
+
+  environment {
+    INVENTORY_FILE = 'ansible/inventories/hosts.yml'
+    HOST_NAME = 'server'
+    SSH_BASE = '/var/jenkins_home/.ssh'
+    REMOTE_HOST = ''
+    REMOTE_USER = ''
+
+    HASS_LOCAL = 'hass-config'
+    DASHY_LOCAL = 'dashy-config'
+    GRAFANA_LOCAL = 'grafana-config'
+    ADGUARD_LOCAL = 'adguard-config'
+    OPENWEBUI_LOCAL = 'openwebui-config'
+
+    PIPELINE_NAME = 'Host Configuration Backup'
+    PIPELINE_VERSION = '1.0.0'
+  }
+
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '30'))
+    timeout(time: 30, unit: 'MINUTES')
+    ansiColor('xterm')
+    timestamps()
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Detect Target') {
+      steps {
+        script {
+          def inv = readYaml file: env.INVENTORY_FILE
+          def hostEntry = inv.all.children.values()
+            .find { it.hosts?.containsKey(env.HOST_NAME) }
+            ?.hosts[env.HOST_NAME]
+
+          if (!hostEntry) {
+            error "Host ${env.HOST_NAME} not found in inventory"
+          }
+
+          env.REMOTE_HOST = hostEntry.ansible_host
+          env.REMOTE_USER = hostEntry.ansible_user
+          echo "Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+        }
+      }
+    }
+
+    stage('Run Host Backup Script') {
+      steps {
+        sh "chmod +x jf/scripts/backup_configs_host.sh"
+        timeout(time: 20, unit: 'MINUTES') {
+          sh './jf/scripts/backup_configs_host.sh'
+        }
+      }
+    }
+
+    stage('Commit and Push Backups') {
+      steps {
+        script {
+          withCredentials([usernamePassword(credentialsId: '7a5fcd35-3a38-4511-a275-881c11e6625d', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+            sh '''
+              git config user.email "jenkins@${HOST_NAME}.local"
+              git config user.name "Jenkins Backup Service"
+              ORIG_URL=$(git remote get-url origin)
+              AUTH_URL=$(echo "$ORIG_URL" | sed -e "s#https://#https://${GIT_USER}:${GIT_PASS}@#")
+              git remote set-url origin "$AUTH_URL"
+            '''
+
+            sh "git add ${HASS_LOCAL} ${DASHY_LOCAL} ${GRAFANA_LOCAL} ${ADGUARD_LOCAL} ${OPENWEBUI_LOCAL} || true"
+
+            def hasChanges = sh(script: 'git diff --cached --quiet', returnStatus: true)
+            if (hasChanges != 0) {
+              def commitMessage = "Host backup ${env.HOST_NAME}: ${new Date().format('yyyy-MM-dd HH:mm:ss UTC')}"
+              sh "git commit -m \"${commitMessage}\" || true"
+              sh "git push origin HEAD:main"
+            } else {
+              echo 'No changes to commit.'
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'backup-report.md', allowEmptyArchive: true
+    }
+  }
+
+}

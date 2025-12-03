@@ -197,7 +197,7 @@
         mode: '0644'
       tags: ['config', 'grafana']
 
-    - name: Deploy Grafana Docker dashboard
+    - name: Deploy Grafana Docker dashboard (cAdvisor - ID 14282)
       copy:
         src: ../templates/homelab/grafana-dashboard-docker.json
         dest: "{{ grafana_data }}/dashboards/docker.json"
@@ -206,7 +206,7 @@
         mode: '0644'
       tags: ['config', 'grafana']
 
-    - name: Deploy Grafana System dashboard
+    - name: Deploy Grafana System dashboard (Node Exporter Full - ID 1860)
       copy:
         src: ../templates/homelab/grafana-dashboard-system.json
         dest: "{{ grafana_data }}/dashboards/system.json"

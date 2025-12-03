@@ -105,8 +105,6 @@ services:
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
-    devices:
-      - /dev/kmsg:/dev/kmsg
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -117,14 +115,11 @@ services:
       - "8088:8080"
     command:
       - '--housekeeping_interval=30s'
-      - '--docker_only=true'
-      - '--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,accelerator,hugetlb,referenced_memory,cpu_topology,resctrl'
-    networks:
-      - homelab_network
+      # Removed --docker_only to collect per-container metrics
+      # Removed --disable_metrics because unsupported metric names can cause cadvisor to
+      # exit immediately with a non-zero status. Run with defaults to ensure startup.
     labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  # Prometheus - Metrics collection
+      - "com.centurylinklabs.watchtower.enable=true"  # Prometheus - Metrics collection
   prometheus:
     image: prom/prometheus:v2.48.0
     container_name: prometheus
