@@ -4,9 +4,17 @@
 pipeline {
   agent { label 'slave' }
 
+  parameters {
+    choice(
+      name: 'TARGET_HOST',
+      choices: ['server', 'kubapc', 'drago', 'pimpek'],
+      description: 'Select which host to backup'
+    )
+  }
+
   environment {
     INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-    HOST_NAME = 'server'
+    HOST_NAME = "${params.TARGET_HOST}"
     SSH_BASE = '/var/jenkins_home/.ssh'
     REMOTE_HOST = ''
     REMOTE_USER = ''
@@ -40,34 +48,24 @@ pipeline {
           // Parse inventory YAML manually (no Pipeline Utility Steps plugin needed)
           def inventoryContent = readFile(env.INVENTORY_FILE)
 
-          // Extract ansible_host for 'server'
-          def hostMatch = (inventoryContent =~ /server:\s+ansible_host:\s+(\S+)/)
-          if (hostMatch.find()) {
-            env.REMOTE_HOST = hostMatch.group(1)
+          // Find the server block and extract ansible_host and ansible_user
+          // Pattern matches:
+          //   server:
+          //     ansible_host: 192.168.1.16
+          //     ansible_user: server
+          def serverBlock = (inventoryContent =~ /(?ms)${env.HOST_NAME}:\s*\n\s+ansible_host:\s+(\S+)\s*\n\s+ansible_user:\s+(\S+)/)
+
+          if (serverBlock.find()) {
+            env.REMOTE_HOST = serverBlock.group(1)
+            env.REMOTE_USER = serverBlock.group(2)
           } else {
-            error "Could not find ansible_host for ${env.HOST_NAME} in inventory"
+            error "Could not find host configuration for '${env.HOST_NAME}' in inventory"
           }
 
-          // Extract ansible_user for 'server'
-          def userMatch = (inventoryContent =~ /server:\s+.*?ansible_user:\s+(\S+)/)
-          if (userMatch.find()) {
-            env.REMOTE_USER = userMatch.group(1)
-          } else {
-            // Try alternative pattern
-            userMatch = (inventoryContent =~ /ansible_user:\s+(\S+)/)
-            if (userMatch.find()) {
-              env.REMOTE_USER = userMatch.group(1)
-            } else {
-              error "Could not find ansible_user in inventory"
-            }
-          }
-
-          echo "Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
+          echo "✓ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
         }
       }
-    }
-
-    stage('Run Host Backup Script') {
+    }    stage('Run Host Backup Script') {
       steps {
         sh "chmod +x jf/scripts/backup_configs_host.sh"
         timeout(time: 20, unit: 'MINUTES') {
