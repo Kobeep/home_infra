@@ -24,8 +24,7 @@ pipeline {
   options {
     buildDiscarder(logRotator(numToKeepStr: '30'))
     timeout(time: 30, unit: 'MINUTES')
-    ansiColor('xterm')
-    timestamps()
+    skipStagesAfterUnstable()
   }
 
   stages {
