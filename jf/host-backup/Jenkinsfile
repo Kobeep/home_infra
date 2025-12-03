@@ -14,7 +14,7 @@ pipeline {
 
   environment {
     INVENTORY_FILE = 'ansible/inventories/hosts.yml'
-    HOST_NAME = "${params.TARGET_HOST}"
+    HOST_NAME = "${params.TARGET_HOST ?: 'server'}"
     SSH_BASE = '/var/jenkins_home/.ssh'
     REMOTE_HOST = ''
     REMOTE_USER = ''
