@@ -45,14 +45,22 @@ pipeline {
     stage('Detect Target') {
       steps {
         script {
+          echo "=== DETECT TARGET STAGE START ==="
+          echo "HOST_NAME from env: ${env.HOST_NAME}"
+          echo "INVENTORY_FILE: ${env.INVENTORY_FILE}"
+
           // Parse inventory YAML manually (no Pipeline Utility Steps plugin needed)
           def inventoryContent = readFile(env.INVENTORY_FILE)
+          echo "DEBUG: Inventory file read successfully, length: ${inventoryContent.length()}"
 
           echo "DEBUG: Looking for host: ${env.HOST_NAME}"
 
           // Simple line-by-line parsing
           def lines = inventoryContent.split('\n')
+          echo "DEBUG: Total lines in inventory: ${lines.size()}"
+
           def hostLineIdx = lines.findIndexOf { it.trim().startsWith("${env.HOST_NAME}:") }
+          echo "DEBUG: Host line index: ${hostLineIdx}"
 
           if (hostLineIdx >= 0) {
             echo "DEBUG: Found host at line ${hostLineIdx}"
