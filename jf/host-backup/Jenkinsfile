@@ -49,40 +49,39 @@ pipeline {
           def inventoryContent = readFile(env.INVENTORY_FILE)
 
           echo "DEBUG: Looking for host: ${env.HOST_NAME}"
-          echo "DEBUG: Inventory snippet:\n${inventoryContent.split('\n').findAll { it.contains(env.HOST_NAME) || it.contains('ansible_host') || it.contains('ansible_user') }.take(10).join('\n')}"
 
-          // Find the server block and extract ansible_host and ansible_user
-          // Pattern matches:
-          //   server:
-          //     ansible_host: 192.168.1.16
-          //     ansible_user: server
-          def serverBlock = (inventoryContent =~ /(?ms)${env.HOST_NAME}:\s*\n\s+ansible_host:\s+(\S+)\s*\n\s+ansible_user:\s+(\S+)/)
+          // Simple line-by-line parsing
+          def lines = inventoryContent.split('\n')
+          def hostLineIdx = lines.findIndexOf { it.trim().startsWith("${env.HOST_NAME}:") }
 
-          if (serverBlock.find()) {
-            env.REMOTE_HOST = serverBlock.group(1)
-            env.REMOTE_USER = serverBlock.group(2)
-          } else {
-            echo "DEBUG: Pattern did not match. Trying simpler approach..."
-            // Fallback: find host, then get next two lines
-            def lines = inventoryContent.split('\n')
-            def hostLineIdx = lines.findIndexOf { it.trim().startsWith("${env.HOST_NAME}:") }
+          if (hostLineIdx >= 0) {
+            echo "DEBUG: Found host at line ${hostLineIdx}"
 
-            if (hostLineIdx >= 0 && hostLineIdx + 2 < lines.size()) {
-              def hostLine = lines[hostLineIdx + 1]
-              def userLine = lines[hostLineIdx + 2]
+            // Look at next few lines for ansible_host and ansible_user
+            for (int i = hostLineIdx + 1; i < Math.min(hostLineIdx + 5, lines.size()); i++) {
+              def line = lines[i].trim()
 
-              def hostMatch = (hostLine =~ /ansible_host:\s+(\S+)/)
-              def userMatch = (userLine =~ /ansible_user:\s+(\S+)/)
-
-              if (hostMatch.find() && userMatch.find()) {
-                env.REMOTE_HOST = hostMatch.group(1)
-                env.REMOTE_USER = userMatch.group(1)
-              } else {
-                error "Could not parse ansible_host/ansible_user for '${env.HOST_NAME}'"
+              if (line.startsWith('ansible_host:')) {
+                env.REMOTE_HOST = line.split(':\\s*')[1].trim()
+                echo "DEBUG: Found ansible_host: ${env.REMOTE_HOST}"
               }
-            } else {
-              error "Could not find host configuration for '${env.HOST_NAME}' in inventory"
+
+              if (line.startsWith('ansible_user:')) {
+                env.REMOTE_USER = line.split(':\\s*')[1].trim()
+                echo "DEBUG: Found ansible_user: ${env.REMOTE_USER}"
+              }
+
+              // Stop if we hit another host or empty section
+              if (line.endsWith(':') && !line.startsWith('ansible')) {
+                break
+              }
             }
+
+            if (!env.REMOTE_HOST || !env.REMOTE_USER) {
+              error "Could not find ansible_host or ansible_user for '${env.HOST_NAME}'"
+            }
+          } else {
+            error "Could not find host '${env.HOST_NAME}' in inventory"
           }
 
           echo "✓ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
