@@ -65,7 +65,9 @@ pipeline {
           echo "✓ Target: ${env.REMOTE_USER}@${env.REMOTE_HOST}"
         }
       }
-    }    stage('Run Host Backup Script') {
+    }
+
+    stage('Run Host Backup Script') {
       steps {
         sh "chmod +x jf/scripts/backup_configs_host.sh"
         timeout(time: 20, unit: 'MINUTES') {
