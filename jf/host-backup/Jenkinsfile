@@ -71,14 +71,12 @@ pipeline {
               echo "DEBUG: Line ${i}: '${line}'"
 
               if (line.startsWith('ansible_host:')) {
-                def parts = line.split(':\\s*', 2)
-                env.REMOTE_HOST = parts.length > 1 ? parts[1].trim() : ''
+                env.REMOTE_HOST = line.substring('ansible_host:'.length()).trim()
                 echo "DEBUG: Found ansible_host: ${env.REMOTE_HOST}"
               }
 
               if (line.startsWith('ansible_user:')) {
-                def parts = line.split(':\\s*', 2)
-                env.REMOTE_USER = parts.length > 1 ? parts[1].trim() : ''
+                env.REMOTE_USER = line.substring('ansible_user:'.length()).trim()
                 echo "DEBUG: Found ansible_user: ${env.REMOTE_USER}"
               }
 
