@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashy-config
+  namespace: dashy
+data:
+  conf.yml: |
+    pageInfo:
+      title: Home Lab Dashboard
+      description: Local Network Services
+
+    appConfig:
+      theme: matrix
+      layout: auto
+      iconSize: medium
+      language: en
+
+    sections:
+      - name: Infrastructure
+        icon: fas fa-server
+        items:
+          - title: Jenkins
+            description: CI/CD Automation
+            icon: favicon
+            url: http://SERVER_IP:30080
+            target: newtab
+
+      - name: Home Services
+        icon: fas fa-home
+        items:
+          - title: Home Assistant
+            description: Smart Home
+            icon: favicon
+            url: http://SERVER_IP:30123
+            target: newtab
+
+          - title: AdGuard
+            description: DNS & Ad Blocker
+            icon: favicon
+            url: http://SERVER_IP:30053
+            target: newtab
+
+      - name: Monitoring
+        icon: fas fa-chart-line
+        items:
+          - title: Grafana
+            description: Dashboards
+            icon: favicon
+            url: http://SERVER_IP:30300
+            target: newtab
+
+          - title: Prometheus
+            description: Metrics
+            icon: favicon
+            url: http://SERVER_IP:30900
+            target: newtab
+
+      - name: Applications
+        icon: fas fa-cubes
+        items:
+          - title: OpenWebUI
+            description: AI Chat
+            icon: favicon
+            url: http://SERVER_IP:30800
+            target: newtab
+
+          - title: Grocy
+            description: Grocery Management
+            icon: favicon
+            url: http://SERVER_IP:30180
+            target: newtab
