@@ -1,0 +1,155 @@
+---
+- name: Home Lab - Full Server Setup
+  hosts: server
+  become: true
+
+  vars:
+    k3s_version: v1.28.5+k3s1
+    server_ip: "{{ ansible_default_ipv4.address }}"
+
+  tasks:
+    # =====================================================
+    # SYSTEM SETUP
+    # =====================================================
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - vim
+          - htop
+          - python3-pip
+          - python3-kubernetes
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - lsb-release
+        state: present
+
+    # =====================================================
+    # K3S INSTALLATION
+    # =====================================================
+    - name: Check if K3s is installed
+      stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Install K3s
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik" sh -
+      when: not k3s_binary.stat.exists
+
+    - name: Wait for K3s to be ready
+      wait_for:
+        port: 6443
+        delay: 5
+        timeout: 60
+
+    - name: Create .kube directory
+      file:
+        path: "{{ ansible_env.HOME }}/.kube"
+        state: directory
+        mode: '0755'
+
+    - name: Copy kubeconfig
+      copy:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        remote_src: yes
+        mode: '0600'
+
+    # =====================================================
+    # KUBECTL & HELM
+    # =====================================================
+    - name: Check if kubectl is installed
+      stat:
+        path: /usr/local/bin/kubectl
+      register: kubectl_binary
+
+    - name: Install kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/
+      when: not kubectl_binary.stat.exists
+
+    - name: Check if helm is installed
+      stat:
+        path: /usr/local/bin/helm
+      register: helm_binary
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      when: not helm_binary.stat.exists
+
+    # =====================================================
+    # DEPLOY ALL APPLICATIONS
+    # =====================================================
+    - name: Deploy all K8s manifests
+      shell: |
+        kubectl apply -f /root/home_infra/k8s/jenkins/
+        kubectl apply -f /root/home_infra/k8s/dashy/
+        kubectl apply -f /root/home_infra/k8s/home-assistant/
+        kubectl apply -f /root/home_infra/k8s/adguard/
+        kubectl apply -f /root/home_infra/k8s/grafana/
+        kubectl apply -f /root/home_infra/k8s/prometheus/
+        kubectl apply -f /root/home_infra/k8s/influxdb/
+        kubectl apply -f /root/home_infra/k8s/openwebui/
+        kubectl apply -f /root/home_infra/k8s/grocy/
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Wait for all pods to be ready
+      shell: kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=300s
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ignore_errors: yes
+
+    # =====================================================
+    # UPDATE DASHY CONFIG WITH SERVER IP
+    # =====================================================
+    - name: Update Dashy ConfigMap with server IP
+      shell: |
+        kubectl get configmap dashy-config -n dashy -o yaml | \
+        sed "s/SERVER_IP/{{ server_ip }}/g" | \
+        kubectl apply -f -
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Restart Dashy to apply changes
+      shell: kubectl rollout restart deployment/dashy -n dashy
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    # =====================================================
+    # DISPLAY ACCESS INFO
+    # =====================================================
+    - name: Display access information
+      debug:
+        msg:
+          - "=========================================="
+          - "Home Lab Setup Complete!"
+          - "=========================================="
+          - ""
+          - "Access your services at:"
+          - "  Dashy Dashboard: http://{{ server_ip }}:30000"
+          - "  Jenkins: http://{{ server_ip }}:30080"
+          - "  Home Assistant: http://{{ server_ip }}:30123"
+          - "  Grafana: http://{{ server_ip }}:30300"
+          - "  Prometheus: http://{{ server_ip }}:30900"
+          - "  AdGuard: http://{{ server_ip }}:30053"
+          - "  OpenWebUI: http://{{ server_ip }}:30800"
+          - "  Grocy: http://{{ server_ip }}:30180"
+          - "  InfluxDB: http://{{ server_ip }}:30086"
+          - ""
+          - "Get Jenkins initial password:"
+          - "  kubectl exec -n jenkins -it deployment/jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword"
+          - ""
+          - "=========================================="
