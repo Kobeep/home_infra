@@ -39,7 +39,7 @@
 
     - name: Install K3s
       shell: |
-        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik" sh -
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik --tls-san {{ server_ip }}" sh -
       when: not k3s_binary.stat.exists
 
     - name: Wait for K3s to be ready
@@ -47,6 +47,15 @@
         port: 6443
         delay: 5
         timeout: 60
+
+    - name: Allow K3s API port through firewall (if ufw is active)
+      ufw:
+        rule: allow
+        port: '6443'
+        proto: tcp
+        comment: 'K3S API Server'
+      when: ansible_facts.services['ufw.service'] is defined
+      ignore_errors: yes
 
     - name: Create .kube directory
       file:

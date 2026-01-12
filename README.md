@@ -71,6 +71,27 @@ ansible-playbook \
   ansible/playbooks/full-setup.yml
 ```
 
+## Remote Access
+
+Access your cluster from any computer on your local network:
+
+```bash
+# Copy kubeconfig from server
+scp user@192.168.0.100:/etc/rancher/k3s/k3s.yaml ~/.kube/homelab-config
+
+# Edit server address (change 127.0.0.1 to your server IP)
+nano ~/.kube/homelab-config
+
+# Use kubectl remotely
+export KUBECONFIG=~/.kube/homelab-config
+kubectl get pods -A
+
+# Or use k9s for terminal UI
+k9s
+```
+
+📖 **[Full Remote Access Guide](REMOTE_ACCESS.md)**
+
 ## Managing Services
 
 ```bash
