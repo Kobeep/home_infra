@@ -32,6 +32,7 @@ That's it! All services will be automatically deployed and accessible on your lo
 | **OpenWebUI** | 30800 | AI chat interface |
 | **Grocy** | 30180 | Grocery management |
 | **InfluxDB** | 30086 | Time-series database |
+| **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
 
 Access all services via: `http://YOUR_SERVER_IP:PORT`
 
@@ -98,6 +99,58 @@ home_infra/
 │   ├── grafana/           # Monitoring
 │   ├── prometheus/        # Metrics
 │   ├── influxdb/          # Database
+│   ├── adguard/           # DNS
+│   ├── openwebui/         # AI
+│   ├── grocy/             # Inventory
+│   └── backup/            # Cloud DR Orchestrator
+├── ansible/
+│   ├── inventory.yml      # Server configuration
+│   └── playbooks/
+│       └── full-setup.yml # Main playbook
+└── deploy.sh              # One-command deployment
+
+## Backup System (Cloud DR Orchestrator)
+
+Automated daily backups to Oracle Cloud Free Tier (20GB free storage):
+
+### Setup
+
+1. **Get Oracle Cloud credentials** (Free Tier)
+   - Sign up at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
+   - Create Object Storage bucket
+   - Generate API keys
+
+2. **Configure backup secrets**
+   ```bash
+   nano k8s/backup/secret.yaml
+   # Add your Oracle Cloud credentials
+   ```
+
+3. **Deploy** (included in main setup)
+   ```bash
+   kubectl apply -f k8s/backup/
+   ```
+
+### Features
+
+- 🗄️ Database backups (PostgreSQL, InfluxDB)
+- 📁 File/config backups (Jenkins, K8s configs)
+- 🔐 AES-256-GCM encryption
+- 📊 Prometheus metrics
+- 🕐 Daily automated runs (2 AM)
+- 💰 Free (Oracle Cloud Free Tier)
+
+### Manual backup
+
+```bash
+kubectl create job --from=cronjob/backup-daily manual-backup-$(date +%s) -n backup
+```
+
+### View backup logs
+
+```bash
+kubectl logs -n backup -l job-name=backup-daily --tail=100
+```
 │   ├── adguard/           # DNS
 │   ├── openwebui/         # AI
 │   └── grocy/             # Inventory

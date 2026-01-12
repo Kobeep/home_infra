@@ -100,6 +100,7 @@
         kubectl apply -f /root/home_infra/k8s/influxdb/
         kubectl apply -f /root/home_infra/k8s/openwebui/
         kubectl apply -f /root/home_infra/k8s/grocy/
+        kubectl apply -f /root/home_infra/k8s/backup/
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
@@ -145,6 +146,9 @@
           - "  OpenWebUI: http://{{ server_ip }}:30800"
           - "  Grocy: http://{{ server_ip }}:30180"
           - "  InfluxDB: http://{{ server_ip }}:30086"
+          - ""
+          - "Backup system (Cloud DR Orchestrator) deployed as CronJob"
+          - "  Configure Oracle Cloud credentials in k8s/backup/secret.yaml"
           - ""
           - "Get Jenkins initial password:"
           - "  kubectl exec -n jenkins -it deployment/jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword"
