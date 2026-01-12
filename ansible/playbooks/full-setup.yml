@@ -29,8 +29,48 @@
           - lsb-release
         state: present
 
+    # =====================================================    # CLEANUP OLD K3D/DOCKER/IPTABLES
     # =====================================================
-    # K3S INSTALLATION
+    - name: Stop and remove k3d clusters
+      shell: |
+        if command -v k3d &> /dev/null; then
+          k3d cluster delete --all || true
+        fi
+      ignore_errors: yes
+
+    - name: Stop and remove Docker containers
+      shell: |
+        if command -v docker &> /dev/null; then
+          docker rm -f $(docker ps -aq) || true
+        fi
+      ignore_errors: yes
+
+    - name: Clean iptables rules
+      shell: |
+        iptables -F
+        iptables -X
+        iptables -t nat -F
+        iptables -t nat -X
+        iptables -t mangle -F
+        iptables -t mangle -X
+        iptables -P INPUT ACCEPT
+        iptables -P FORWARD ACCEPT
+        iptables -P OUTPUT ACCEPT
+      ignore_errors: yes
+
+    - name: Remove k3d if installed
+      apt:
+        name: k3d
+        state: absent
+      ignore_errors: yes
+
+    - name: Clean CNI configurations
+      shell: |
+        rm -rf /etc/cni/net.d/*
+        rm -rf /opt/cni/bin/*
+      ignore_errors: yes
+
+    # =====================================================    # K3S INSTALLATION
     # =====================================================
     - name: Check if K3s is installed
       stat:
