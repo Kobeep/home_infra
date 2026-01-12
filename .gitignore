@@ -1,14 +1,7 @@
-# Configuration data - only keep README files, not actual config data
-hass-config/*
-!hass-config/README.md
-dashy-config/*
-!dashy-config/README.md
-grafana-config/*
-!grafana-config/README.md
-adguard-config/*
-!adguard-config/README.md
-openwebui-config/*
-!openwebui-config/README.md
+# Old archived configurations
+old-configs/
+old-roles/
+old-inventories/
 
 # Temporary files
 *.tmp
@@ -24,6 +17,7 @@ openwebui-config/*
 # OS
 .DS_Store
 Thumbs.db
+
 # SOPS encryption keys - NEVER COMMIT!
 .config/sops/
 **/*_plain

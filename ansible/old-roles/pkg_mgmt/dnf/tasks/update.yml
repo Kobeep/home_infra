@@ -1,7 +1,0 @@
----
-- name: "[DNF] Update all packages"
-  dnf:
-    name: "*"
-    state: latest
-  tags:
-    - update
