@@ -113,6 +113,30 @@
     # =====================================================
     # DEPLOY ALL APPLICATIONS
     # =====================================================
+    - name: Create all namespaces first
+      shell: |
+        kubectl apply -f /root/home_infra/k8s/jenkins/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/dashy/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/home-assistant/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/adguard/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/grafana/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/influxdb/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/openwebui/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/grocy/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/backup/namespace.yaml
+
+    - name: Wait for namespaces to be ready
+      shell: |
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/jenkins --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/dashy --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/home-assistant --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/adguard --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/monitoring --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/influxdb --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/openwebui --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/grocy --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/backup --timeout=30s
+
     - name: Deploy all K8s manifests
       shell: |
         kubectl apply -f /root/home_infra/k8s/jenkins/
