@@ -29,19 +29,31 @@
           - lsb-release
         state: present
 
-    # =====================================================    # CLEANUP OLD K3D/DOCKER/IPTABLES
     # =====================================================
+    # CLEANUP OLD K3D/DOCKER/IPTABLES
+    # =====================================================
+    - name: Uninstall existing K3S
+      shell: |
+        if [ -f /usr/local/bin/k3s-uninstall.sh ]; then
+          /usr/local/bin/k3s-uninstall.sh
+        fi
+      ignore_errors: yes
+
     - name: Stop and remove k3d clusters
       shell: |
         if command -v k3d &> /dev/null; then
           k3d cluster delete --all || true
+          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.0.0 bash -s -- --remove || true
         fi
       ignore_errors: yes
 
     - name: Stop and remove Docker containers
       shell: |
         if command -v docker &> /dev/null; then
-          docker rm -f $(docker ps -aq) || true
+          docker stop $(docker ps -aq) 2>/dev/null || true
+          docker rm -f $(docker ps -aq) 2>/dev/null || true
+          docker network prune -f || true
+          docker volume prune -f || true
         fi
       ignore_errors: yes
 
@@ -53,6 +65,8 @@
         iptables -t nat -X
         iptables -t mangle -F
         iptables -t mangle -X
+        iptables -t raw -F
+        iptables -t raw -X
         iptables -P INPUT ACCEPT
         iptables -P FORWARD ACCEPT
         iptables -P OUTPUT ACCEPT
@@ -64,10 +78,32 @@
         state: absent
       ignore_errors: yes
 
+    - name: Remove k3d binary
+      file:
+        path: /usr/local/bin/k3d
+        state: absent
+      ignore_errors: yes
+
     - name: Clean CNI configurations
       shell: |
         rm -rf /etc/cni/net.d/*
         rm -rf /opt/cni/bin/*
+        rm -rf /var/lib/rancher/k3s/*
+        rm -rf /var/lib/kubelet/*
+        ip link delete cni0 2>/dev/null || true
+        ip link delete flannel.1 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Reboot to clean network state
+      reboot:
+        msg: "Rebooting to clean all network configurations"
+        pre_reboot_delay: 5
+
+    - name: Wait for system to come back online
+      wait_for_connection:
+        delay: 30
+        timeout: 300
+
       ignore_errors: yes
 
     # =====================================================    # K3S INSTALLATION
