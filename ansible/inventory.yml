@@ -3,6 +3,6 @@ all:
     server:
       hosts:
         homelab:
-          ansible_host: 192.168.0.100  # Change to your server IP
-          ansible_user: root             # Change if needed
-          ansible_ssh_private_key_file: ~/.ssh/id_rsa  # Change if needed
+          ansible_host: 192.168.1.16
+          ansible_user: root
+          ansible_ssh_private_key_file: ~/.ssh/server/id_rsa
