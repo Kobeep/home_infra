@@ -96,6 +96,21 @@
       when: not helm_binary.stat.exists
 
     # =====================================================
+    # CLONE HOME_INFRA REPOSITORY
+    # =====================================================
+    - name: Install git
+      apt:
+        name: git
+        state: present
+
+    - name: Clone home_infra repository
+      git:
+        repo: 'https://github.com/Kobeep/home_infra.git'
+        dest: /root/home_infra
+        version: main
+        force: yes
+
+    # =====================================================
     # DEPLOY ALL APPLICATIONS
     # =====================================================
     - name: Deploy all K8s manifests
