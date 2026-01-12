@@ -8,9 +8,6 @@
     server_ip: "{{ ansible_default_ipv4.address }}"
 
   tasks:
-    # =====================================================
-    # SYSTEM SETUP
-    # =====================================================
     - name: Update apt cache
       apt:
         update_cache: yes
