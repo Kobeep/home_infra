@@ -57,6 +57,17 @@
       when: ansible_facts.services['ufw.service'] is defined
       ignore_errors: yes
 
+    - name: Allow HTTP/HTTPS ports for Ingress
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '80'
+        - '443'
+      when: ansible_facts.services['ufw.service'] is defined
+      ignore_errors: yes
+
     - name: Create .kube directory
       file:
         path: "{{ ansible_env.HOME }}/.kube"
@@ -111,6 +122,37 @@
         force: yes
 
     # =====================================================
+    # INSTALL INGRESS NGINX CONTROLLER
+    # =====================================================
+    - name: Check if ingress-nginx namespace exists
+      shell: kubectl get namespace ingress-nginx
+      register: ingress_ns
+      failed_when: false
+      changed_when: false
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Install Ingress NGINX Controller
+      shell: |
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/baremetal/deploy.yaml
+      when: ingress_ns.rc != 0
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Wait for Ingress NGINX Controller to be ready
+      shell: |
+        kubectl wait --namespace ingress-nginx \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/component=controller \
+          --timeout=120s
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      retries: 3
+      delay: 10
+      register: result
+      until: result.rc == 0
+
+    # =====================================================
     # DEPLOY ALL APPLICATIONS
     # =====================================================
     - name: Create all namespaces first
@@ -152,6 +194,11 @@
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
+    - name: Deploy Ingress rules
+      shell: kubectl apply -f /root/home_infra/k8s/ingress-nginx.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
     - name: Wait for all pods to be ready
       shell: kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=300s
       environment:
@@ -184,21 +231,34 @@
           - "Home Lab Setup Complete!"
           - "=========================================="
           - ""
-          - "Access your services at:"
-          - "  Dashy Dashboard: http://{{ server_ip }}:30000"
-          - "  Jenkins: http://{{ server_ip }}:30080"
-          - "  Home Assistant: http://{{ server_ip }}:30123"
-          - "  Grafana: http://{{ server_ip }}:30300"
-          - "  Prometheus: http://{{ server_ip }}:30900"
-          - "  AdGuard: http://{{ server_ip }}:30053"
-          - "  OpenWebUI: http://{{ server_ip }}:30800"
-          - "  Grocy: http://{{ server_ip }}:30180"
-          - "  InfluxDB: http://{{ server_ip }}:30086"
+          - "🌐 Access your services through Ingress NGINX:"
           - ""
-          - "Backup system (Cloud DR Orchestrator) deployed as CronJob"
+          - "  🏠 Dashy Dashboard:  http://{{ server_ip }}/"
+          - "  🔧 Jenkins:          http://{{ server_ip }}/jenkins"
+          - "  🏡 Home Assistant:   http://{{ server_ip }}/homeassistant"
+          - "  📊 Grafana:          http://{{ server_ip }}/grafana"
+          - "  📈 Prometheus:       http://{{ server_ip }}/prometheus"
+          - "  🛡️  AdGuard:          http://{{ server_ip }}/adguard"
+          - "  🤖 OpenWebUI:        http://{{ server_ip }}/openwebui"
+          - "  🛒 Grocy:            http://{{ server_ip }}/grocy"
+          - "  💾 InfluxDB:         http://{{ server_ip }}/influxdb"
+          - ""
+          - "💡 Notes:"
+          - "  • All services are accessible ONLY through Ingress (ports 80/443)"
+          - "  • Services are ClusterIP type (no NodePort exposure)"
+          - "  • Dashy dashboard is at the root path /"
+          - "  • Health checks enabled for all services"
+          - ""
+          - "🔐 Jenkins Initial Setup:"
+          - "  kubectl exec -n jenkins -it deployment/jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword"
+          - ""
+          - "💾 Backup System:"
+          - "  Cloud DR Orchestrator deployed as CronJob"
           - "  Configure Oracle Cloud credentials in k8s/backup/secret.yaml"
           - ""
-          - "Get Jenkins initial password:"
-          - "  kubectl exec -n jenkins -it deployment/jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword"
+          - "🔍 Useful Commands:"
+          - "  kubectl get ingress -A           # View all Ingress rules"
+          - "  kubectl get svc -A               # View all services"
+          - "  kubectl get pods -A              # View all pods"
           - ""
           - "=========================================="

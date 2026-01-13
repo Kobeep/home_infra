@@ -21,20 +21,22 @@ That's it! All services will be automatically deployed and accessible on your lo
 
 ## What Gets Deployed
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **Dashy** | 30000 | Central dashboard for all services |
-| **Jenkins** | 30080 | CI/CD automation |
-| **Home Assistant** | 30123 | Smart home platform |
-| **Grafana** | 30300 | Monitoring dashboards |
-| **Prometheus** | 30900 | Metrics collection |
-| **AdGuard** | 30053 | DNS ad blocker |
-| **OpenWebUI** | 30800 | AI chat interface |
-| **Grocy** | 30180 | Grocery management |
-| **InfluxDB** | 30086 | Time-series database |
+| Service | URL Path | Description |
+|---------|----------|-------------|
+| **Dashy** | `/` | Central dashboard for all services |
+| **Jenkins** | `/jenkins` | CI/CD automation |
+| **Home Assistant** | `/homeassistant` | Smart home platform |
+| **Grafana** | `/grafana` | Monitoring dashboards |
+| **Prometheus** | `/prometheus` | Metrics collection |
+| **AdGuard** | `/adguard` | DNS ad blocker |
+| **OpenWebUI** | `/openwebui` | AI chat interface |
+| **Grocy** | `/grocy` | Grocery management |
+| **InfluxDB** | `/influxdb` | Time-series database |
 | **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
 
-Access all services via: `http://YOUR_SERVER_IP:PORT`
+Access all services via: `http://YOUR_SERVER_IP/<path>`
+
+Example: `http://192.168.0.100/jenkins`
 
 ## Architecture
 
@@ -45,14 +47,25 @@ Ansible installs:
   - Base packages
   - K3S (Lightweight Kubernetes)
   - kubectl & helm
+  - Ingress NGINX Controller
     ↓
 Ansible deploys all apps to K3S:
   - Each app in its own namespace
   - Persistent storage for data
-  - NodePort services for local access
+  - ClusterIP services (internal only)
+  - Ingress rules for HTTP routing
     ↓
-Access via Dashy Dashboard
+Access via Ingress NGINX → http://YOUR_IP/<service>
 ```
+
+## Features
+
+✅ **Single Entry Point** - All services through Ingress (ports 80/443)
+✅ **Path-based Routing** - Clean URLs like `/jenkins`, `/grafana`
+✅ **No NodePort Exposure** - Increased security with ClusterIP services
+✅ **Health Checks** - Automatic service monitoring in Dashy
+✅ **Zero Configuration** - Ansible handles everything
+✅ **Production Ready** - Standard Kubernetes patterns
 
 ## Requirements
 
@@ -87,15 +100,21 @@ export KUBECONFIG=~/.kube/homelab-config
 kubectl get pods -A
 
 # Or use k9s for terminal UI
-k9s
-```
+k9View Ingress rules
+kubectl get ingress -A
 
-📖 **[Full Remote Access Guide](REMOTE_ACCESS.md)**
+# Restart a service
+kubectl rollout restart deployment/home-assistant -n home-assistant
 
-## Managing Services
+# View logs
+kubectl logs -f deployment/grafana -n monitoring
 
-```bash
-# View all pods
+# Get Jenkins initial password
+kubectl exec -n jenkins -it deployment/jenkins -- \
+  cat /var/jenkins_home/secrets/initialAdminPassword
+
+# Check Ingress NGINX status
+kubectl get pods -n ingress-nginx
 kubectl get pods --all-namespaces
 
 # Restart a service
@@ -114,6 +133,7 @@ kubectl exec -n jenkins -it deployment/jenkins -- \
 ```
 home_infra/
 ├── k8s/                    # Kubernetes manifests
+│   ├── ingress-nginx.yaml # Ingress routing rules
 │   ├── jenkins/           # CI/CD
 │   ├── dashy/             # Dashboard
 │   ├── home-assistant/    # Smart home
@@ -127,8 +147,10 @@ home_infra/
 ├── ansible/
 │   ├── inventory.yml      # Server configuration
 │   └── playbooks/
-│       └── full-setup.yml # Main playbook
-└── deploy.sh              # One-command deployment
+│       └── full-setup.yml # Main playbook (includes Ingress)
+├── deploy.sh              # One-command deployment
+└── troubleshoot.sh        # Debugging helper
+```
 
 ## Backup System (Cloud DR Orchestrator)
 
@@ -178,9 +200,16 @@ kubectl logs -n backup -l job-name=backup-daily --tail=100
 ├── ansible/
 │   ├── inventory.yml      # Server configuration
 │   └── playbooks/
-│       └── full-setup.yml # Main playbook
-└── deploy.sh              # One-command deployment
-```
+│       └── fare accessed through **Ingress NGINX** on standard HTTP/HTTPS ports (80/443). No need for port numbers in URLs.
+
+**Services use ClusterIP** (internal K8s networking only) for enhanced security. External access is controlled through Ingress routing rules.
+
+Set your router to give your server a static local IP (e.g., 192.168.0.100) for consistent access.
+
+### Example Access URLs
+- Dashboard: `http://192.168.0.100/`
+- Jenkins: `http://192.168.0.100/jenkins`
+- Grafana: `http://192.168.0.100/grafana`
 
 ## Network Access
 
