@@ -115,7 +115,7 @@
 
     - name: Install K3s
       shell: |
-        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik --tls-san {{ server_ip }}" sh -
+        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik --tls-san {{ server_ip }} --node-external-ip {{ server_ip }}" sh -
       when: not k3s_binary.stat.exists
 
     - name: Wait for K3s to be ready
