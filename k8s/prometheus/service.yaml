@@ -3,11 +3,10 @@ kind: Service
 metadata:
   name: prometheus
   namespace: monitoring
-spec:
-  type: NodePort
+ spec:
+  type: ClusterIP
   selector:
     app: prometheus
   ports:
   - port: 9090
     targetPort: 9090
-    nodePort: 30900

@@ -4,10 +4,9 @@ metadata:
   name: grocy
   namespace: grocy
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: grocy
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 30180

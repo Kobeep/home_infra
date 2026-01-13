@@ -4,10 +4,9 @@ metadata:
   name: dashy
   namespace: dashy
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: dashy
   ports:
   - port: 80
     targetPort: 80
-    nodePort: 30000

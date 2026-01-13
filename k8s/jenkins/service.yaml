@@ -4,15 +4,13 @@ metadata:
   name: jenkins
   namespace: jenkins
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: jenkins
   ports:
   - name: http
     port: 8080
     targetPort: 8080
-    nodePort: 30080
   - name: agent
     port: 50000
     targetPort: 50000
-    nodePort: 30050

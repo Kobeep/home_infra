@@ -6,66 +6,168 @@ metadata:
 data:
   conf.yml: |
     pageInfo:
-      title: Home Lab Dashboard
-      description: Local Network Services
+      title: 🏠 Home Lab Dashboard
+      description: Twoje centrum zarządzania infrastrukturą domową
+      navLinks:
+        - title: GitHub
+          path: https://github.com
+        - title: Documentation
+          path: https://dashy.to/docs
 
     appConfig:
       theme: matrix
       layout: auto
-      iconSize: medium
-      language: en
+      iconSize: large
+      language: pl
+      statusCheck: true
+      statusCheckInterval: 60
+      disableUpdateChecks: false
+      enableFontAwesome: true
+      fontAwesomeKey: # Opcjonalnie: dodaj swój klucz Font Awesome Pro
+      faviconApi: google
+
+      # Ustawienia wyglądu
+      customCss: |
+        :root {
+          --curve-factor: 10px;
+          --dimming-factor: 0.7;
+        }
+
+      # Opcje bezpieczeństwa
+      auth:
+        enableGuestAccess: true
 
     sections:
-      - name: Infrastructure
+      - name: 🚀 Infrastructure & CI/CD
         icon: fas fa-server
+        displayData:
+          collapsed: false
+          rows: 1
+          cols: 2
         items:
           - title: Jenkins
-            description: CI/CD Automation
-            icon: favicon
-            url: http://SERVER_IP:30080
+            description: Automatyzacja CI/CD Pipeline
+            icon: hl-jenkins
+            url: http://SERVER_IP/jenkins
             target: newtab
+            statusCheck: true
+            statusCheckUrl: http://SERVER_IP/jenkins
+            tags: [CI/CD, Build, Deploy]
 
-      - name: Home Services
+          - title: InfluxDB
+            description: Time Series Database
+            icon: hl-influxdb
+            url: http://SERVER_IP/influxdb
+            target: newtab
+            statusCheck: true
+            tags: [Database, Metrics]
+
+      - name: 🏡 Smart Home
         icon: fas fa-home
+        displayData:
+          collapsed: false
+          rows: 1
+          cols: 2
         items:
           - title: Home Assistant
-            description: Smart Home
-            icon: favicon
-            url: http://SERVER_IP:30123
+            description: Centrum sterowania Smart Home
+            icon: hl-home-assistant
+            url: http://SERVER_IP/homeassistant
             target: newtab
+            statusCheck: true
+            statusCheckUrl: http://SERVER_IP/homeassistant
+            tags: [Smart Home, Automation, IoT]
 
-          - title: AdGuard
-            description: DNS & Ad Blocker
-            icon: favicon
-            url: http://SERVER_IP:30053
+          - title: AdGuard Home
+            description: Blokada reklam i DNS
+            icon: hl-adguard-home
+            url: http://SERVER_IP/adguard
             target: newtab
+            statusCheck: true
+            statusCheckUrl: http://SERVER_IP/adguard
+            tags: [DNS, Security, Ad-Block]
 
-      - name: Monitoring
+      - name: 📊 Monitoring & Analytics
         icon: fas fa-chart-line
+        displayData:
+          collapsed: false
+          rows: 1
+          cols: 2
         items:
           - title: Grafana
-            description: Dashboards
-            icon: favicon
-            url: http://SERVER_IP:30300
+            description: Dashboardy i wizualizacje
+            icon: hl-grafana
+            url: http://SERVER_IP/grafana
             target: newtab
+            statusCheck: true
+            statusCheckUrl: http://SERVER_IP/grafana/api/health
+            tags: [Monitoring, Dashboards, Visualization]
 
           - title: Prometheus
-            description: Metrics
-            icon: favicon
-            url: http://SERVER_IP:30900
+            description: Metryki i alerty
+            icon: hl-prometheus
+            url: http://SERVER_IP/prometheus
             target: newtab
+            statusCheck: true
+            statusCheckUrl: http://SERVER_IP/prometheus/-/healthy
+            tags: [Metrics, Monitoring, Alerts]
 
-      - name: Applications
+      - name: 🤖 Applications
         icon: fas fa-cubes
+        displayData:
+          collapsed: false
+          rows: 2
+          cols: 2
         items:
-          - title: OpenWebUI
-            description: AI Chat
-            icon: favicon
-            url: http://SERVER_IP:30800
+          - title: Open WebUI
+            description: Interfejs AI Chat (Ollama/OpenAI)
+            icon: hl-chatgpt
+            url: http://SERVER_IP/openwebui
             target: newtab
+            statusCheck: true
+            tags: [AI, Chat, LLM]
 
           - title: Grocy
-            description: Grocery Management
-            icon: favicon
-            url: http://SERVER_IP:30180
+            description: Zarządzanie gospodarstwem domowym
+            icon: hl-grocy
+            url: http://SERVER_IP/grocy
+            target: newtab
+            statusCheck: true
+            tags: [Grocery, Management, ERP]
+
+      - name: 🔧 System & Tools
+        icon: fas fa-tools
+        displayData:
+          collapsed: true
+          rows: 1
+        items:
+          - title: Kubernetes Dashboard
+            description: Zarządzanie klastrem K8s
+            icon: hl-kubernetes
+            url: http://SERVER_IP:30001
+            target: newtab
+            tags: [Kubernetes, Management]
+
+          - title: Portainer
+            description: Docker Management UI
+            icon: hl-portainer
+            url: http://SERVER_IP:9000
+            target: newtab
+            tags: [Docker, Containers]
+
+      - name: 📚 Documentation
+        icon: fas fa-book
+        displayData:
+          collapsed: true
+        items:
+          - title: Home Infra Docs
+            description: Dokumentacja projektu
+            icon: fas fa-file-code
+            url: https://github.com/Kobeep/home_infra
+            target: newtab
+
+          - title: Kubernetes Docs
+            description: Oficjalna dokumentacja K8s
+            icon: hl-kubernetes
+            url: https://kubernetes.io/docs/
             target: newtab
