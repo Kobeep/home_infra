@@ -222,6 +222,26 @@
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
     # =====================================================
+    # CONFIGURE INGRESS CONTROLLER FOR HOST NETWORK
+    # =====================================================
+    - name: Patch Ingress Controller to use LoadBalancer with externalIP
+      shell: |
+        kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{"spec":{"type":"LoadBalancer","externalIPs":["{{ server_ip}}"]}}'
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Wait for Ingress Controller to be ready
+      shell: |
+        kubectl wait --namespace ingress-nginx \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/component=controller \
+          --timeout=60s
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      retries: 3
+      delay: 10
+
+    # =====================================================
     # DISPLAY ACCESS INFO
     # =====================================================
     - name: Display access information

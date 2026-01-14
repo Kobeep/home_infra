@@ -48,16 +48,16 @@ data:
           - title: Jenkins
             description: Automatyzacja CI/CD Pipeline
             icon: hl-jenkins
-            url: http://SERVER_IP/jenkins
+            url: http://jenkins.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
-            statusCheckUrl: http://SERVER_IP/jenkins
+            statusCheckUrl: http://jenkins.192.168.1.16.nip.io
             tags: [CI/CD, Build, Deploy]
 
           - title: InfluxDB
             description: Time Series Database
             icon: hl-influxdb
-            url: http://SERVER_IP/influxdb
+            url: http://influxdb.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
             tags: [Database, Metrics]
@@ -72,19 +72,19 @@ data:
           - title: Home Assistant
             description: Centrum sterowania Smart Home
             icon: hl-home-assistant
-            url: http://SERVER_IP/homeassistant
+            url: http://ha.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
-            statusCheckUrl: http://SERVER_IP/homeassistant
+            statusCheckUrl: http://ha.192.168.1.16.nip.io
             tags: [Smart Home, Automation, IoT]
 
           - title: AdGuard Home
             description: Blokada reklam i DNS
             icon: hl-adguard-home
-            url: http://SERVER_IP/adguard
+            url: http://adguard.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
-            statusCheckUrl: http://SERVER_IP/adguard
+            statusCheckUrl: http://adguard.192.168.1.16.nip.io
             tags: [DNS, Security, Ad-Block]
 
       - name: 📊 Monitoring & Analytics
@@ -97,19 +97,19 @@ data:
           - title: Grafana
             description: Dashboardy i wizualizacje
             icon: hl-grafana
-            url: http://SERVER_IP/grafana
+            url: http://grafana.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
-            statusCheckUrl: http://SERVER_IP/grafana/api/health
+            statusCheckUrl: http://grafana.192.168.1.16.nip.io/api/health
             tags: [Monitoring, Dashboards, Visualization]
 
           - title: Prometheus
             description: Metryki i alerty
             icon: hl-prometheus
-            url: http://SERVER_IP/prometheus
+            url: http://prometheus.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
-            statusCheckUrl: http://SERVER_IP/prometheus/-/healthy
+            statusCheckUrl: http://prometheus.192.168.1.16.nip.io/-/healthy
             tags: [Metrics, Monitoring, Alerts]
 
       - name: 🤖 Applications
@@ -122,7 +122,7 @@ data:
           - title: Open WebUI
             description: Interfejs AI Chat (Ollama/OpenAI)
             icon: hl-chatgpt
-            url: http://SERVER_IP/openwebui
+            url: http://openwebui.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
             tags: [AI, Chat, LLM]
@@ -130,7 +130,7 @@ data:
           - title: Grocy
             description: Zarządzanie gospodarstwem domowym
             icon: hl-grocy
-            url: http://SERVER_IP/grocy
+            url: http://grocy.192.168.1.16.nip.io
             target: newtab
             statusCheck: true
             tags: [Grocery, Management, ERP]

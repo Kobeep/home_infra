@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: ingress-nginx
 ---
-# Ingress dla Dashy (namespace: dashy)
+# Ingress dla Dashy - dashy.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -14,7 +14,8 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: dashy.192.168.1.16.nip.io
+    http:
       paths:
       - path: /
         pathType: Prefix
@@ -24,7 +25,7 @@ spec:
             port:
               number: 80
 ---
-# Ingress dla Jenkins (namespace: jenkins)
+# Ingress dla Jenkins - jenkins.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -32,13 +33,13 @@ metadata:
   namespace: jenkins
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: jenkins.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /jenkins(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -46,28 +47,43 @@ spec:
             port:
               number: 8080
 ---
-# Ingress dla Monitoring (namespace: monitoring - Grafana i Prometheus)
+# Ingress dla Grafana - grafana.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: monitoring-ingress
+  name: grafana-ingress
   namespace: monitoring
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: grafana.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /grafana(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
             name: grafana
             port:
               number: 3000
-      - path: /prometheus(/|$)(.*)
+---
+# Ingress dla Prometheus - prometheus.192.168.1.16.nip.io
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-ingress
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: prometheus.192.168.1.16.nip.io
+    http:
+      paths:
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -75,7 +91,7 @@ spec:
             port:
               number: 9090
 ---
-# Ingress dla Home Assistant (namespace: home-assistant)
+# Ingress dla Home Assistant - ha.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -83,13 +99,13 @@ metadata:
   namespace: home-assistant
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: ha.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /homeassistant(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -97,7 +113,7 @@ spec:
             port:
               number: 8123
 ---
-# Ingress dla AdGuard (namespace: adguard)
+# Ingress dla AdGuard - adguard.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -105,13 +121,13 @@ metadata:
   namespace: adguard
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: adguard.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /adguard(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -119,7 +135,7 @@ spec:
             port:
               number: 3000
 ---
-# Ingress dla Grocy (namespace: grocy)
+# Ingress dla Grocy - grocy.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -127,13 +143,13 @@ metadata:
   namespace: grocy
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: grocy.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /grocy(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -141,7 +157,7 @@ spec:
             port:
               number: 80
 ---
-# Ingress dla OpenWebUI (namespace: openwebui)
+# Ingress dla OpenWebUI - openwebui.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -149,13 +165,13 @@ metadata:
   namespace: openwebui
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: openwebui.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /openwebui(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
@@ -163,7 +179,7 @@ spec:
             port:
               number: 8080
 ---
-# Ingress dla InfluxDB (namespace: influxdb)
+# Ingress dla InfluxDB - influxdb.192.168.1.16.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -171,13 +187,13 @@ metadata:
   namespace: influxdb
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: influxdb.192.168.1.16.nip.io
+    http:
       paths:
-      - path: /influxdb(/|$)(.*)
+      - path: /
         pathType: Prefix
         backend:
           service:
