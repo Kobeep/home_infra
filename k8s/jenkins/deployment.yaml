@@ -21,6 +21,13 @@ spec:
           name: http
         - containerPort: 50000
           name: agent
+                resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1024Mi"
         volumeMounts:
         - name: jenkins-data
           mountPath: /var/jenkins_home

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: prometheus
   namespace: monitoring
- spec:
+spec:
   type: ClusterIP
   selector:
     app: prometheus

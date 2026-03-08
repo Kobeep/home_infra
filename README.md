@@ -32,9 +32,10 @@ That's it! All services will be automatically deployed and accessible on your lo
 | **OpenWebUI** | `/openwebui` | AI chat interface |
 | **Grocy** | `/grocy` | Grocery management |
 | **InfluxDB** | `/influxdb` | Time-series database |
+| **HashiCorp Vault** | `vault.home.local` | Secrets Management |
 | **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
 
-Access all services via: `http://YOUR_SERVER_IP/<path>`
+Access services natively via `http://<service>.home.local` if your DNS is configured, or explicitly via the IP mappings in Ingress.
 
 Example: `http://192.168.0.100/jenkins`
 
@@ -123,10 +124,34 @@ kubectl rollout restart deployment/home-assistant -n home-assistant
 # View logs
 kubectl logs -f deployment/grafana -n monitoring
 
-# Get Jenkins initial password
-kubectl exec -n jenkins -it deployment/jenkins -- \
   cat /var/jenkins_home/secrets/initialAdminPassword
 ```
+
+## HashiCorp Vault & Secrets Management
+
+This lab comes with **HashiCorp Vault** and **External Secrets Operator (ESO)** pre-installed. All manual secrets management should be handled through Vault instead of plain Kubernetes Secrets.
+
+### 1. Initializing Vault
+Vault starts "sealed" and must be initialized on the first run.
+```bash
+# Exec into the vault pod
+kubectl exec -it vault-0 -n vault -- /bin/sh
+
+# Initialize vault (Save the Unseal Keys and Root Token somewhere safe!)
+vault operator init
+
+# Unseal Vault (Run this 3 times with 3 different keys from the init step)
+vault operator unseal
+```
+
+### 2. Accessing Vault UI
+Vault is accessible within your network at `http://vault.home.local` (ensure your DNS router / Adguard redirects `*.home.local` to your server IP). Login using the Root Token generated above.
+
+### 3. Using External Secrets
+External Secrets fetches secrets from Vault automatically. To connect ESO to your unsealed Vault:
+1. Create a `SecretStore` in Kubernetes pointing to Vault.
+2. In Vault, create a KVv2 Secret Engine.
+3. Use `ExternalSecret` manifests in your apps rather than raw `Secret`. ESO will auto-generate the Kubernetes `Secret` containing your Vault payload!
 
 ## Structure
 

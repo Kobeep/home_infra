@@ -55,7 +55,7 @@
         proto: tcp
         comment: 'K3S API Server'
       when: ansible_facts.services['ufw.service'] is defined
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Allow HTTP/HTTPS ports for Ingress
       ufw:
@@ -66,7 +66,7 @@
         - '80'
         - '443'
       when: ansible_facts.services['ufw.service'] is defined
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Create .kube directory
       file:
@@ -166,6 +166,7 @@
         kubectl apply -f /root/home_infra/k8s/openwebui/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/grocy/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/backup/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/vault/namespace.yaml
 
     - name: Wait for namespaces to be ready
       shell: |
@@ -178,32 +179,43 @@
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/openwebui --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/grocy --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/backup --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/vault --timeout=30s
 
     - name: Deploy all K8s manifests
-      shell: |
-        kubectl apply -f /root/home_infra/k8s/jenkins/
-        kubectl apply -f /root/home_infra/k8s/dashy/
-        kubectl apply -f /root/home_infra/k8s/home-assistant/
-        kubectl apply -f /root/home_infra/k8s/adguard/
-        kubectl apply -f /root/home_infra/k8s/grafana/
-        kubectl apply -f /root/home_infra/k8s/prometheus/
-        kubectl apply -f /root/home_infra/k8s/influxdb/
-        kubectl apply -f /root/home_infra/k8s/openwebui/
-        kubectl apply -f /root/home_infra/k8s/grocy/
-        kubectl apply -f /root/home_infra/k8s/backup/
+      shell: kubectl apply -k /root/home_infra/k8s/
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
-    - name: Deploy Ingress rules
-      shell: kubectl apply -f /root/home_infra/k8s/ingress-nginx.yaml
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
 
     - name: Wait for all pods to be ready
       shell: kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=300s
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      ignore_errors: yes
+      ignore_errors: true
+
+    - name: Add Hashicorp Helm Repo
+      shell: helm repo add hashicorp https://helm.releases.hashicorp.com && helm repo update
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Install HashiCorp Vault via Helm
+      shell: |
+        helm upgrade --install vault hashicorp/vault \
+          --namespace vault \
+          -f /root/home_infra/k8s/vault/values.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Add External Secrets Helm Repo
+      shell: helm repo add external-secrets https://charts.external-secrets.io && helm repo update
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Install External Secrets Operator
+      shell: helm upgrade --install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace --set installCRDs=true
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
     # =====================================================
     # UPDATE DASHY CONFIG WITH SERVER IP
