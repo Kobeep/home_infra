@@ -151,6 +151,29 @@
       until: result.rc == 0
 
     # =====================================================
+    # INSTALL CERT-MANAGER
+    # =====================================================
+    - name: Add Jetstack Helm Repo
+      shell: helm repo add jetstack https://charts.jetstack.io && helm repo update
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Install cert-manager
+      shell: |
+        helm upgrade --install cert-manager jetstack/cert-manager \
+          --namespace cert-manager \
+          --create-namespace \
+          --set crds.enabled=true
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Wait for cert-manager webhooks to be ready
+      shell: |
+        kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=120s
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    # =====================================================
     # DEPLOY ALL APPLICATIONS
     # =====================================================
     - name: Create all namespaces first

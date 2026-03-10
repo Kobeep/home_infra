@@ -10,3 +10,4 @@ resources:
 - influxdb
 - jenkins
 - prometheus
+- cert-manager

@@ -5,7 +5,8 @@ metadata:
   name: adguard-ingress
   namespace: adguard
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: local-ca
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -19,3 +20,7 @@ spec:
             name: adguard
             port:
               number: 3000
+  tls:
+  - hosts:
+    - adguard.192.168.1.24.nip.io
+    secretName: adguard-tls

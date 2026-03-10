@@ -5,7 +5,8 @@ metadata:
   name: grocy-ingress
   namespace: grocy
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: local-ca
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -19,3 +20,7 @@ spec:
             name: grocy
             port:
               number: 80
+  tls:
+  - hosts:
+    - grocy.192.168.1.24.nip.io
+    secretName: grocy-tls

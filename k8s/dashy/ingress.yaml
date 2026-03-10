@@ -5,7 +5,8 @@ metadata:
   name: dashy-ingress
   namespace: dashy
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    cert-manager.io/cluster-issuer: local-ca
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -19,3 +20,7 @@ spec:
             name: dashy
             port:
               number: 80
+  tls:
+  - hosts:
+    - dashy.192.168.1.24.nip.io
+    secretName: dashy-tls
