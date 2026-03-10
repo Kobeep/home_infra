@@ -18,7 +18,7 @@ spec:
         image: linuxserver/grocy:latest
         ports:
         - containerPort: 80
-                resources:
+        resources:
           requests:
             cpu: "100m"
             memory: "128Mi"

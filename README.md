@@ -29,13 +29,19 @@ That's it! All services will be automatically deployed and accessible on your lo
 | **Grafana** | `/grafana` | Monitoring dashboards |
 | **Prometheus** | `/prometheus` | Metrics collection |
 | **AdGuard** | `/adguard` | DNS ad blocker |
+| **Dashy** | `/` | Central dashboard for all services |
+| **Jenkins** | `/jenkins` | CI/CD automation |
+| **Home Assistant** | `/homeassistant` | Smart home platform |
+| **Grafana** | `/grafana` | Monitoring dashboards |
+| **Prometheus** | `/prometheus` | Metrics collection |
+| **AdGuard** | `/adguard` | DNS ad blocker |
 | **OpenWebUI** | `/openwebui` | AI chat interface |
 | **Grocy** | `/grocy` | Grocery management |
 | **InfluxDB** | `/influxdb` | Time-series database |
-| **HashiCorp Vault** | `vault.home.local` | Secrets Management |
+| **HashiCorp Vault** | `vault.192.168.1.24.nip.io` | Secrets Management |
 | **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
 
-Access services natively via `http://<service>.home.local` if your DNS is configured, or explicitly via the IP mappings in Ingress.
+Access services natively via `http://<service>.192.168.1.24.nip.io` from any device on your local network (e.g. `http://dashy.192.168.1.24.nip.io`).
 
 Example: `http://192.168.0.100/jenkins`
 
@@ -145,7 +151,7 @@ vault operator unseal
 ```
 
 ### 2. Accessing Vault UI
-Vault is accessible within your network at `http://vault.home.local` (ensure your DNS router / Adguard redirects `*.home.local` to your server IP). Login using the Root Token generated above.
+Vault is accessible within your network at `http://vault.192.168.1.24.nip.io` out of the box. Login using the Root Token generated above.
 
 ### 3. Using External Secrets
 External Secrets fetches secrets from Vault automatically. To connect ESO to your unsealed Vault:

@@ -1,4 +1,4 @@
-# Ingress dla Dashy - dashy.home.local
+# Ingress dla Dashy - dashy.192.168.1.24.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: dashy.home.local
+  - host: dashy.192.168.1.24.nip.io
     http:
       paths:
       - path: /

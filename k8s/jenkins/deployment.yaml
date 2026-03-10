@@ -21,7 +21,7 @@ spec:
           name: http
         - containerPort: 50000
           name: agent
-                resources:
+        resources:
           requests:
             cpu: "100m"
             memory: "128Mi"

@@ -1,4 +1,4 @@
-# Ingress dla Home Assistant - ha.home.local
+# Ingress dla Home Assistant - ha.192.168.1.24.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: ha.home.local
+  - host: ha.192.168.1.24.nip.io
     http:
       paths:
       - path: /

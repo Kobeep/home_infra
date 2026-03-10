@@ -1,4 +1,4 @@
-# Ingress dla Jenkins - jenkins.home.local
+# Ingress dla Jenkins - jenkins.192.168.1.24.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: jenkins.home.local
+  - host: jenkins.192.168.1.24.nip.io
     http:
       paths:
       - path: /
