@@ -144,14 +144,14 @@ data:
           - title: Kubernetes Dashboard
             description: Zarządzanie klastrem K8s
             icon: hl-kubernetes
-            url: http://SERVER_IP:30001
+            url: http://192.168.1.24:30001
             target: newtab
             tags: [Kubernetes, Management]
 
           - title: Portainer
             description: Docker Management UI
             icon: hl-portainer
-            url: http://SERVER_IP:9000
+            url: http://192.168.1.24:9000
             target: newtab
             tags: [Docker, Containers]
 
