@@ -4,6 +4,7 @@ import subprocess
 import os
 import paramiko
 from datetime import datetime
+import lib.Constants
 
 def ask_sudopwd():
     sudo_password = input("Enter your sudo password: ")
@@ -12,7 +13,7 @@ def ask_sudopwd():
 # Logging function to log messages to a file
 def log_message(message, log_file=None):
     if log_file is None:
-        log_file = f"/var/services/{os.path.basename(__file__)}_{datetime.now().strftime('%Y%m%d')}.log"
+        log_file = f"{lib.Constants.log_path}/{os.path.basename(__file__)}_{datetime.now().strftime('%Y%m%d')}.log"
     try:
         with open(log_file, 'a') as f:
             f.write(message + '\n')
@@ -20,7 +21,7 @@ def log_message(message, log_file=None):
         print(f"Info =>: Failed to log message: {e}")
 
 def clean_orphaned_logs(retention_days):
-    log_dir = "/var/services/"
+    log_dir = lib.Constants.log_path
     current_time = datetime.now()
 
     for filename in os.listdir(log_dir):
@@ -98,8 +99,6 @@ def list_packages_to_update():
         log_message(f"Info =>: Failed to list upgradable packages: {e}")
         return []
 
-
-
 def update_os():
     try:
         subprocess.run(['sudo', 'apt-get', 'update'], check=True)
@@ -107,3 +106,51 @@ def update_os():
         log_message(f"Info =>: Operating system packages have been updated successfully.")
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to update operating system packages: {e}")
+
+
+# Setup cronjobs for updating the OS and cleaning orphaned logs
+def setup_cronjobs():
+    list_of_cronjobs = lib.Constants.list_of_cronjobs_to_apply
+    for cronjob in list_of_cronjobs:
+        try:
+            subprocess.run(['crontab', '-l'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(['(crontab -l; echo "{}") | crontab -'.format(cronjob)], shell=True, check=True)
+            log_message(f"Info =>: Cronjob '{cronjob}' has been set up successfully.")
+        except subprocess.CalledProcessError as e:
+            log_message(f"Info =>: Failed to set up cronjob '{cronjob}': {e}")
+
+# github.py functions
+def check_github_profile():
+    try:
+        result_name = subprocess.run(['git', 'config', '--global', 'user.name'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result_email = subprocess.run(['git', 'config', '--global', 'user.email'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        username = result_name.stdout.decode('utf-8').strip()
+        email = result_email.stdout.decode('utf-8').strip()
+        if username and email:
+            log_message(f"Info =>: GitHub profile is set up with username: {username}, email: {email}")
+            return True
+        else:
+            log_message(f"Info =>: GitHub profile is not set up.")
+            subprocess.run(['git', 'config', '--global', 'user.name', 'server'], check=True)
+            subprocess.run(['git', 'config', '--global', 'user.email', 'server@kobecloud.pl'], check=True)
+            return False
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to check GitHub profile: {e}")
+        return False
+
+def sync_git_repo():
+    git_local_path = lib.Constants.git_local_path
+    git_repo_url = lib.Constants.git_repo_url
+
+    if not os.path.exists(git_local_path):
+        try:
+            subprocess.run(['git', 'clone', git_repo_url, git_local_path], check=True)
+            log_message(f"Info =>: Git repository cloned to '{git_local_path}'.")
+        except subprocess.CalledProcessError as e:
+            log_message(f"Info =>: Failed to clone Git repository: {e}")
+    else:
+        try:
+            subprocess.run(['git', '-C', git_local_path, 'pull'], check=True)
+            log_message(f"Info =>: Git repository at '{git_local_path}' has been updated.")
+        except subprocess.CalledProcessError as e:
+            log_message(f"Info =>: Failed to update Git repository: {e}")
