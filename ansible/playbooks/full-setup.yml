@@ -284,9 +284,9 @@
     - name: Clone home_infra repository to /home/$USER/home_infra
       git:
         repo: 'https://github.com/Kobeep/home_infra.git'
-        dest: '/home/$USER/home_infra'
+        dest: '/home/{{ ansible_user }}/home_infra'
 
     - name: Run the startup hook script to set up cronjobs
-      shell: /root/home_infra/bin/startuphook.py
+      shell: /home/{{ ansible_user }}/home_infra/bin/startuphook.py
       args:
         executable: /usr/bin/env python3
