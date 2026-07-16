@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from datetime import datetime
-import subprocess
+from pathlib import Path
+import getpass
 import os
-import paramiko
-from datetime import datetime
+import subprocess
+
 import lib.Constants
 
 def ask_sudopwd():
@@ -13,28 +14,31 @@ def ask_sudopwd():
 # Logging function to log messages to a file
 def log_message(message, log_file=None):
     if log_file is None:
-        log_file = f"{lib.Constants.log_path}/{os.path.basename(__file__)}_{datetime.now().strftime('%Y%m%d')}.log"
+        script_name = Path(__file__).stem
+        log_file = lib.Constants.log_path / f"system_log_{script_name}_{datetime.now().strftime('%Y%m%d')}.log"
     try:
+        Path(lib.Constants.log_path).mkdir(parents=True, exist_ok=True)
         with open(log_file, 'a') as f:
             f.write(message + '\n')
     except Exception as e:
         print(f"Info =>: Failed to log message: {e}")
 
 def clean_orphaned_logs(retention_days):
-    log_dir = lib.Constants.log_path
+    log_dir = Path(lib.Constants.log_path)
     current_time = datetime.now()
 
-    for filename in os.listdir(log_dir):
-        if filename.startswith("system_log_") and filename.endswith(".log"):
-            file_path = os.path.join(log_dir, filename)
-            file_time_str = filename[len("system_log_"):-len(".log")]
-            try:
-                file_time = datetime.strptime(file_time_str, "%Y%m%d")
-                if (current_time - file_time).days > retention_days:
-                    os.remove(file_path)
-                    log_message(f"Info =>: Deleted orphaned log file: {file_path}")
-            except ValueError:
-                log_message(f"Info =>: Failed to parse date from log file name: {filename}")
+    if not log_dir.exists():
+        return
+
+    for file_path in log_dir.glob("system_log_*.log"):
+        file_time_str = file_path.stem.rsplit("_", 1)[-1]
+        try:
+            file_time = datetime.strptime(file_time_str, "%Y%m%d")
+            if (current_time - file_time).days > retention_days:
+                file_path.unlink()
+                log_message(f"Info =>: Deleted orphaned log file: {file_path}")
+        except ValueError:
+            log_message(f"Info =>: Failed to parse date from log file name: {file_path.name}")
 
 # Manage identities and user accounts on the system
 def add_user(username):
@@ -45,7 +49,7 @@ def add_user(username):
     except subprocess.CalledProcessError:
         # User does not exist, proceed to add
         try:
-            subprocess.run(['sudo', 'useradd', '-m', username], check=True)
+            subprocess.run(['useradd', '-m', username], check=True)
             log_message(f"Info =>: User '{username}' has been added successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}': {e}")
@@ -56,7 +60,7 @@ def remove_user(username):
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # User exists, proceed to remove
         try:
-            subprocess.run(['sudo', 'userdel', username], check=True)
+            subprocess.run(['userdel', username], check=True)
             log_message(f"Info =>: User '{username}' has been removed successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to remove user '{username}': {e}")
@@ -69,7 +73,7 @@ def grant_sudo_privileges(username):
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # User exists, proceed to grant sudo privileges
         try:
-            subprocess.run(['sudo', 'usermod', '-aG', 'sudo', username], check=True)
+            subprocess.run(['usermod', '-aG', 'sudo', username], check=True)
             log_message(f"Info =>: Sudo privileges granted to user '{username}'.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to grant sudo privileges to user '{username}': {e}")
@@ -82,7 +86,7 @@ def add_to_group(username, groupname):
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # User exists, proceed to add to group
         try:
-            subprocess.run(['sudo', 'usermod', '-aG', groupname, username], check=True)
+            subprocess.run(['usermod', '-aG', groupname, username], check=True)
             log_message(f"Info =>: User '{username}' has been added to group '{groupname}'.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}' to group '{groupname}': {e}")
@@ -101,8 +105,8 @@ def list_packages_to_update():
 
 def update_os():
     try:
-        subprocess.run(['sudo', 'apt-get', 'update'], check=True)
-        subprocess.run(['sudo', 'apt-get', 'upgrade', '-y'], check=True)
+        subprocess.run(['apt-get', 'update'], check=True)
+        subprocess.run(['apt-get', 'upgrade', '-y'], check=True)
         log_message(f"Info =>: Operating system packages have been updated successfully.")
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to update operating system packages: {e}")
@@ -113,8 +117,18 @@ def setup_cronjobs():
     list_of_cronjobs = lib.Constants.list_of_cronjobs_to_apply
     for cronjob in list_of_cronjobs:
         try:
-            subprocess.run(['crontab', '-l'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subprocess.run(['(crontab -l; echo "{}") | crontab -'.format(cronjob)], shell=True, check=True)
+            current_crontab = subprocess.run(['crontab', '-l'], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            existing_crontab = current_crontab.stdout if current_crontab.returncode == 0 else ""
+
+            if cronjob in existing_crontab:
+                log_message(f"Info =>: Cronjob '{cronjob}' is already present.")
+                continue
+
+            updated_crontab = existing_crontab.rstrip()
+            if updated_crontab:
+                updated_crontab += "\n"
+            updated_crontab += cronjob + "\n"
+            subprocess.run(['crontab', '-'], input=updated_crontab, text=True, check=True)
             log_message(f"Info =>: Cronjob '{cronjob}' has been set up successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to set up cronjob '{cronjob}': {e}")
@@ -131,8 +145,9 @@ def check_github_profile():
             return True
         else:
             log_message(f"Info =>: GitHub profile is not set up.")
-            subprocess.run(['git', 'config', '--global', 'user.name', '$USER'], check=True)
-            subprocess.run(['git', 'config', '--global', 'user.email', f'$USER@{lib.Constants.domain}'], check=True)
+            current_user = os.environ.get('SUDO_USER') or getpass.getuser()
+            subprocess.run(['git', 'config', '--global', 'user.name', current_user], check=True)
+            subprocess.run(['git', 'config', '--global', 'user.email', f'{current_user}@{lib.Constants.domain}'], check=True)
             return False
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to check GitHub profile: {e}")

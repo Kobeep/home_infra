@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
-import lib.Utils;
-import lib.Constants;
-import argparse;
+from pathlib import Path
+import argparse
+import subprocess
+import sys
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+import lib.Utils
+import lib.Constants
 
 parser = argparse.ArgumentParser(description="Manage system users")
 parser.add_argument("--username", help="Enter username to add or remove", required=True)
@@ -9,9 +17,6 @@ parser.add_argument("--action", help="Enter action to perform (add, remove, gran
 parser.add_argument("--password", help="Enter password for the user (only required for adding a user)", required=False)
 parser.add_argument("--groupname", help="Enter group name to add the user to (only required for adding to a group)", required=False)
 args = parser.parse_args()
-
-# Ask for sudo password
-sudo_password = lib.Utils.ask_sudopwd()
 
 if not args.username:
     print("INFO ==> Didnt provide any user. Setting default username to 'ubuntuserver'.")
@@ -28,6 +33,8 @@ elif not args.action:
 
 if args.action == "add":
     lib.Utils.add_user(args.username)
+    if args.password:
+        subprocess.run(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
 elif args.action == "remove":
     lib.Utils.remove_user(args.username)
 elif args.action == "grant_sudo":

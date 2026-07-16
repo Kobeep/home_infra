@@ -287,6 +287,6 @@
         dest: '/home/$USER/home_infra'
 
     - name: Run the startup hook script to set up cronjobs
-      shell: /home/$USER/home_infra/bin/startuphook.py
+      shell: /root/home_infra/bin/startuphook.py
       args:
         executable: /usr/bin/env python3
