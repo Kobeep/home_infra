@@ -281,6 +281,7 @@
           - "  kubectl get pods -A              # View all pods"
           - ""
           - "=========================================="
+
     - name: Clone home_infra repository to /home/$USER/home_infra
       become_user: "{{ ansible_user }}"
       git:
