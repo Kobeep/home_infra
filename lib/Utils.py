@@ -131,8 +131,8 @@ def check_github_profile():
             return True
         else:
             log_message(f"Info =>: GitHub profile is not set up.")
-            subprocess.run(['git', 'config', '--global', 'user.name', 'server'], check=True)
-            subprocess.run(['git', 'config', '--global', 'user.email', 'server@kobecloud.pl'], check=True)
+            subprocess.run(['git', 'config', '--global', 'user.name', '$USER'], check=True)
+            subprocess.run(['git', 'config', '--global', 'user.email', f'$USER@{lib.Constants.domain}'], check=True)
             return False
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to check GitHub profile: {e}")

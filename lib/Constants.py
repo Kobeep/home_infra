@@ -4,7 +4,7 @@
 proposed_username = "service"
 proposed_groupname = "service"
 retention_days = 30
-
+domain = "kobecloud.pl"
 git_local_path = "/home/$USER/home_infra"
 bin_path = "$git_local_path/bin"
 lib_path = "$git_local_path/lib"
