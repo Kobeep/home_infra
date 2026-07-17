@@ -215,6 +215,8 @@
         kubectl apply -f /root/home_infra/k8s/grocy/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/backup/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/vault/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/infra-api/namespace.yaml
+        kubectl apply -f /root/home_infra/k8s/opengrok/namespace.yaml
 
     - name: Wait for namespaces to be ready
       shell: |
@@ -228,6 +230,8 @@
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/grocy --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/backup --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/vault --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/infra-api --timeout=30s
+        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/opengrok --timeout=30s
 
     - name: Deploy all K8s manifests
       shell: kubectl apply -k /root/home_infra/k8s/
