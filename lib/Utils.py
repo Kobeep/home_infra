@@ -41,6 +41,9 @@ def clean_orphaned_logs(retention_days):
             log_message(f"Info =>: Failed to parse date from log file name: {file_path.name}")
 
 # Manage identities and user accounts on the system
+def get_current_user():
+    return getpass.getuser()
+
 def add_user(username):
     try:
         # Check if the user already exists
@@ -169,3 +172,70 @@ def sync_git_repo():
             log_message(f"Info =>: Git repository at '{git_local_path}' has been updated.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to update Git repository: {e}")
+
+# Monitoring functions
+def get_cpu_usage():
+    try:
+        result = subprocess.run(['top', '-bn1'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        for line in output.splitlines():
+            if "Cpu(s)" in line:
+                cpu_usage = float(line.split('%')[0].split()[-1])
+                return cpu_usage
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to get CPU usage: {e}")
+        return 0.0
+
+def get_memory_usage():
+    try:
+        result = subprocess.run(['free', '-m'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        lines = output.splitlines()
+        mem_line = lines[1]
+        total_mem = float(mem_line.split()[1])
+        used_mem = float(mem_line.split()[2])
+        memory_usage = (used_mem / total_mem) * 100
+        return memory_usage
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to get memory usage: {e}")
+        return 0.0
+
+def get_disk_usage():
+    try:
+        result = subprocess.run(['df', '-h'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        lines = output.splitlines()
+        disk_line = lines[1]
+        total_disk = float(disk_line.split()[1].replace('G', ''))
+        used_disk = float(disk_line.split()[2].replace('G', ''))
+        disk_usage = (used_disk / total_disk) * 100
+        return disk_usage
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to get disk usage: {e}")
+        return 0.0
+
+def get_inode_usage():
+    try:
+        result = subprocess.run(['df', '-i'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        lines = output.splitlines()
+        inode_line = lines[1]
+        total_inodes = float(inode_line.split()[1])
+        used_inodes = float(inode_line.split()[2])
+        inode_usage = (used_inodes / total_inodes) * 100
+        return inode_usage
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to get inode usage: {e}")
+        return 0.0
+
+def get_io_usage():
+    try:
+        result = subprocess.run(['iostat', '-dx'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        lines = output.splitlines()
+        io_line = lines[-1]
+        io_usage = float(io_line.split()[-1])
+        return io_usage
+    except subprocess.CalledProcessError as e:
+        log_message(f"Info =>: Failed to get IO usage: {e}")
+        return 0.0
