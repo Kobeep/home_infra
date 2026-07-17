@@ -257,7 +257,12 @@
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
     - name: Install External Secrets Operator
-      shell: helm upgrade --install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace --set installCRDs=true
+      shell: |
+        helm upgrade --install external-secrets external-secrets/external-secrets \
+          -n external-secrets \
+          --create-namespace \
+          --version "0.9.14" \
+          --set installCRDs=true
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
