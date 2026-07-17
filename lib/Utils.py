@@ -4,6 +4,7 @@ from pathlib import Path
 import getpass
 import os
 import subprocess
+import shutil
 
 import lib.Constants
 
@@ -226,15 +227,10 @@ def get_memory_usage():
 
 def get_disk_usage():
     try:
-        result = subprocess.run(['df', '-h'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output = result.stdout.decode('utf-8')
-        lines = output.splitlines()
-        disk_line = lines[1]
-        total_disk = int(disk_line.split()[1].replace('G', ''))
-        used_disk = int(disk_line.split()[2].replace('G', ''))
-        disk_usage = (used_disk / total_disk) * 100
-        return disk_usage
-    except subprocess.CalledProcessError as e:
+        total, used, free = shutil.disk_usage("/")
+        disk_usage = (used / total) * 100
+        return round(disk_usage, 1)
+    except Exception as e:
         log_message(f"Info =>: Failed to get disk usage: {e}")
         return 0.0
 
