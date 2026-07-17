@@ -1,0 +1,4 @@
+# Requirements for Home Lab API
+fastapi
+uvicorn
+psycopg2-binary
