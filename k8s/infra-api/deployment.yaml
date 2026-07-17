@@ -13,6 +13,8 @@ spec:
       labels:
         app: infra-api
     spec:
+      hostNetwork: true
+      hostPID: true
       imagePullSecrets:
         - name: ghcr-cred
       containers:
@@ -21,3 +23,24 @@ spec:
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          env:
+            - name: KUBECONFIG
+              value: /etc/rancher/k3s/k3s.yaml
+          volumeMounts:
+            - name: host-root
+              mountPath: /host
+              readOnly: true
+            - name: k3s-config
+              mountPath: /etc/rancher/k3s/k3s.yaml
+              readOnly: true
+      volumes:
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory
+        - name: k3s-config
+          hostPath:
+            path: /etc/rancher/k3s/k3s.yaml
+            type: File

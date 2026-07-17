@@ -16,7 +16,7 @@ async def health_check():
         "uptime": subprocess.run(["uptime"], capture_output=True, text=True).stdout.strip(),
         "load": subprocess.run(["cat", "/proc/loadavg"], capture_output=True, text=True).stdout.strip(),
         "memory": subprocess.run(["free", "-h"], capture_output=True, text=True).stdout.strip(),
-        "disk": subprocess.run(["df", "-h"], capture_output=True, text=True).stdout.strip(),
+        "disk": subprocess.run(["df", "-h", "/host"], capture_output=True, text=True).stdout.strip(),
         "network": subprocess.run(["ifconfig"], capture_output=True, text=True).stdout.strip(),
     }
     json_response = {
