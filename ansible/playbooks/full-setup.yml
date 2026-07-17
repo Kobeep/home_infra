@@ -34,6 +34,7 @@
       git:
         repo: 'git@github.com:Kobeep/home_infra.git'
         dest: '/home/{{ ansible_user }}/home_infra'
+        key_file: '/home/{{ ansible_user }}/.ssh/id_rsa'
 
     - name: Run the startup hook script to set up cronjobs
       become_user: "{{ ansible_user }}"
