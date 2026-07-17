@@ -12,3 +12,4 @@ resources:
 - prometheus
 - cert-manager
 - opengrok
+- infra-api

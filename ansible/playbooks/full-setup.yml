@@ -184,6 +184,21 @@
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
+    - name: Create secret for GHCR directly from memory
+      ansible.builtin.shell: |
+        kubectl create secret docker-registry ghcr-cred \
+          --docker-server=ghcr.io \
+          --docker-username="$GH_USER" \
+          --docker-password="$GH_TOKEN" \
+          --docker-email="$GH_EMAIL" \
+          --namespace=default \
+          --dry-run=client -o yaml | kubectl apply -f -
+      environment:
+        GH_USER: "{{ lookup('ansible.builtin.env', 'GITHUB_USERNAME') }}"
+        GH_TOKEN: "{{ lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        GH_EMAIL: "{{ lookup('ansible.builtin.env', 'GITHUB_EMAIL') }}"
+      no_log: true
+
     # =====================================================
     # DEPLOY ALL APPLICATIONS
     # =====================================================
@@ -217,8 +232,6 @@
       shell: kubectl apply -k /root/home_infra/k8s/
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-
 
     - name: Wait for all pods to be ready
       shell: kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=300s

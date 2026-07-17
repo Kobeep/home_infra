@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-api-deployment
+  namespace: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infra-api
+  template:
+    metadata:
+      labels:
+        app: infra-api
+    spec:
+      imagePullSecrets:
+        - name: ghcr-cred
+      containers:
+        - name: api-container
+          image: ghcr.io/kobeep/home_infra:latest
+          ports:
+            - containerPort: 8000
+          imagePullPolicy: Always

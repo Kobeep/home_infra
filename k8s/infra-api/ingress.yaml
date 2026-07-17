@@ -1,0 +1,26 @@
+# Ingress dla Infra API - api.192.168.1.24.nip.io
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: infra-api-ingress
+  namespace: api
+  annotations:
+    cert-manager.io/cluster-issuer: local-ca
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.192.168.1.24.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: infra-api-service
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - api.192.168.1.24.nip.io
+    secretName: infra-api-tls

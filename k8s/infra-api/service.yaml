@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: infra-api-service
+  namespace: api
+spec:
+  type: ClusterIP
+  selector:
+    app: infra-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
