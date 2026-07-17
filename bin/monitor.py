@@ -41,9 +41,5 @@ def main():
   if io_usage > 80:
       lib.Utils.log_message(f"Warning =>: High IO usage detected: {io_usage}%")
 
-    # Keep the script running indefinitely to continuously monitor the system
-  while True:
-      time.sleep(60)
-
 if __name__ == "__main__":
       main()
