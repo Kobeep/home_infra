@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: infra-api:${{ github.ref_name }}
+  IMAGE_NAME: infra-api
 
 jobs:
   build-and-push-image:
