@@ -196,10 +196,17 @@ def get_cpu_usage():
         result = subprocess.run(['top', '-bn1'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         for line in output.splitlines():
-            if "Cpu(s)" in line:
-                cpu_usage = float(line.split('%')[0].split()[-1])
-                return cpu_usage
-    except subprocess.CalledProcessError as e:
+            if "Cpu(s)" in line or "cpu" in line.lower():
+                # Bezpieczne wyciąganie wartości: szukamy wolnego procesora (id / idle)
+                # i odejmujemy od 100, co jest najbardziej uniwersalne.
+                parts = line.split()
+                for i, part in enumerate(parts):
+                    if "id" in part:  # szukamy np. "95.2 id,"
+                        # bierzemy element tuż przed "id"
+                        idle = float(parts[i-1].replace(',', '.'))
+                        return round(100.0 - idle, 1)
+        return 0.0
+    except Exception as e:
         log_message(f"Info =>: Failed to get CPU usage: {e}")
         return 0.0
 
