@@ -29,6 +29,18 @@
           - lsb-release
         state: present
 
+    - name: Clone home_infra repository to /home/$USER/home_infra
+      become_user: "{{ ansible_user }}"
+      git:
+        repo: 'https://github.com/Kobeep/home_infra.git'
+        dest: '/home/{{ ansible_user }}/home_infra'
+
+    - name: Run the startup hook script to set up cronjobs
+      become_user: "{{ ansible_user }}"
+      shell: /home/{{ ansible_user }}/home_infra/bin/startuphook.py
+      args:
+        executable: /usr/bin/env python3
+
     # =====================================================
     # K3S INSTALLATION
     # =====================================================
@@ -281,15 +293,3 @@
           - "  kubectl get pods -A              # View all pods"
           - ""
           - "=========================================="
-
-    - name: Clone home_infra repository to /home/$USER/home_infra
-      become_user: "{{ ansible_user }}"
-      git:
-        repo: 'https://github.com/Kobeep/home_infra.git'
-        dest: '/home/{{ ansible_user }}/home_infra'
-
-    - name: Run the startup hook script to set up cronjobs
-      become_user: "{{ ansible_user }}"
-      shell: /home/{{ ansible_user }}/home_infra/bin/startuphook.py
-      args:
-        executable: /usr/bin/env python3

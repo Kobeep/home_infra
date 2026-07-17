@@ -13,7 +13,7 @@ bin_path = project_root / "bin"
 lib_path = project_root / "lib"
 log_path = Path("/var/services/logs")
 git_repo_url = "https://github.com/Kobeep/home_infra.git"
-
+git_node_mount_path = Path("/tmp/git")
 
 
 # Cronjob schedules

@@ -11,3 +11,4 @@ resources:
 - jenkins
 - prometheus
 - cert-manager
+- opengrok

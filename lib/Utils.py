@@ -172,6 +172,23 @@ def sync_git_repo():
             log_message(f"Info =>: Git repository at '{git_local_path}' has been updated.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to update Git repository: {e}")
+# rsync git repo from local to node path
+def rsync_git_repo():
+    git_node_mount_path = lib.Constants.git_node_mount_path
+    git_repo_url = lib.Constants.git_repo_url
+
+    if not os.path.exists(git_node_mount_path):
+        try:
+            subprocess.run(['git', 'clone', git_repo_url, git_node_mount_path], check=True)
+            log_message(f"Info =>: Git repository cloned to '{git_node_mount_path}'.")
+        except subprocess.CalledProcessError as e:
+            log_message(f"Info =>: Failed to clone Git repository: {e}")
+    else:
+        try:
+            subprocess.run(['rsync', '-av', '--delete', f'{git_local_path}/', f'{git_node_mount_path}/'], check=True)
+            log_message(f"Info =>: Git repository at '{git_node_mount_path}' has been synchronized.")
+        except subprocess.CalledProcessError as e:
+            log_message(f"Info =>: Failed to synchronize Git repository: {e}")
 
 # Monitoring functions
 def get_cpu_usage():
