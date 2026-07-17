@@ -8,4 +8,8 @@ if str(project_root) not in sys.path:
 
 import lib.Utils
 
-lib.Utils.update_os()
+def main():
+    lib.Utils.update_os()
+
+if __name__ == "__main__":
+    main()

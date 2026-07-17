@@ -9,4 +9,8 @@ if str(project_root) not in sys.path:
 import lib.Utils
 import lib.Constants
 
-lib.Utils.clean_orphaned_logs(lib.Constants.retention_days)
+def main():
+    lib.Utils.clean_orphaned_logs(lib.Constants.retention_days)
+
+if __name__ == "__main__":
+    main()

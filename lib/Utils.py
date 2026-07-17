@@ -230,8 +230,8 @@ def get_disk_usage():
         output = result.stdout.decode('utf-8')
         lines = output.splitlines()
         disk_line = lines[1]
-        total_disk = float(disk_line.split()[1].replace('G', ''))
-        used_disk = float(disk_line.split()[2].replace('G', ''))
+        total_disk = int(disk_line.split()[1].replace('G', ''))
+        used_disk = int(disk_line.split()[2].replace('G', ''))
         disk_usage = (used_disk / total_disk) * 100
         return disk_usage
     except subprocess.CalledProcessError as e:

@@ -10,6 +10,9 @@ if str(project_root) not in sys.path:
 import lib.Utils
 import bin.monitor
 
-lib.Utils.setup_cronjobs()
+def main():
+  lib.Utils.setup_cronjobs()
+  bin.monitor.main()
 
-bin.monitor.main()
+if __name__ == "__main__":
+    main()
