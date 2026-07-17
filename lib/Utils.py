@@ -12,7 +12,6 @@ def ask_sudopwd():
     sudo_password = input("Enter your sudo password: ")
     return sudo_password
 
-# Logging function to log messages to a file
 def log_message(message, log_file=None):
     if log_file is None:
         script_name = Path(__file__).stem
@@ -41,17 +40,14 @@ def clean_orphaned_logs(retention_days):
         except ValueError:
             log_message(f"Info =>: Failed to parse date from log file name: {file_path.name}")
 
-# Manage identities and user accounts on the system
 def get_current_user():
     return getpass.getuser()
 
 def add_user(username):
     try:
-        # Check if the user already exists
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         log_message(f"Info =>: User '{username}' already exists.")
     except subprocess.CalledProcessError:
-        # User does not exist, proceed to add
         try:
             subprocess.run(['useradd', '-m', username], check=True)
             log_message(f"Info =>: User '{username}' has been added successfully.")
@@ -60,9 +56,7 @@ def add_user(username):
 
 def remove_user(username):
     try:
-        # Check if the user exists
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # User exists, proceed to remove
         try:
             subprocess.run(['userdel', username], check=True)
             log_message(f"Info =>: User '{username}' has been removed successfully.")
@@ -73,9 +67,7 @@ def remove_user(username):
 
 def grant_sudo_privileges(username):
     try:
-        # Check if the user exists
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # User exists, proceed to grant sudo privileges
         try:
             subprocess.run(['usermod', '-aG', 'sudo', username], check=True)
             log_message(f"Info =>: Sudo privileges granted to user '{username}'.")
@@ -86,9 +78,7 @@ def grant_sudo_privileges(username):
 
 def add_to_group(username, groupname):
     try:
-        # Check if the user exists
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # User exists, proceed to add to group
         try:
             subprocess.run(['usermod', '-aG', groupname, username], check=True)
             log_message(f"Info =>: User '{username}' has been added to group '{groupname}'.")
@@ -97,12 +87,11 @@ def add_to_group(username, groupname):
     except subprocess.CalledProcessError:
         log_message(f"Info =>: User '{username}' does not exist.")
 
-# Update the operating system packages
 def list_packages_to_update():
     try:
         result = subprocess.run(['apt', 'list', '--upgradable'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         packages = result.stdout.decode('utf-8').splitlines()
-        return packages[1:]  # Skip the first line which is a header
+        return packages[1:]
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to list upgradable packages: {e}")
         return []
@@ -115,8 +104,6 @@ def update_os():
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to update operating system packages: {e}")
 
-
-# Setup cronjobs for updating the OS and cleaning orphaned logs
 def setup_cronjobs():
     list_of_cronjobs = lib.Constants.list_of_cronjobs_to_apply
     for cronjob in list_of_cronjobs:
@@ -137,7 +124,6 @@ def setup_cronjobs():
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to set up cronjob '{cronjob}': {e}")
 
-# github.py functions
 def check_github_profile():
     try:
         result_name = subprocess.run(['git', 'config', '--global', 'user.name'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -173,8 +159,9 @@ def sync_git_repo():
             log_message(f"Info =>: Git repository at '{git_local_path}' has been updated.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to update Git repository: {e}")
-# rsync git repo from local to node path
+
 def rsync_git_repo():
+    git_local_path = lib.Constants.git_local_path
     git_node_mount_path = lib.Constants.git_node_mount_path
     git_repo_url = lib.Constants.git_repo_url
 
@@ -191,20 +178,16 @@ def rsync_git_repo():
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to synchronize Git repository: {e}")
 
-# Monitoring functions
 def get_cpu_usage():
     try:
         result = subprocess.run(['top', '-bn1'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         for line in output.splitlines():
-            if "Cpu(s)" in line or "cpu" in line.lower():
-                # Bezpieczne wyciąganie wartości: szukamy wolnego procesora (id / idle)
-                # i odejmujemy od 100, co jest najbardziej uniwersalne.
-                parts = line.split()
+            if "cpu" in line.lower():
+                parts = line.replace(',', '.').split()
                 for i, part in enumerate(parts):
-                    if "id" in part:  # szukamy np. "95.2 id,"
-                        # bierzemy element tuż przed "id"
-                        idle = float(parts[i-1].replace(',', '.'))
+                    if "id" in part and i > 0:
+                        idle = float(parts[i-1].strip('%'))
                         return round(100.0 - idle, 1)
         return 0.0
     except Exception as e:
@@ -216,35 +199,42 @@ def get_memory_usage():
         result = subprocess.run(['free', '-m'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         lines = output.splitlines()
-        mem_line = lines[1]
-        total_mem = float(mem_line.split()[1])
-        used_mem = float(mem_line.split()[2])
-        memory_usage = (used_mem / total_mem) * 100
-        return memory_usage
-    except subprocess.CalledProcessError as e:
+        if len(lines) > 1:
+            mem_line = lines[1]
+            parts = mem_line.split()
+            total_mem = float(parts[1])
+            used_mem = float(parts[2])
+            if total_mem > 0:
+                return round((used_mem / total_mem) * 100, 1)
+        return 0.0
+    except Exception as e:
         log_message(f"Info =>: Failed to get memory usage: {e}")
         return 0.0
 
 def get_disk_usage():
     try:
         total, used, free = shutil.disk_usage("/")
-        disk_usage = (used / total) * 100
-        return round(disk_usage, 1)
+        if total > 0:
+            return round((used / total) * 100, 1)
+        return 0.0
     except Exception as e:
         log_message(f"Info =>: Failed to get disk usage: {e}")
         return 0.0
 
 def get_inode_usage():
     try:
-        result = subprocess.run(['df', '-i'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.run(['df', '-i', '/'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         lines = output.splitlines()
-        inode_line = lines[1]
-        total_inodes = float(inode_line.split()[1])
-        used_inodes = float(inode_line.split()[2])
-        inode_usage = (used_inodes / total_inodes) * 100
-        return inode_usage
-    except subprocess.CalledProcessError as e:
+        if len(lines) > 1:
+            inode_line = lines[1]
+            parts = inode_line.split()
+            total_inodes = float(parts[1])
+            used_inodes = float(parts[2])
+            if total_inodes > 0:
+                return round((used_inodes / total_inodes) * 100, 1)
+        return 0.0
+    except Exception as e:
         log_message(f"Info =>: Failed to get inode usage: {e}")
         return 0.0
 
@@ -252,10 +242,16 @@ def get_io_usage():
     try:
         result = subprocess.run(['iostat', '-dx'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
-        lines = output.splitlines()
-        io_line = lines[-1]
-        io_usage = float(io_line.split()[-1])
-        return io_usage
-    except subprocess.CalledProcessError as e:
+        for line in reversed(output.splitlines()):
+            parts = line.split()
+            if not parts:
+                continue
+            try:
+                io_usage = float(parts[-1].replace(',', '.'))
+                return io_usage
+            except ValueError:
+                continue
+        return 0.0
+    except Exception as e:
         log_message(f"Info =>: Failed to get IO usage: {e}")
         return 0.0
