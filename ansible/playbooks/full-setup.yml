@@ -211,9 +211,6 @@
         kubectl apply -f /root/home_infra/k8s/adguard/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/grafana/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/influxdb/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/openwebui/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/grocy/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/backup/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/vault/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/infra-api/namespace.yaml
         kubectl apply -f /root/home_infra/k8s/opengrok/namespace.yaml
@@ -226,9 +223,6 @@
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/adguard --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/monitoring --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/influxdb --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/openwebui --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/grocy --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/backup --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/vault --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/infra-api --timeout=30s
         kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/opengrok --timeout=30s
@@ -287,8 +281,6 @@
           - "  📊 Grafana:          http://{{ server_ip }}/grafana"
           - "  📈 Prometheus:       http://{{ server_ip }}/prometheus"
           - "  🛡️  AdGuard:          http://{{ server_ip }}/adguard"
-          - "  🤖 OpenWebUI:        http://{{ server_ip }}/openwebui"
-          - "  🛒 Grocy:            http://{{ server_ip }}/grocy"
           - "  💾 InfluxDB:         http://{{ server_ip }}/influxdb"
           - ""
           - "💡 Notes:"
