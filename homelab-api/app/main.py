@@ -30,8 +30,8 @@ app.add_middleware(
 )
 
 # Include routers for different API endpoints
-app.include_router(health.router, prefix="/api/health", tags=["Health"])
-app.include_router(kubernetes.router, prefix="/api/kubernetes", tags=["Kubernetes"])
+app.include_router(health.router, prefix="/api/", tags=["Health"])
+app.include_router(kubernetes.router, prefix="/api/", tags=["Kubernetes"])
 
 # list of available endpoints
 @app.get("/api", tags=["API"])

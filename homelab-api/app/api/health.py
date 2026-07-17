@@ -5,7 +5,7 @@ import subprocess
 router = APIRouter()
 
 # Check state of machine : uptime, load, memory, disk, network
-@router.get("/", tags=["Health"])
+@router.get("/health", tags=["Health"])
 async def health_check():
     """
     Health check endpoint to monitor the state of the machine.

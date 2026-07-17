@@ -4,7 +4,7 @@ from kubernetes import client, config
 
 router = APIRouter()
 
-@router.get("/", tags=["Kubernetes"])
+@router.get("/kubernetes", tags=["Kubernetes"])
 async def kubernetes_info():
     """
     Get information about the Kubernetes cluster.
@@ -27,7 +27,7 @@ async def kubernetes_info():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/cluster-info", tags=["Kubernetes"])
+@router.get("/kubernetes/cluster-info", tags=["Kubernetes"])
 async def get_cluster_info():
     """
     Get information about the Kubernetes cluster.
@@ -50,7 +50,7 @@ async def get_cluster_info():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/nodes", tags=["Kubernetes"])
+@router.get("/kubernetes/nodes", tags=["Kubernetes"])
 async def get_nodes():
     """
     Get a list of nodes in the Kubernetes cluster.
@@ -74,7 +74,7 @@ async def get_nodes():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/pods", tags=["Kubernetes"])
+@router.get("/kubernetes/pods", tags=["Kubernetes"])
 async def get_pods():
     """
     Get a list of pods in the Kubernetes cluster.
@@ -99,7 +99,7 @@ async def get_pods():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/services", tags=["Kubernetes"])
+@router.get("/kubernetes/services", tags=["Kubernetes"])
 async def get_services():
     """
     Get a list of services in the Kubernetes cluster.
@@ -124,7 +124,7 @@ async def get_services():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/deployments", tags=["Kubernetes"])
+@router.get("/kubernetes/deployments", tags=["Kubernetes"])
 async def get_deployments():
     """
     Get a list of deployments in the Kubernetes cluster.
@@ -149,7 +149,7 @@ async def get_deployments():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/state", tags=["Kubernetes"])
+@router.get("/kubernetes/state", tags=["Kubernetes"])
 async def get_kubernetes_state():
     """
     Get the overall state of the Kubernetes cluster.
@@ -187,7 +187,7 @@ async def get_kubernetes_state():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/cluster-health", tags=["Kubernetes"])
+@router.get("/kubernetes/cluster-health", tags=["Kubernetes"])
 async def get_cluster_health():
     """
     Get the health status of the Kubernetes cluster.
@@ -220,7 +220,7 @@ async def get_cluster_health():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/cluster-metrics", tags=["Kubernetes"])
+@router.get("/kubernetes/cluster-metrics", tags=["Kubernetes"])
 async def get_cluster_metrics():
     """
     Get metrics of the Kubernetes cluster.
@@ -260,7 +260,7 @@ async def get_cluster_metrics():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/cluster-logs", tags=["Kubernetes"])
+@router.get("/kubernetes/cluster-logs", tags=["Kubernetes"])
 async def get_cluster_logs():
     """
     Get logs of the Kubernetes cluster.
@@ -296,7 +296,7 @@ async def get_cluster_logs():
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/cluster-events", tags=["Kubernetes"])
+@router.get("/kubernetes/cluster-events", tags=["Kubernetes"])
 async def get_cluster_events():
     """
     Get events of the Kubernetes cluster.
