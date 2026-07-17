@@ -1,4 +1,3 @@
----
 - name: Home Lab - Full Server Setup
   hosts: server
   become: true
@@ -133,20 +132,21 @@
     # =====================================================
     # INSTALL INGRESS NGINX CONTROLLER
     # =====================================================
-    - name: Check if ingress-nginx namespace exists
-      shell: kubectl get namespace ingress-nginx
-      register: ingress_ns
-      failed_when: false
-      changed_when: false
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
     - name: Install Ingress NGINX Controller
       shell: |
         kubectl apply -k /root/home_infra/k8s/ingress-nginx/
-      when: ingress_ns.rc != 0
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    - name: Wait for Ingress NGINX Controller deployment to exist
+      shell: |
+        kubectl get deployment -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[*].metadata.name}'
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      register: deployment_exists
+      until: deployment_exists.stdout != ""
+      retries: 12
+      delay: 5
 
     - name: Wait for Ingress NGINX Controller to be ready
       shell: |
@@ -156,10 +156,10 @@
           --timeout=120s
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      retries: 3
-      delay: 10
       register: result
       until: result.rc == 0
+      retries: 3
+      delay: 10
 
     # =====================================================
     # INSTALL CERT-MANAGER
@@ -260,8 +260,6 @@
       shell: helm upgrade --install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace --set installCRDs=true
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    # Omitted imperative Dashy and Ingress config patching in favor of declarative GitOpsYAML
 
     # =====================================================
     # DISPLAY ACCESS INFO
