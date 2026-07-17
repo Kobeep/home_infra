@@ -4,6 +4,10 @@ from pathlib import Path
 import lib.Utils
 import time
 
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 def main():
   # Check CPU usage
   cpu_usage = lib.Utils.get_cpu_usage()
