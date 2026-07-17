@@ -6,3 +6,4 @@ resources:
 - pvc.yaml
 - pv.yaml
 - service.yaml
+- sc.yaml
