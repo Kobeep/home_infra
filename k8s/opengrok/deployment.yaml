@@ -1,39 +1,39 @@
-- apiVersion: apps/v1
-    kind: Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opengrok
+  namespace: opengrok
+  labels:
+    app: opengrok
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opengrok
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+      maxSurge: 1
+  template:
     metadata:
-      name: opengrok
-      namespace: opengrok
       labels:
         app: opengrok
-      spec:
-        replicas: 1
-        selector:
-          matchLabels:
-            app: opengrok
-        strategy:
-          type: RollingUpdate
-          rollingUpdate:
-            maxUnavailable: 50%
-            maxSurge: 1
-        template:
-          metadata:
-            labels:
-              app: opengrok
-          spec:
-            containers:
-            - name: opengrok
-              image: opengrok/docker
-              imagePullPolicy: Always
-              ports:
-              - containerPort: 8080
-              env:
-              - name: REINDEX
-                value: "0"
-              volumeMounts:
-                - name: git-volume
-                  mountPath: /src
-            terminationGracePeriodSeconds: 30
-            volumes:
-            - name: git-volume
-              persistentVolumeClaim:
-                claimName: git-local-pvc
+    spec:
+      containers:
+      - name: opengrok
+        image: opengrok/docker
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REINDEX
+          value: "0"
+        volumeMounts:
+          - name: git-volume
+            mountPath: /src
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: git-volume
+        persistentVolumeClaim:
+          claimName: git-local-pvc

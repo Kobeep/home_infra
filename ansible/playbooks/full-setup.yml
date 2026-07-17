@@ -197,6 +197,7 @@
         GH_USER: "{{ lookup('ansible.builtin.env', 'GITHUB_USERNAME') }}"
         GH_TOKEN: "{{ lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
         GH_EMAIL: "{{ lookup('ansible.builtin.env', 'GITHUB_EMAIL') }}"
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
       no_log: true
 
     # =====================================================
