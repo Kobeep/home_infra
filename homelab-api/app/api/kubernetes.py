@@ -461,11 +461,12 @@ async def get_persistent_volume_claims(namespace: str = "default"):
     except Exception as e:
         return {"error": str(e)}
 
+# Returns names of ingresses and their hosts (DNS) in all namespaces in JSON format.
 @router.get("/kubernetes/ingresses", tags=["Kubernetes"])
-async def get_ingresses(namespace: str = "default"):
+async def get_ingresses():
     """
     Get a list of Ingresses in the Kubernetes cluster.
-    Returns name of pod which is attached to the Ingress and its address(DNS) in JSON format.
+    Returns Ingress names and their hosts in JSON format.
     """
     try:
         # Load Kubernetes configuration
@@ -473,12 +474,14 @@ async def get_ingresses(namespace: str = "default"):
         networking_v1 = client.NetworkingV1Api()
 
         # Get Ingresses
-        ingresses = networking_v1.list_namespaced_ingress(namespace)
+        ingresses = networking_v1.list_ingress_for_all_namespaces()
         ingress_info = []
         for ingress in ingresses.items:
+            hosts = [rule.host for rule in ingress.spec.rules]
             ingress_info.append({
                 "name": ingress.metadata.name,
-                "address": ingress.status.load_balancer.ingress[0].hostname if ingress.status.load_balancer.ingress else None,
+                "namespace": ingress.metadata.namespace,
+                "hosts": hosts,
             })
         json_response = {
             "ingresses": ingress_info
