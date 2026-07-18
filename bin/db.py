@@ -1,47 +1,74 @@
 #!/usr/bin/env python3
-# Script destined to generate/update sqlite database with pods informations (hostname, ip, status, etc.) from homelab-api -> api/kubernetes.
 import os
 import urllib.request
 import sqlite3
+import json
 
-# download/setup sqlite database if not exists
-if not os.path.isfile("/var/services/db.sqlite"):
-    print("Database not found. Downloading...")
-    urllib.request.urlretrieve("https://example.com/path/to/db.sqlite", "/var/service/db.sqlite")
+DB_PATH = "/var/service/db.sqlite"
 
-# Gather pods informations from homelab-api -> api/kubernetes
-request1 = urllib.request.Request("http://api.192.168.1.24.nip.io/api/kubernetes/pods")
-request2 = urllib.request.Request("http://api.192.168.1.24.nip.io/api/kubernetes/ingresses")
-# Api returns a JSON with all pods informations, we need to parse it and store it in the sqlite database.
+if not os.path.isfile(DB_PATH):
+    print("Info =>: Database not found. Creating a new database file...")
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+        with open(DB_PATH, 'w'): pass
+    except Exception as e:
+        print(f"Info =>: Failed to create database directory or file: {e}")
+        exit(1)
 
-with urllib.request.urlopen(request) as response:
-    import json
-    data = json.load(response)
+pods_url = "https://api.192.168.1.24.nip.io/api/kubernetes/pods"
+ingresses_url = "https://api.192.168.1.24.nip.io/api/kubernetes/ingresses"
 
-# Connect to the sqlite database and update it with the pods informations
-conn = sqlite3.connect("/var/service/db.sqlite")
+try:
+    with urllib.request.urlopen(pods_url) as resp:
+        pods_data = json.load(resp)
+
+    with urllib.request.urlopen(ingresses_url) as resp:
+        ingress_data = json.load(resp)
+except Exception as e:
+    print(f"Info =>: Error fetching data from API: {e}")
+    exit(1)
+
+conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
-# Create table if not exists
 cursor.execute('''CREATE TABLE IF NOT EXISTS pods (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     namespace TEXT NOT NULL,
-                    status TEXT NOT NULL,
-                    created_at TEXT NOT NULL
+                    status TEXT NOT NULL
                 )''')
 
-# Clear existing data
+cursor.execute('''CREATE TABLE IF NOT EXISTS ingresses (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    namespace TEXT NOT NULL,
+                    host TEXT NOT NULL
+                )''')
+
 cursor.execute("DELETE FROM pods")
+cursor.execute("DELETE FROM ingresses")
 
-# Insert new data
-for pod in data['items']:
-    name = pod['metadata']['name']
-    namespace = pod['metadata']['namespace']
-    status = pod['status']['phase']
+for pod in pods_data.get('pods', []):
+    name = pod.get('name')
+    namespace = pod.get('namespace')
+    status = pod.get('status')
 
-    cursor.execute("INSERT INTO pods (name, namespace, status, ip, node_name, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                   (name, namespace, status))
+    cursor.execute(
+        "INSERT INTO pods (name, namespace, status) VALUES (?, ?, ?)",
+        (name, namespace, status)
+    )
+
+for ingress in ingress_data.get('ingresses', []):
+    name = ingress.get('name')
+    namespace = ingress.get('namespace')
+    hosts = ", ".join(ingress.get('hosts', [])) if ingress.get('hosts') else "N/A"
+
+    cursor.execute(
+        "INSERT INTO ingresses (name, namespace, host) VALUES (?, ?, ?)",
+        (name, namespace, hosts)
+    )
 
 conn.commit()
 conn.close()
+
+print("Info =>: Database successfully updated with pods and ingresses!")
