@@ -465,7 +465,7 @@ async def get_persistent_volume_claims(namespace: str = "default"):
 async def get_ingresses(namespace: str = "default"):
     """
     Get a list of Ingresses in the Kubernetes cluster.
-    Returns Ingress names, pod, and their Address in JSON format.
+    Returns name of pod which is attached to the Ingress and its address(DNS) in JSON format.
     """
     try:
         # Load Kubernetes configuration
@@ -478,7 +478,7 @@ async def get_ingresses(namespace: str = "default"):
         for ingress in ingresses.items:
             ingress_info.append({
                 "name": ingress.metadata.name,
-                "address": ingress.status.load_balancer.ingress[0].ip if ingress.status.load_balancer.ingress else None,
+                "address": ingress.status.load_balancer.ingress[0].hostname if ingress.status.load_balancer.ingress else None,
             })
         json_response = {
             "ingresses": ingress_info

@@ -51,5 +51,6 @@ async def list_endpoints():
         {"path": "/api/kubernetes/secrets", "description": "Get a list of all Secrets in the Kubernetes cluster."},
         {"path": "/api/kubernetes/persistent-volumes", "description": "Get a list of all PersistentVolumes in the Kubernetes cluster."},
         {"path": "/api/kubernetes/persistent-volume-claims", "description": "Get a list of all PersistentVolumeClaims in the Kubernetes cluster."},
+        {"path": "/api/kubernetes/ingresses", "description": "Get a list of all Ingresses in the Kubernetes cluster."},
     ]
     return {"endpoints": endpoints}
