@@ -20,45 +20,9 @@ app = FastAPI(
     },
 )
 
-# CORS setup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://localhost:3000",
-        "https://api.192.168.1.24.nip.io"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Include routers for different API endpoints
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(kubernetes.router, prefix="/api", tags=["Kubernetes"])
-
-AUTHORIZED_NETWORKS = [
-    ipaddress.ip_network("192.168.1.0/24"),
-    ipaddress.ip_network("127.0.0.1/32")
-]
-
-@app.middleware("http")
-async def check_authorized_ips(request: Request, call_next):
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        client_ip_str = forwarded_for.split(",")[0].strip()
-    else:
-        client_ip_str = request.client.host
-
-    try:
-        client_ip = ipaddress.ip_address(client_ip_str)
-        is_authorized = any(client_ip in network for network in AUTHORIZED_NETWORKS)
-    except ValueError:
-        is_authorized = False
-
-    if not is_authorized:
-        return JSONResponse(status_code=403, content={"message": "Forbidden"})
-
-    return await call_next(request)
 
 # list of available endpoints
 @app.get("/api", tags=["API"])
