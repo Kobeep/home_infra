@@ -1,9 +1,8 @@
-# Infrastructer API to manage and monitor the home lab environment
-from fastapi import FastAPI
+import ipaddress
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from api import health
-from api import kubernetes
+from api import health, kubernetes
 
 # Api setup
 app = FastAPI(
@@ -34,13 +33,24 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(kubernetes.router, prefix="/api", tags=["Kubernetes"])
 
-# Allow to gather data only from Authorized IPs
+AUTHORIZED_NETWORKS = [
+    ipaddress.ip_network("192.168.1.0/24"),
+    ipaddress.ip_network("127.0.0.1/32")
+]
+
 @app.middleware("http")
-async def check_authorized_ips(request, call_next):
-    authorized_ips = ["192.168.1.0/24"]
-    client_ip = request.client.host
-    if not any(client_ip.startswith(ip.split("/")[0]) for ip in authorized_ips):
+async def check_authorized_ips(request: Request, call_next):
+    client_ip_str = request.client.host
+
+    try:
+        client_ip = ipaddress.ip_address(client_ip_str)
+        is_authorized = any(client_ip in network for network in AUTHORIZED_NETWORKS)
+    except ValueError:
+        is_authorized = False
+
+    if not is_authorized:
         return JSONResponse(status_code=403, content={"message": "Forbidden"})
+
     response = await call_next(request)
     return response
 
