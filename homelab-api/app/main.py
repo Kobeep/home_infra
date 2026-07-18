@@ -23,7 +23,10 @@ app = FastAPI(
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://localhost:3000",
+        "https://api.192.168.1.24.nip.io"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,7 +43,11 @@ AUTHORIZED_NETWORKS = [
 
 @app.middleware("http")
 async def check_authorized_ips(request: Request, call_next):
-    client_ip_str = request.client.host
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        client_ip_str = forwarded_for.split(",")[0].strip()
+    else:
+        client_ip_str = request.client.host
 
     try:
         client_ip = ipaddress.ip_address(client_ip_str)
@@ -51,8 +58,7 @@ async def check_authorized_ips(request: Request, call_next):
     if not is_authorized:
         return JSONResponse(status_code=403, content={"message": "Forbidden"})
 
-    response = await call_next(request)
-    return response
+    return await call_next(request)
 
 # list of available endpoints
 @app.get("/api", tags=["API"])
