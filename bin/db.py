@@ -5,7 +5,7 @@ import sqlite3
 import json
 import ssl
 
-DB_PATH = "/var/service/db.sqlite"
+DB_PATH = "/var/services/db.sqlite"
 
 if not os.path.isfile(DB_PATH):
     print("Info =>: Database not found. Creating a new database file...")
