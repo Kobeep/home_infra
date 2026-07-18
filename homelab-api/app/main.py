@@ -37,7 +37,7 @@ app.include_router(kubernetes.router, prefix="/api", tags=["Kubernetes"])
 # Allow to gather data only from Authorized IPs
 @app.middleware("http")
 async def check_authorized_ips(request, call_next):
-    authorized_ips = ["192.168.1.0/16"]
+    authorized_ips = ["192.168.1.0/24"]
     client_ip = request.client.host
     if not any(client_ip.startswith(ip.split("/")[0]) for ip in authorized_ips):
         return JSONResponse(status_code=403, content={"message": "Forbidden"})
