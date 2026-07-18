@@ -232,12 +232,6 @@
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
-    - name: Wait for all pods to be ready
-      shell: kubectl wait --for=condition=ready pod --all --all-namespaces --timeout=300s
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      ignore_errors: true
-
     - name: Add Hashicorp Helm Repo
       shell: helm repo add hashicorp https://helm.releases.hashicorp.com && helm repo update
       environment:
