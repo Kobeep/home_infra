@@ -31,8 +31,6 @@ spec:
         volumeMounts:
         - name: jenkins-data
           mountPath: /var/jenkins_home
-        - name: db
-          mountPath: /var/services/db.sqlite
         env:
         - name: JAVA_OPTS
           value: "-Djenkins.install.runSetupWizard=false"
@@ -40,6 +38,3 @@ spec:
       - name: jenkins-data
         persistentVolumeClaim:
           claimName: jenkins-data
-      - name: db
-        persistentVolumeClaim:
-          claimName: db
