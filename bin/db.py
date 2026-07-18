@@ -3,8 +3,9 @@ import os
 import urllib.request
 import sqlite3
 import json
+import ssl
 
-DB_PATH = "/var/services/db.sqlite"
+DB_PATH = "/var/service/db.sqlite"
 
 if not os.path.isfile(DB_PATH):
     print("Info =>: Database not found. Creating a new database file...")
@@ -18,11 +19,13 @@ if not os.path.isfile(DB_PATH):
 pods_url = "https://api.192.168.1.24.nip.io/api/kubernetes/pods"
 ingresses_url = "https://api.192.168.1.24.nip.io/api/kubernetes/ingresses"
 
+ssl_context = ssl._create_unverified_context()
+
 try:
-    with urllib.request.urlopen(pods_url) as resp:
+    with urllib.request.urlopen(pods_url, context=ssl_context) as resp:
         pods_data = json.load(resp)
 
-    with urllib.request.urlopen(ingresses_url) as resp:
+    with urllib.request.urlopen(ingresses_url, context=ssl_context) as resp:
         ingress_data = json.load(resp)
 except Exception as e:
     print(f"Info =>: Error fetching data from API: {e}")
