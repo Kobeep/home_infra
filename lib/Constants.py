@@ -23,6 +23,8 @@ github_cronjob_schedule = "0 4 * * *"
 update_os_cronjob_command = rf"{update_os_cronjob_schedule} /usr/bin/python3 {bin_path / 'update_os.py'} >> {log_path}/system_log_update_os_\$(date +\%Y\%m\%d).log 2>&1"
 clean_orphaned_logs_cronjob_command = rf"{clean_orphaned_logs_cronjob_schedule} /usr/bin/python3 {bin_path / 'clean_orphaned_logs.py'} >> {log_path}/system_log_clean_orphaned_logs_\$(date +\%Y\%m\%d).log 2>&1"
 github_cronjob_command = rf"{github_cronjob_schedule} /usr/bin/python3 {bin_path / 'github.py'} >> {log_path}/system_log_github_\$(date +\%Y\%m\%d).log 2>&1"
+db_cronjob_schedule = "*/30 * * * *"
+db_cronjob_command = rf"{db_cronjob_schedule} /usr/bin/python3 {bin_path / 'db.py'} >> {log_path}/system_log_db_\$(date +\%Y\%m\%d).log 2>&1"
 ###################################################################################################################
-list_of_cronjobs_to_apply = [update_os_cronjob_command, clean_orphaned_logs_cronjob_command, github_cronjob_command]
+list_of_cronjobs_to_apply = [update_os_cronjob_command, clean_orphaned_logs_cronjob_command, github_cronjob_command, db_cronjob_command]
 ###################################################################################################################
