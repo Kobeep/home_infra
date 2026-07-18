@@ -5,7 +5,7 @@ import urllib.request
 import sqlite3
 
 # download/setup sqlite database if not exists
-if not os.path.isfile("/var/service/db.sqlite"):
+if not os.path.isfile("/var/services/db.sqlite"):
     print("Database not found. Downloading...")
     urllib.request.urlretrieve("https://example.com/path/to/db.sqlite", "/var/service/db.sqlite")
 
