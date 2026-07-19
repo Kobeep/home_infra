@@ -1,26 +1,26 @@
-# Ingress dla Grafana - grafana.192.168.1.24.nip.io
+# Ingress dla Jenkins - jenkins.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: grafana-ingress
-  namespace: monitoring
+  name: jenkins-ingress
+  namespace: jenkins
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: grafana.192.168.1.24.nip.io
+  - host: jenkins.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: grafana
+            name: jenkins
             port:
-              number: 3000
+              number: 8080
   tls:
   - hosts:
-    - grafana.192.168.1.24.nip.io
-    secretName: grafana-tls
+    - jenkins.{{ server_ip }}.nip.io
+    secretName: jenkins-tls

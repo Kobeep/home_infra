@@ -1,26 +1,26 @@
-# Ingress dla Dashy - dashy.192.168.1.24.nip.io
+# Ingress dla OpenGrok - opengrok.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dashy-ingress
-  namespace: dashy
+  name: opengrok-ingress
+  namespace: opengrok
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: dashy.192.168.1.24.nip.io
+  - host: opengrok.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: dashy
+            name: opengrok
             port:
-              number: 80
+              number: 8080
   tls:
   - hosts:
-    - dashy.192.168.1.24.nip.io
-    secretName: dashy-tls
+    - opengrok.{{ server_ip }}.nip.io
+    secretName: opengrok-tls

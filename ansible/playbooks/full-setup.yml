@@ -1,301 +1,47 @@
+---
+# Home Lab - Full Server Provisioning
+# Run with: ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml
+#
+# Required environment variables (set before running):
+#   GITHUB_USERNAME  - GitHub username for ghcr.io image pull secret
+#   GITHUB_TOKEN     - GitHub personal access token (read:packages scope)
+#   GITHUB_EMAIL     - GitHub email address
+
 - name: Home Lab - Full Server Setup
   hosts: server
   become: true
 
-  vars:
-    k3s_version: v1.28.5+k3s1
-    server_ip: "{{ ansible_default_ipv4.address }}"
+  roles:
+    - role: common          # apt packages, repo sync, cron bootstrap
+    - role: k3s             # K3s install + kubeconfig for server user
+    - role: kubectl_helm    # kubectl + helm binaries
+    - role: apps            # render templates + deploy all K8s workloads
 
-  tasks:
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
-
-    - name: Install base packages
-      apt:
-        name:
-          - curl
-          - wget
-          - git
-          - vim
-          - htop
-          - python3-pip
-          - python3-kubernetes
-          - apt-transport-https
-          - ca-certificates
-          - gnupg
-          - lsb-release
-        state: present
-
-    - name: Clone home_infra repository to /home/$USER/home_infra
-      become_user: "{{ ansible_user }}"
-      git:
-        repo: 'git@github.com:Kobeep/home_infra.git'
-        dest: '/home/{{ ansible_user }}/home_infra'
-        key_file: '/home/{{ ansible_user }}/.ssh/id_rsa'
-
-    - name: Run the startup hook script to set up cronjobs
-      become: true
-      shell: python3 /home/{{ ansible_user }}/home_infra/bin/startuphook.py
-
-    # =====================================================
-    # K3S INSTALLATION
-    # =====================================================
-    - name: Check if K3s is installed
-      stat:
-        path: /usr/local/bin/k3s
-      register: k3s_binary
-
-    - name: Install K3s
-      shell: |
-        curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s_version }}" INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik --tls-san {{ server_ip }} --node-external-ip {{ server_ip }}" sh -
-      when: not k3s_binary.stat.exists
-
-    - name: Wait for K3s to be ready
-      wait_for:
-        port: 6443
-        delay: 5
-        timeout: 60
-
-    - name: Allow K3s API port through firewall (if ufw is active)
-      ufw:
-        rule: allow
-        port: '6443'
-        proto: tcp
-        comment: 'K3S API Server'
-      when: ansible_facts.services['ufw.service'] is defined
-      ignore_errors: true
-
-    - name: Allow HTTP/HTTPS ports for Ingress
-      ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-      loop:
-        - '80'
-        - '443'
-      when: ansible_facts.services['ufw.service'] is defined
-      ignore_errors: true
-
-    - name: Create .kube directory
-      file:
-        path: "{{ ansible_env.HOME }}/.kube"
-        state: directory
-        mode: '0755'
-
-    - name: Copy kubeconfig
-      copy:
-        src: /etc/rancher/k3s/k3s.yaml
-        dest: "{{ ansible_env.HOME }}/.kube/config"
-        remote_src: yes
-        mode: '0600'
-
-    # =====================================================
-    # KUBECTL & HELM
-    # =====================================================
-    - name: Check if kubectl is installed
-      stat:
-        path: /usr/local/bin/kubectl
-      register: kubectl_binary
-
-    - name: Install kubectl
-      shell: |
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        mv kubectl /usr/local/bin/
-      when: not kubectl_binary.stat.exists
-
-    - name: Check if helm is installed
-      stat:
-        path: /usr/local/bin/helm
-      register: helm_binary
-
-    - name: Install Helm
-      shell: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-      when: not helm_binary.stat.exists
-
-    # =====================================================
-    # CLONE HOME_INFRA REPOSITORY
-    # =====================================================
-    - name: Install git
-      apt:
-        name: git
-        state: present
-
-    - name: Copy home_infra repository from local
-      synchronize:
-        src: "{{ playbook_dir | dirname | dirname }}/"
-        dest: /root/home_infra/
-
-    # =====================================================
-    # INSTALL INGRESS NGINX CONTROLLER
-    # =====================================================
-    - name: Install Ingress NGINX Controller
-      shell: |
-        kubectl apply -k /root/home_infra/k8s/ingress-nginx/
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Wait for Ingress NGINX Controller deployment to exist
-      shell: |
-        kubectl get deployment -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[*].metadata.name}'
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      register: deployment_exists
-      until: deployment_exists.stdout != ""
-      retries: 12
-      delay: 5
-
-    - name: Wait for Ingress NGINX Controller to be ready
-      shell: |
-        kubectl wait --namespace ingress-nginx \
-          --for=condition=ready pod \
-          --selector=app.kubernetes.io/component=controller \
-          --timeout=120s
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      register: result
-      until: result.rc == 0
-      retries: 3
-      delay: 10
-
-    # =====================================================
-    # INSTALL CERT-MANAGER
-    # =====================================================
-    - name: Add Jetstack Helm Repo
-      shell: helm repo add jetstack https://charts.jetstack.io && helm repo update
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Install cert-manager
-      shell: |
-        helm upgrade --install cert-manager jetstack/cert-manager \
-          --namespace cert-manager \
-          --create-namespace \
-          --set crds.enabled=true
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Wait for cert-manager webhooks to be ready
-      shell: |
-        kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=120s
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Create secret for GHCR directly from memory
-      ansible.builtin.shell: |
-        kubectl create secret docker-registry ghcr-cred \
-          --docker-server=ghcr.io \
-          --docker-username="$GH_USER" \
-          --docker-password="$GH_TOKEN" \
-          --docker-email="$GH_EMAIL" \
-          --namespace=default \
-          --dry-run=client -o yaml | kubectl apply -f -
-      environment:
-        GH_USER: "{{ lookup('ansible.builtin.env', 'GITHUB_USERNAME') }}"
-        GH_TOKEN: "{{ lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
-        GH_EMAIL: "{{ lookup('ansible.builtin.env', 'GITHUB_EMAIL') }}"
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-      no_log: true
-
-    # =====================================================
-    # DEPLOY ALL APPLICATIONS
-    # =====================================================
-    - name: Create all namespaces first
-      shell: |
-        kubectl apply -f /root/home_infra/k8s/jenkins/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/dashy/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/home-assistant/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/adguard/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/grafana/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/influxdb/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/vault/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/infra-api/namespace.yaml
-        kubectl apply -f /root/home_infra/k8s/opengrok/namespace.yaml
-
-    - name: Wait for namespaces to be ready
-      shell: |
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/jenkins --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/dashy --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/home-assistant --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/adguard --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/monitoring --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/influxdb --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/vault --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/infra-api --timeout=30s
-        kubectl wait --for=jsonpath='{.status.phase}'=Active namespace/opengrok --timeout=30s
-
-    - name: Deploy all K8s manifests
-      shell: kubectl apply -k /root/home_infra/k8s/
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Add Hashicorp Helm Repo
-      shell: helm repo add hashicorp https://helm.releases.hashicorp.com && helm repo update
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Install HashiCorp Vault via Helm
-      shell: |
-        helm upgrade --install vault hashicorp/vault \
-          --namespace vault \
-          -f /root/home_infra/k8s/vault/values.yaml
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Add External Secrets Helm Repo
-      shell: helm repo add external-secrets https://charts.external-secrets.io && helm repo update
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    - name: Install External Secrets Operator
-      shell: |
-        helm upgrade --install external-secrets external-secrets/external-secrets \
-          -n external-secrets \
-          --create-namespace \
-          --version "0.9.14" \
-          --set installCRDs=true
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-
-    # =====================================================
-    # DISPLAY ACCESS INFO
-    # =====================================================
+  post_tasks:
     - name: Display access information
-      debug:
+      ansible.builtin.debug:
         msg:
           - "=========================================="
           - "Home Lab Setup Complete!"
           - "=========================================="
           - ""
-          - "🌐 Access your services through Ingress NGINX:"
+          - "Server IP: {{ server_ip }}"
           - ""
-          - "  🏠 Dashy Dashboard:  http://{{ server_ip }}/"
-          - "  🔧 Jenkins:          http://{{ server_ip }}/jenkins"
-          - "  🏡 Home Assistant:   http://{{ server_ip }}/homeassistant"
-          - "  📊 Grafana:          http://{{ server_ip }}/grafana"
-          - "  📈 Prometheus:       http://{{ server_ip }}/prometheus"
-          - "  🛡️  AdGuard:          http://{{ server_ip }}/adguard"
-          - "  💾 InfluxDB:         http://{{ server_ip }}/influxdb"
+          - "🌐 Access your services:"
+          - "  🏠 Dashy:          https://dashy.{{ server_ip }}.nip.io"
+          - "  🔧 Jenkins:        https://jenkins.{{ server_ip }}.nip.io"
+          - "  🏡 Home Assistant: https://ha.{{ server_ip }}.nip.io"
+          - "  📊 Grafana:        https://grafana.{{ server_ip }}.nip.io"
+          - "  📈 Prometheus:     https://prometheus.{{ server_ip }}.nip.io"
+          - "  🛡️  AdGuard:        https://adguard.{{ server_ip }}.nip.io"
+          - "  💾 InfluxDB:       https://influxdb.{{ server_ip }}.nip.io"
+          - "  🔐 Vault:          https://vault.{{ server_ip }}.nip.io"
+          - "  🔍 API:            https://api.{{ server_ip }}.nip.io"
+          - "  📚 OpenGrok:       https://opengrok.{{ server_ip }}.nip.io"
           - ""
           - "💡 Notes:"
-          - "  • All services are accessible ONLY through Ingress (ports 80/443)"
-          - "  • Services are ClusterIP type (no NodePort exposure)"
-          - "  • Dashy dashboard is at the root path /"
-          - "  • Health checks enabled for all services"
-          - ""
-          - "🔐 Jenkins Initial Setup:"
-          - "  kubectl exec -n jenkins -it deployment/jenkins -- cat /var/jenkins_home/secrets/initialAdminPassword"
-          - ""
-          - "💾 Backup System:"
-          - "  Cloud DR Orchestrator deployed as CronJob"
-          - "  Configure Oracle Cloud credentials in k8s/backup/secret.yaml"
-          - ""
-          - "🔍 Useful Commands:"
-          - "  kubectl get ingress -A           # View all Ingress rules"
-          - "  kubectl get svc -A               # View all services"
-          - "  kubectl get pods -A              # View all pods"
+          - "  • All kubectl commands can be run as the 'server' user"
+          - "  • Vault must be manually initialized after first deploy"
+          - "  • Run: kubectl exec -it vault-0 -n vault -- vault operator init"
           - ""
           - "=========================================="

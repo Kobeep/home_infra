@@ -1,26 +1,26 @@
-# Ingress dla Jenkins - jenkins.192.168.1.24.nip.io
+# Ingress dla Home Assistant - ha.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: opengrok-ingress
-  namespace: opengrok
+  name: home-assistant-ingress
+  namespace: home-assistant
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: opengrok.192.168.1.24.nip.io
+  - host: ha.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: opengrok
+            name: home-assistant
             port:
-              number: 8080
+              number: 8123
   tls:
   - hosts:
-    - opengrok.192.168.1.24.nip.io
-    secretName: opengrok-tls
+    - ha.{{ server_ip }}.nip.io
+    secretName: home-assistant-tls

@@ -6,12 +6,12 @@ server:
       cert-manager.io/cluster-issuer: local-ca
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
     hosts:
-      - host: vault.192.168.1.24.nip.io
+      - host: vault.{{ server_ip }}.nip.io
         paths: []
     tls:
       - secretName: vault-tls
         hosts:
-          - vault.192.168.1.24.nip.io
+          - vault.{{ server_ip }}.nip.io
   dataStorage:
     enabled: true
     size: 5Gi

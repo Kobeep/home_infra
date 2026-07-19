@@ -1,0 +1,62 @@
+---
+# Role: common
+# Installs base packages, syncs the repository and bootstraps cron jobs.
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - htop
+      - rsync
+      - python3-pip
+      - python3-kubernetes
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - sysstat        # iostat required by monitor.py
+    state: present
+
+- name: Create /var/services and subdirectories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  loop:
+    - /var/services
+    - /var/services/logs
+
+- name: Sync home_infra repository to server
+  ansible.builtin.synchronize:
+    src: "{{ home_infra_local_path }}/"
+    dest: "{{ home_infra_remote_path }}/"
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=*.j2"   # templates are rendered separately
+      - "--exclude=__pycache__"
+      - "--exclude=*.pyc"
+  delegate_to: localhost
+
+- name: Ensure home_infra directory is owned by ansible_user
+  ansible.builtin.file:
+    path: "{{ home_infra_remote_path }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: true
+
+- name: Run startup hook to register cron jobs (as server user)
+  ansible.builtin.command:
+    cmd: python3 {{ home_infra_remote_path }}/bin/startuphook.py
+  become: false
+  environment:
+    HOME: "/home/{{ ansible_user }}"

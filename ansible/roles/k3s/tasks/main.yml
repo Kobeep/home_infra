@@ -1,0 +1,70 @@
+---
+# Role: k3s
+# Installs and configures K3s with the server user having full kubectl access.
+
+- name: Check if K3s binary is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k3s
+  register: k3s_binary
+
+- name: Install K3s
+  ansible.builtin.shell:
+    cmd: >
+      curl -sfL https://get.k3s.io |
+      INSTALL_K3S_VERSION="{{ k3s_version }}"
+      INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --disable traefik
+      --tls-san {{ server_ip }} --node-external-ip {{ server_ip }}" sh -
+  when: not k3s_binary.stat.exists
+  changed_when: true
+
+- name: Wait for K3s API server to be ready
+  ansible.builtin.wait_for:
+    port: 6443
+    delay: 5
+    timeout: 120
+
+- name: Allow K3s API port through firewall
+  community.general.ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+    comment: "K3S API Server"
+  when: ansible_facts.services['ufw.service'] is defined
+  ignore_errors: true
+
+- name: Allow HTTP/HTTPS ports for Ingress
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+    comment: "Ingress NGINX"
+  loop:
+    - "80"
+    - "443"
+  when: ansible_facts.services['ufw.service'] is defined
+  ignore_errors: true
+
+- name: Create .kube directory for server user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0750"
+
+- name: Copy kubeconfig to server user home
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "/home/{{ ansible_user }}/.kube/config"
+    remote_src: true
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+
+- name: Set KUBECONFIG in server user .bashrc
+  ansible.builtin.lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    line: 'export KUBECONFIG="/home/{{ ansible_user }}/.kube/config"'
+    state: present
+    create: true
+    mode: "0644"

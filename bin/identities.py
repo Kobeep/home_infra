@@ -10,6 +10,7 @@ if str(project_root) not in sys.path:
 
 import lib.Utils
 import lib.Constants
+from lib.Utils import run_privileged_command
 
 def main():
     parser = argparse.ArgumentParser(description="Manage system users")
@@ -35,7 +36,7 @@ def main():
     if args.action == "add":
         lib.Utils.add_user(args.username)
         if args.password:
-            subprocess.run(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
+            run_privileged_command(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
     elif args.action == "remove":
         lib.Utils.remove_user(args.username)
     elif args.action == "grant_sudo":
