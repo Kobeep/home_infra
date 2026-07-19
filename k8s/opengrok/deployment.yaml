@@ -34,6 +34,10 @@ spec:
             mountPath: /src
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: git-volume
+      - name: opengrok-data
         persistentVolumeClaim:
-          claimName: git-local-pvc
+          claimName: opengrok-data
+      - name: git-volume
+        hostPath:
+          path: /tmp/git
+          type: Directory

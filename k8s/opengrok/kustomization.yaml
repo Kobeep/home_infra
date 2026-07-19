@@ -4,6 +4,4 @@ resources:
 - deployment.yaml
 - ingress.yaml
 - pvc.yaml
-- pv.yaml
 - service.yaml
-- sc.yaml
