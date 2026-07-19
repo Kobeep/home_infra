@@ -29,6 +29,8 @@ spec:
         volumeMounts:
           - name: git-volume
             mountPath: /src
+          - name: opengrok-data
+            mountPath: /data
       terminationGracePeriodSeconds: 30
       volumes:
       - name: opengrok-data
