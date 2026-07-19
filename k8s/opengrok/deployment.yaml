@@ -38,5 +38,5 @@ spec:
           claimName: opengrok-data
       - name: git-volume
         hostPath:
-          path: /tmp/git
+          path: /home/server
           type: Directory
