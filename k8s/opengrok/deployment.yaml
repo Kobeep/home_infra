@@ -11,10 +11,7 @@ spec:
     matchLabels:
       app: opengrok
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-      maxSurge: 1
+    type: Recreate
   template:
     metadata:
       labels:
