@@ -3,7 +3,6 @@ fastapi
 uvicorn
 psycopg2-binary
 kubernetes
-sqlite3
 paramiko
 requests
 # end
