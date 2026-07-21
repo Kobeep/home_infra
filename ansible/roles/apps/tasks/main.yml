@@ -104,6 +104,7 @@
       --create-namespace
       --version {{ cert_manager_version }}
       --set crds.enabled=true
+      --timeout 10m0s
   environment: "{{ kubectl_env }}"
   changed_when: true
 
@@ -121,19 +122,23 @@
 
 # ── GHCR image pull secret ────────────────────────────────────────────────────
 
+- name: Load encrypted env.cfg variables
+  ansible.builtin.include_vars:
+    file: "{{ home_infra_remote_path }}/ansible/env.cfg"
+  no_log: true
+
 - name: Create ghcr-cred image pull secret in default namespace
   become: false
   ansible.builtin.shell:
     cmd: |
       kubectl create secret docker-registry ghcr-cred \
         --docker-server=ghcr.io \
-        --docker-username="{{ lookup('env.cfg', 'vault_github_username') }}" \
-        --docker-password="{{ lookup('env.cfg', 'vault_github_token') }}" \
-        --docker-email="{{ lookup('env.cfg', 'vault_github_email') }}" \
+        --docker-username="{{ vault_github_username }}" \
+        --docker-password="{{ vault_github_token }}" \
+        --docker-email="{{ vault_github_email }}" \
         --namespace=default \
         --dry-run=client -o yaml | kubectl apply -f -
   environment: "{{ kubectl_env }}"
-  no_log: true
   changed_when: true
 
 # ── Deploy all application manifests ─────────────────────────────────────────
