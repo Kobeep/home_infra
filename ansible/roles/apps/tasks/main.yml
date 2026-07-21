@@ -124,7 +124,7 @@
 
 - name: Load encrypted env.cfg variables
   ansible.builtin.include_vars:
-    file: "{{ home_infra_remote_path }}/ansible/env.cfg"
+    file: "{{ home_infra_local_path }}/ansible/env.cfg"
   no_log: true
 
 - name: Create ghcr-cred image pull secret in default namespace
