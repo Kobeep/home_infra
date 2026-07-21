@@ -1,26 +1,26 @@
-# Ingress dla Jenkins - jenkins.192.168.1.24.nip.io
+# Ingress dla InfluxDB - influxdb.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jenkins-ingress
-  namespace: jenkins
+  name: influxdb-ingress
+  namespace: influxdb
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: jenkins.192.168.1.24.nip.io
+  - host: influxdb.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: jenkins
+            name: influxdb
             port:
-              number: 8080
+              number: 8086
   tls:
   - hosts:
-    - jenkins.192.168.1.24.nip.io
-    secretName: jenkins-tls
+    - influxdb.{{ server_ip }}.nip.io
+    secretName: influxdb-tls

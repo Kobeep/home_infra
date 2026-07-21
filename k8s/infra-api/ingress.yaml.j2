@@ -1,26 +1,26 @@
-# Ingress dla AdGuard - adguard.192.168.1.24.nip.io
+# Ingress dla Infra API - api.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: adguard-ingress
-  namespace: adguard
+  name: infra-api-ingress
+  namespace: api
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: adguard.192.168.1.24.nip.io
+  - host: api.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: adguard
+            name: infra-api-service
             port:
-              number: 3000
+              number: 80
   tls:
   - hosts:
-    - adguard.192.168.1.24.nip.io
-    secretName: adguard-tls
+    - api.{{ server_ip }}.nip.io
+    secretName: infra-api-tls

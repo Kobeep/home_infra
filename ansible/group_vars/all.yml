@@ -1,0 +1,18 @@
+---
+# Global variables for all hosts in the inventory.
+# Override per-host in host_vars/ if needed.
+
+# ── K3s ───────────────────────────────────────────────────────────────────────
+k3s_version: "v1.28.5+k3s1"
+
+# Resolved dynamically from the control node's primary interface.
+# Can be overridden with a static value if needed, e.g.: server_ip: "192.168.1.24"
+server_ip: "{{ ansible_default_ipv4.address }}"
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+home_infra_local_path: "{{ playbook_dir | dirname | dirname }}"
+home_infra_remote_path: "/home/{{ ansible_user }}/home_infra"
+
+# ── Helm chart versions ───────────────────────────────────────────────────────
+cert_manager_version: "v1.14.4"
+external_secrets_version: "0.9.14"

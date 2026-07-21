@@ -1,0 +1,202 @@
+---
+# Role: apps
+# Renders J2 templates, installs Ingress NGINX, cert-manager, and deploys all apps.
+
+# ── Environment for kubectl/helm calls ───────────────────────────────────────
+# We run all K8s commands as the server user so KUBECONFIG points to their home.
+- name: Set shared kubectl environment fact
+  ansible.builtin.set_fact:
+    kubectl_env:
+      KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+
+# ── Render Jinja2 templates ───────────────────────────────────────────────────
+
+- name: Render ingress and config Jinja2 templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - src: "{{ home_infra_remote_path }}/k8s/adguard/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/adguard/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/dashy/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/dashy/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/dashy/configmap.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/dashy/configmap.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/grafana/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/grafana/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/home-assistant/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/home-assistant/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/infra-api/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/infra-api/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/influxdb/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/influxdb/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/jenkins/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/jenkins/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/ingress-nginx/service-patch.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/ingress-nginx/service-patch.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/opengrok/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/opengrok/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/prometheus/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/prometheus/ingress.yaml"
+    - src: "{{ home_infra_remote_path }}/k8s/vault/values.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/vault/values.yaml"
+
+# ── Ingress NGINX ─────────────────────────────────────────────────────────────
+
+- name: Install Ingress NGINX Controller
+  become: false
+  ansible.builtin.command:
+    cmd: kubectl apply -k {{ home_infra_remote_path }}/k8s/ingress-nginx/
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Wait for Ingress NGINX deployment to appear
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      kubectl get deployment -n ingress-nginx
+      -l app.kubernetes.io/name=ingress-nginx
+      -o jsonpath='{.items[*].metadata.name}'
+  environment: "{{ kubectl_env }}"
+  register: ingress_deployment
+  until: ingress_deployment.stdout != ""
+  retries: 12
+  delay: 10
+  changed_when: false
+
+- name: Wait for Ingress NGINX controller pod to be ready
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      kubectl wait --namespace ingress-nginx
+      --for=condition=ready pod
+      --selector=app.kubernetes.io/component=controller
+      --timeout=180s
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+# ── cert-manager ─────────────────────────────────────────────────────────────
+
+- name: Add Jetstack Helm repository
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo add jetstack https://charts.jetstack.io
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  failed_when: false   # helm repo add is idempotent but exits 1 if already present
+
+- name: Update Helm repositories
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo update
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Install cert-manager via Helm
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install cert-manager jetstack/cert-manager
+      --namespace cert-manager
+      --create-namespace
+      --version {{ cert_manager_version }}
+      --set crds.enabled=true
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Wait for cert-manager webhook pods to be ready
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      kubectl wait --for=condition=ready pod
+      -l app.kubernetes.io/instance=cert-manager
+      -n cert-manager
+      --timeout=180s
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+
+# ── GHCR image pull secret ────────────────────────────────────────────────────
+
+- name: Create ghcr-cred image pull secret in default namespace
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      kubectl create secret docker-registry ghcr-cred \
+        --docker-server=ghcr.io \
+        --docker-username="{{ lookup('env.cfg', 'vault_github_username') }}" \
+        --docker-password="{{ lookup('env.cfg', 'vault_github_token') }}" \
+        --docker-email="{{ lookup('env.cfg', 'vault_github_email') }}" \
+        --namespace=default \
+        --dry-run=client -o yaml | kubectl apply -f -
+  environment: "{{ kubectl_env }}"
+  no_log: true
+  changed_when: true
+
+# ── Deploy all application manifests ─────────────────────────────────────────
+
+- name: Deploy all K8s application manifests via Kustomize
+  become: false
+  ansible.builtin.command:
+    cmd: kubectl apply -k {{ home_infra_remote_path }}/k8s/
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+# ── HashiCorp Vault ───────────────────────────────────────────────────────────
+
+- name: Add HashiCorp Helm repository
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo add hashicorp https://helm.releases.hashicorp.com
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  failed_when: false
+
+- name: Update Helm repositories (post HashiCorp add)
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo update
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Install HashiCorp Vault via Helm
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install vault hashicorp/vault
+      --namespace vault
+      -f {{ home_infra_remote_path }}/k8s/vault/values.yaml
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+# ── External Secrets Operator ─────────────────────────────────────────────────
+
+- name: Add External Secrets Helm repository
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo add external-secrets https://charts.external-secrets.io
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  failed_when: false
+
+- name: Update Helm repositories (post ESO add)
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo update
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Install External Secrets Operator via Helm
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install external-secrets external-secrets/external-secrets
+      -n external-secrets
+      --create-namespace
+      --version {{ external_secrets_version }}
+      --set installCRDs=true
+  environment: "{{ kubectl_env }}"
+  changed_when: true

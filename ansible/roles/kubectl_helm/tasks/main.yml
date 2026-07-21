@@ -1,0 +1,36 @@
+---
+# Role: kubectl_helm
+# Installs kubectl and helm binaries to /usr/local/bin.
+
+- name: Check if kubectl is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/kubectl
+  register: kubectl_binary
+
+- name: Get latest stable kubectl version string
+  ansible.builtin.uri:
+    url: https://dl.k8s.io/release/stable.txt
+    return_content: true
+  register: kubectl_stable_version
+  when: not kubectl_binary.stat.exists
+
+- name: Download and install kubectl
+  ansible.builtin.shell:
+    cmd: |
+      curl -LO "https://dl.k8s.io/release/{{ kubectl_stable_version.content | trim }}/bin/linux/amd64/kubectl"
+      chmod +x kubectl
+      mv kubectl /usr/local/bin/kubectl
+    chdir: /tmp
+  when: not kubectl_binary.stat.exists
+  changed_when: true
+
+- name: Check if helm is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: helm_binary
+
+- name: Install Helm via official script
+  ansible.builtin.shell:
+    cmd: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  when: not helm_binary.stat.exists
+  changed_when: true

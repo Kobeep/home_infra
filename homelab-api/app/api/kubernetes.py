@@ -1,491 +1,418 @@
 # Kubernetes API endpoints for showing the state of the Kubernetes cluster
+import os
 from fastapi import APIRouter
 from kubernetes import client, config
+from kubernetes.stream import stream
 
 router = APIRouter()
 
+# ---------------------------------------------------------------------------
+# Kubernetes config loading — tries in-cluster first (when running inside K8s)
+# then falls back to KUBECONFIG env var or the default ~/.kube/config path.
+# ---------------------------------------------------------------------------
+
+def _load_kube_config():
+    kubeconfig = os.environ.get("KUBECONFIG")
+    try:
+        config.load_incluster_config()
+    except config.ConfigException:
+        config.load_kube_config(config_file=kubeconfig)
+
+
+_load_kube_config()
+
+
 @router.get("/kubernetes", tags=["Kubernetes"])
 async def kubernetes_info():
-    """
-    Get information about the Kubernetes cluster.
-    Returns the cluster version and API server URL in JSON format.
-    """
+    """Get cluster version and API server URL."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.VersionApi()
         version_info = v1.get_code()
-        cluster_info = {
+        return {
             "version": version_info.git_version,
-            "api_server": version_info.server_address,
+            "platform": version_info.platform,
         }
-        json_response = {
-            "version": cluster_info["version"],
-            "api_server": cluster_info["api_server"],
-        }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/pods", tags=["Kubernetes"])
 async def get_pods():
-    """
-    Get a list of pods in the Kubernetes cluster.
-    Returns pod names, namespaces, and their statuses in JSON format.
-    """
+    """Get all pods across all namespaces."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
         pods = v1.list_pod_for_all_namespaces()
-        pod_info = []
-        for pod in pods.items:
-            pod_info.append({
-                "name": pod.metadata.name,
-                "namespace": pod.metadata.namespace,
-                "status": pod.status.phase,
-            })
-        json_response = {
-            "pods": pod_info
+        return {
+            "pods": [
+                {
+                    "name": pod.metadata.name,
+                    "namespace": pod.metadata.namespace,
+                    "status": pod.status.phase,
+                    "node": pod.spec.node_name,
+                    "ready": all(
+                        cs.ready for cs in (pod.status.container_statuses or [])
+                    ),
+                }
+                for pod in pods.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/nodes", tags=["Kubernetes"])
 async def get_nodes():
-    """
-    Get a list of nodes in the Kubernetes cluster.
-    Returns node names and their statuses in JSON format.
-    """
+    """Get all nodes with their status conditions."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
         nodes = v1.list_node()
-        node_info = []
-        for node in nodes.items:
-            node_info.append({
-                "name": node.metadata.name,
-                "status": node.status.conditions[-1].type,
-            })
-        json_response = {
-            "nodes": node_info
+        return {
+            "nodes": [
+                {
+                    "name": node.metadata.name,
+                    "status": node.status.conditions[-1].type if node.status.conditions else "Unknown",
+                    "ready": next(
+                        (c.status for c in (node.status.conditions or []) if c.type == "Ready"),
+                        "Unknown",
+                    ),
+                    "roles": [
+                        k.split("/", 1)[1]
+                        for k in (node.metadata.labels or {})
+                        if k.startswith("node-role.kubernetes.io/")
+                    ],
+                }
+                for node in nodes.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/services", tags=["Kubernetes"])
 async def get_services():
-    """
-    Get a list of services in the Kubernetes cluster.
-    Returns service names, namespaces, and their types in JSON format.
-    """
+    """Get all services across all namespaces."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
         services = v1.list_service_for_all_namespaces()
-        service_info = []
-        for service in services.items:
-            service_info.append({
-                "name": service.metadata.name,
-                "namespace": service.metadata.namespace,
-                "type": service.spec.type,
-            })
-        json_response = {
-            "services": service_info
+        return {
+            "services": [
+                {
+                    "name": svc.metadata.name,
+                    "namespace": svc.metadata.namespace,
+                    "type": svc.spec.type,
+                    "cluster_ip": svc.spec.cluster_ip,
+                    "ports": [
+                        {"port": p.port, "protocol": p.protocol, "target_port": str(p.target_port)}
+                        for p in (svc.spec.ports or [])
+                    ],
+                }
+                for svc in services.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/deployments", tags=["Kubernetes"])
 async def get_deployments():
-    """
-    Get a list of deployments in the Kubernetes cluster.
-    Returns deployment names, namespaces, and their replicas in JSON format.
-    """
+    """Get all deployments across all namespaces."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         apps_v1 = client.AppsV1Api()
         deployments = apps_v1.list_deployment_for_all_namespaces()
-        deployment_info = []
-        for deployment in deployments.items:
-            deployment_info.append({
-                "name": deployment.metadata.name,
-                "namespace": deployment.metadata.namespace,
-                "replicas": deployment.spec.replicas,
-            })
-        json_response = {
-            "deployments": deployment_info
+        return {
+            "deployments": [
+                {
+                    "name": d.metadata.name,
+                    "namespace": d.metadata.namespace,
+                    "replicas": d.spec.replicas,
+                    "ready_replicas": d.status.ready_replicas,
+                    "available_replicas": d.status.available_replicas,
+                }
+                for d in deployments.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/cluster-info", tags=["Kubernetes"])
 async def get_cluster_info():
-    """
-    Get information about the Kubernetes cluster.
-    Returns the cluster version and API server URL in JSON format.
-    """
+    """Get combined cluster info: version, node count, namespace count."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
-        v1 = client.VersionApi()
-        version_info = v1.get_code()
-        cluster_info = {
+        v1 = client.CoreV1Api()
+        version_api = client.VersionApi()
+        version_info = version_api.get_code()
+        nodes = v1.list_node()
+        namespaces = v1.list_namespace()
+        return {
             "version": version_info.git_version,
-            "api_server": version_info.server_address,
+            "platform": version_info.platform,
+            "node_count": len(nodes.items),
+            "namespace_count": len(namespaces.items),
         }
-        json_response = {
-            "version": cluster_info["version"],
-            "api_server": cluster_info["api_server"],
-        }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
 
+
 @router.get("/kubernetes/events", tags=["Kubernetes"])
-async def get_events():
-    """
-    Get a list of events in the Kubernetes cluster.
-    Returns event names, namespaces, reasons, and messages in JSON format.
-    """
+async def get_events(namespace: str = None):
+    """Get events — optionally filtered by namespace, otherwise cluster-wide."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-        events = v1.list_event_for_all_namespaces()
-        event_info = []
-        for event in events.items:
-            event_info.append({
-                "name": event.metadata.name,
-                "namespace": event.metadata.namespace,
-                "reason": event.reason,
-                "message": event.message,
-            })
-        json_response = {
-            "events": event_info
+        if namespace:
+            events = v1.list_namespaced_event(namespace)
+        else:
+            events = v1.list_event_for_all_namespaces()
+        return {
+            "events": [
+                {
+                    "name": e.metadata.name,
+                    "namespace": e.metadata.namespace,
+                    "reason": e.reason,
+                    "message": e.message,
+                    "type": e.type,
+                    "count": e.count,
+                    "first_time": str(e.first_timestamp),
+                    "last_time": str(e.last_timestamp),
+                }
+                for e in events.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/state", tags=["Kubernetes"])
 async def get_kubernetes_state():
-    """
-    Get the overall state of the Kubernetes cluster.
-    Returns a summary of nodes, pods, services, and deployments in JSON format.
-    """
+    """Get overall cluster state summary: nodes, pods, services, deployments."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
         apps_v1 = client.AppsV1Api()
 
-        # Get nodes
         nodes = v1.list_node()
-        node_info = [{"name": node.metadata.name, "status": node.status.conditions[-1].type} for node in nodes.items]
-
-        # Get pods
         pods = v1.list_pod_for_all_namespaces()
-        pod_info = [{"name": pod.metadata.name, "namespace": pod.metadata.namespace, "status": pod.status.phase} for pod in pods.items]
-
-        # Get services
         services = v1.list_service_for_all_namespaces()
-        service_info = [{"name": service.metadata.name, "namespace": service.metadata.namespace, "type": service.spec.type} for service in services.items]
-
-        # Get deployments
         deployments = apps_v1.list_deployment_for_all_namespaces()
-        deployment_info = [{"name": deployment.metadata.name, "namespace": deployment.metadata.namespace, "replicas": deployment.spec.replicas} for deployment in deployments.items]
 
-        json_response = {
-            "nodes": node_info,
-            "pods": pod_info,
-            "services": service_info,
-            "deployments": deployment_info,
+        return {
+            "nodes": [{"name": n.metadata.name, "status": n.status.conditions[-1].type} for n in nodes.items],
+            "pods": [{"name": p.metadata.name, "namespace": p.metadata.namespace, "status": p.status.phase} for p in pods.items],
+            "services": [{"name": s.metadata.name, "namespace": s.metadata.namespace, "type": s.spec.type} for s in services.items],
+            "deployments": [{"name": d.metadata.name, "namespace": d.metadata.namespace, "replicas": d.spec.replicas} for d in deployments.items],
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/cluster-metrics", tags=["Kubernetes"])
 async def get_cluster_metrics():
-    """
-    Get metrics of the Kubernetes cluster.
-    Returns CPU and memory usage of nodes and pods in JSON format.
-    """
+    """Get node capacity (CPU/memory) and pod resource requests."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
 
-        # Get nodes metrics
         nodes = v1.list_node()
-        node_metrics = []
-        for node in nodes.items:
-            node_metrics.append({
-                "name": node.metadata.name,
-                "cpu": node.status.capacity.get("cpu"),
-                "memory": node.status.capacity.get("memory"),
-            })
+        node_metrics = [
+            {
+                "name": n.metadata.name,
+                "cpu_capacity": n.status.capacity.get("cpu"),
+                "memory_capacity": n.status.capacity.get("memory"),
+                "cpu_allocatable": n.status.allocatable.get("cpu"),
+                "memory_allocatable": n.status.allocatable.get("memory"),
+            }
+            for n in nodes.items
+        ]
 
-        # Get pods metrics
         pods = v1.list_pod_for_all_namespaces()
         pod_metrics = []
         for pod in pods.items:
-            pod_metrics.append({
-                "name": pod.metadata.name,
-                "namespace": pod.metadata.namespace,
-                "cpu": pod.status.container_statuses[0].resources.requests.get("cpu") if pod.status.container_statuses else None,
-                "memory": pod.status.container_statuses[0].resources.requests.get("memory") if pod.status.container_statuses else None,
-            })
+            for container in (pod.spec.containers or []):
+                requests = (container.resources.requests or {}) if container.resources else {}
+                pod_metrics.append({
+                    "pod": pod.metadata.name,
+                    "container": container.name,
+                    "namespace": pod.metadata.namespace,
+                    "cpu_request": requests.get("cpu"),
+                    "memory_request": requests.get("memory"),
+                })
 
-        json_response = {
-            "node_metrics": node_metrics,
-            "pod_metrics": pod_metrics,
-        }
-        return json_response
+        return {"node_metrics": node_metrics, "pod_metrics": pod_metrics}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/logs", tags=["Kubernetes"])
-async def get_pod_logs(pod_name: str, namespace: str = "default"):
-    """
-    Get logs from a specific pod in the Kubernetes cluster.
-    Returns the logs of the specified pod in JSON format.
-    """
+async def get_pod_logs(pod_name: str, namespace: str = "default", tail_lines: int = 100):
+    """Get logs from a specific pod (optionally tail N lines)."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Get pod logs
-        logs = v1.read_namespaced_pod_log(name=pod_name, namespace=namespace)
-        json_response = {
-            "pod_name": pod_name,
-            "namespace": namespace,
-            "logs": logs,
-        }
-        return json_response
+        logs = v1.read_namespaced_pod_log(
+            name=pod_name,
+            namespace=namespace,
+            tail_lines=tail_lines,
+        )
+        return {"pod_name": pod_name, "namespace": namespace, "logs": logs}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/exec", tags=["Kubernetes"])
 async def exec_command_in_pod(pod_name: str, namespace: str = "default", command: str = "echo Hello"):
-    """
-    Execute a command in a specific pod in the Kubernetes cluster.
-    Returns the output of the command executed in the specified pod in JSON format.
-    """
+    """Execute a shell command inside a running pod."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Execute command in pod
-        exec_command = [
-            '/bin/sh',
-            '-c',
-            command
-        ]
-        resp = client.stream.stream(v1.connect_get_namespaced_pod_exec,
-                                     pod_name,
-                                     namespace,
-                                     command=exec_command,
-                                     stderr=True, stdin=False,
-                                     stdout=True, tty=False)
-        json_response = {
-            "pod_name": pod_name,
-            "namespace": namespace,
-            "command": command,
-            "output": resp,
-        }
-        return json_response
+        resp = stream(
+            v1.connect_get_namespaced_pod_exec,
+            pod_name,
+            namespace,
+            command=["/bin/sh", "-c", command],
+            stderr=True,
+            stdin=False,
+            stdout=True,
+            tty=False,
+        )
+        return {"pod_name": pod_name, "namespace": namespace, "command": command, "output": resp}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/scale", tags=["Kubernetes"])
 async def scale_deployment(deployment_name: str, namespace: str = "default", replicas: int = 1):
-    """
-    Scale a deployment in the Kubernetes cluster.
-    Returns the new number of replicas for the specified deployment in JSON format.
-    """
+    """Scale a deployment to the specified number of replicas."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         apps_v1 = client.AppsV1Api()
-
-        # Scale deployment
         scale = apps_v1.read_namespaced_deployment_scale(deployment_name, namespace)
         scale.spec.replicas = replicas
         apps_v1.replace_namespaced_deployment_scale(deployment_name, namespace, scale)
-
-        json_response = {
-            "deployment_name": deployment_name,
-            "namespace": namespace,
-            "replicas": replicas,
-        }
-        return json_response
+        return {"deployment_name": deployment_name, "namespace": namespace, "replicas": replicas}
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/rollout", tags=["Kubernetes"])
 async def rollout_status(deployment_name: str, namespace: str = "default"):
-    """
-    Get the rollout status of a deployment in the Kubernetes cluster.
-    Returns the current rollout status of the specified deployment in JSON format.
-    """
+    """Get rollout status for a deployment."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         apps_v1 = client.AppsV1Api()
-
-        # Get rollout status
         deployment = apps_v1.read_namespaced_deployment(deployment_name, namespace)
-        rollout_status = {
+        return {
             "deployment_name": deployment.metadata.name,
             "namespace": deployment.metadata.namespace,
-            "replicas": deployment.spec.replicas,
+            "desired_replicas": deployment.spec.replicas,
+            "ready_replicas": deployment.status.ready_replicas,
             "available_replicas": deployment.status.available_replicas,
             "unavailable_replicas": deployment.status.unavailable_replicas,
         }
-        return rollout_status
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/configmaps", tags=["Kubernetes"])
-async def get_configmaps(namespace: str = "default"):
-    """
-    Get a list of ConfigMaps in the Kubernetes cluster.
-    Returns ConfigMap names and their data in JSON format.
-    """
+async def get_configmaps(namespace: str = None):
+    """List ConfigMaps — cluster-wide if no namespace specified."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Get ConfigMaps
-        configmaps = v1.list_namespaced_config_map(namespace)
-        configmap_info = []
-        for configmap in configmaps.items:
-            configmap_info.append({
-                "name": configmap.metadata.name,
-                "data": configmap.data,
-            })
-        json_response = {
-            "configmaps": configmap_info
+        if namespace:
+            cms = v1.list_namespaced_config_map(namespace)
+        else:
+            cms = v1.list_config_map_for_all_namespaces()
+        return {
+            "configmaps": [
+                {"name": cm.metadata.name, "namespace": cm.metadata.namespace, "data_keys": list((cm.data or {}).keys())}
+                for cm in cms.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/secrets", tags=["Kubernetes"])
-async def get_secrets(namespace: str = "default"):
-    """
-    Get a list of Secrets in the Kubernetes cluster.
-    Returns Secret names and their types in JSON format.
-    """
+async def get_secrets(namespace: str = None):
+    """List Secrets (names and types only — never data). Cluster-wide if no namespace."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Get Secrets
-        secrets = v1.list_namespaced_secret(namespace)
-        secret_info = []
-        for secret in secrets.items:
-            secret_info.append({
-                "name": secret.metadata.name,
-                "type": secret.type,
-            })
-        json_response = {
-            "secrets": secret_info
+        if namespace:
+            secrets = v1.list_namespaced_secret(namespace)
+        else:
+            secrets = v1.list_secret_for_all_namespaces()
+        return {
+            "secrets": [
+                {"name": s.metadata.name, "namespace": s.metadata.namespace, "type": s.type}
+                for s in secrets.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/persistent-volumes", tags=["Kubernetes"])
 async def get_persistent_volumes():
-    """
-    Get a list of Persistent Volumes in the Kubernetes cluster.
-    Returns Persistent Volume names and their capacities in JSON format.
-    """
+    """List all PersistentVolumes with capacity and status."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Get Persistent Volumes
         pvs = v1.list_persistent_volume()
-        pv_info = []
-        for pv in pvs.items:
-            pv_info.append({
-                "name": pv.metadata.name,
-                "capacity": pv.spec.capacity,
-            })
-        json_response = {
-            "persistent_volumes": pv_info
+        return {
+            "persistent_volumes": [
+                {
+                    "name": pv.metadata.name,
+                    "capacity": pv.spec.capacity,
+                    "access_modes": pv.spec.access_modes,
+                    "status": pv.status.phase,
+                    "claim": (
+                        f"{pv.spec.claim_ref.namespace}/{pv.spec.claim_ref.name}"
+                        if pv.spec.claim_ref else None
+                    ),
+                }
+                for pv in pvs.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
+
 
 @router.get("/kubernetes/persistent-volume-claims", tags=["Kubernetes"])
-async def get_persistent_volume_claims(namespace: str = "default"):
-    """
-    Get a list of Persistent Volume Claims in the Kubernetes cluster.
-    Returns Persistent Volume Claim names and their statuses in JSON format.
-    """
+async def get_persistent_volume_claims(namespace: str = None):
+    """List PVCs — cluster-wide if no namespace specified."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         v1 = client.CoreV1Api()
-
-        # Get Persistent Volume Claims
-        pvcs = v1.list_namespaced_persistent_volume_claim(namespace)
-        pvc_info = []
-        for pvc in pvcs.items:
-            pvc_info.append({
-                "name": pvc.metadata.name,
-                "status": pvc.status.phase,
-            })
-        json_response = {
-            "persistent_volume_claims": pvc_info
+        if namespace:
+            pvcs = v1.list_namespaced_persistent_volume_claim(namespace)
+        else:
+            pvcs = v1.list_persistent_volume_claim_for_all_namespaces()
+        return {
+            "persistent_volume_claims": [
+                {
+                    "name": pvc.metadata.name,
+                    "namespace": pvc.metadata.namespace,
+                    "status": pvc.status.phase,
+                    "capacity": (pvc.status.capacity or {}).get("storage"),
+                    "volume_name": pvc.spec.volume_name,
+                }
+                for pvc in pvcs.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}
 
-# Returns names of ingresses and their hosts (DNS) in all namespaces in JSON format.
+
 @router.get("/kubernetes/ingresses", tags=["Kubernetes"])
 async def get_ingresses():
-    """
-    Get a list of Ingresses in the Kubernetes cluster.
-    Returns Ingress names and their hosts in JSON format.
-    """
+    """Get all Ingress resources across all namespaces."""
     try:
-        # Load Kubernetes configuration
-        config.load_kube_config()
         networking_v1 = client.NetworkingV1Api()
-
-        # Get Ingresses
         ingresses = networking_v1.list_ingress_for_all_namespaces()
-        ingress_info = []
-        for ingress in ingresses.items:
-            hosts = [rule.host for rule in ingress.spec.rules]
-            ingress_info.append({
-                "name": ingress.metadata.name,
-                "namespace": ingress.metadata.namespace,
-                "hosts": hosts,
-            })
-        json_response = {
-            "ingresses": ingress_info
+        return {
+            "ingresses": [
+                {
+                    "name": ing.metadata.name,
+                    "namespace": ing.metadata.namespace,
+                    "hosts": [rule.host for rule in (ing.spec.rules or []) if rule.host],
+                    "tls": [
+                        {"hosts": tls.hosts, "secret": tls.secret_name}
+                        for tls in (ing.spec.tls or [])
+                    ],
+                }
+                for ing in ingresses.items
+            ]
         }
-        return json_response
     except Exception as e:
         return {"error": str(e)}

@@ -1,26 +1,26 @@
-# Ingress dla Home Assistant - ha.192.168.1.24.nip.io
+# Ingress dla Grafana - grafana.{{ server_ip }}.nip.io
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: home-assistant-ingress
-  namespace: home-assistant
+  name: grafana-ingress
+  namespace: monitoring
   annotations:
     cert-manager.io/cluster-issuer: local-ca
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
-  - host: ha.192.168.1.24.nip.io
+  - host: grafana.{{ server_ip }}.nip.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: home-assistant
+            name: grafana
             port:
-              number: 8123
+              number: 3000
   tls:
   - hosts:
-    - ha.192.168.1.24.nip.io
-    secretName: home-assistant-tls
+    - grafana.{{ server_ip }}.nip.io
+    secretName: grafana-tls

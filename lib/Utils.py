@@ -8,6 +8,13 @@ import shutil
 
 import lib.Constants
 
+
+def run_privileged_command(cmd: list, **kwargs) -> subprocess.CompletedProcess:
+    """Run a command, prepending sudo automatically when not running as root."""
+    if os.geteuid() != 0:
+        cmd = ["sudo"] + cmd
+    return subprocess.run(cmd, **kwargs)
+
 def ask_sudopwd():
     sudo_password = input("Enter your sudo password: ")
     return sudo_password
@@ -49,7 +56,7 @@ def add_user(username):
         log_message(f"Info =>: User '{username}' already exists.")
     except subprocess.CalledProcessError:
         try:
-            subprocess.run(['useradd', '-m', username], check=True)
+            run_privileged_command(['useradd', '-m', username], check=True)
             log_message(f"Info =>: User '{username}' has been added successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}': {e}")
@@ -58,7 +65,7 @@ def remove_user(username):
     try:
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            subprocess.run(['userdel', username], check=True)
+            run_privileged_command(['userdel', username], check=True)
             log_message(f"Info =>: User '{username}' has been removed successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to remove user '{username}': {e}")
@@ -69,7 +76,7 @@ def grant_sudo_privileges(username):
     try:
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            subprocess.run(['usermod', '-aG', 'sudo', username], check=True)
+            run_privileged_command(['usermod', '-aG', 'sudo', username], check=True)
             log_message(f"Info =>: Sudo privileges granted to user '{username}'.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to grant sudo privileges to user '{username}': {e}")
@@ -80,7 +87,7 @@ def add_to_group(username, groupname):
     try:
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            subprocess.run(['usermod', '-aG', groupname, username], check=True)
+            run_privileged_command(['usermod', '-aG', groupname, username], check=True)
             log_message(f"Info =>: User '{username}' has been added to group '{groupname}'.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}' to group '{groupname}': {e}")
@@ -89,7 +96,7 @@ def add_to_group(username, groupname):
 
 def list_packages_to_update():
     try:
-        result = subprocess.run(['apt', 'list', '--upgradable'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = run_privileged_command(['apt', 'list', '--upgradable'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         packages = result.stdout.decode('utf-8').splitlines()
         return packages[1:]
     except subprocess.CalledProcessError as e:
@@ -98,8 +105,8 @@ def list_packages_to_update():
 
 def update_os():
     try:
-        subprocess.run(['apt-get', 'update'], check=True)
-        subprocess.run(['apt-get', 'upgrade', '-y'], check=True)
+        run_privileged_command(['apt-get', 'update'], check=True)
+        run_privileged_command(['apt-get', 'upgrade', '-y'], check=True)
         log_message(f"Info =>: Operating system packages have been updated successfully.")
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to update operating system packages: {e}")

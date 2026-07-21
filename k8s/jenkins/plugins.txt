@@ -1,0 +1,17 @@
+configuration-as-code:latest
+credentials-binding:latest
+job-dsl:latest
+git:latest
+github:latest
+gitlab-plugin:latest
+workflow-aggregator:latest
+docker-plugin:latest
+docker-workflow:latest
+maven-plugin:latest
+gradle:latest
+slack:latest
+email-ext:latest
+blueocean:latest
+antisamy-markup-formatter:latest
+kubernetes:latest
+role-strategy:latest

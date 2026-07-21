@@ -11,3 +11,5 @@ resources:
 - cert-manager
 - opengrok
 - infra-api
+- vault/namespace.yaml
+- external-secrets-namespace.yaml

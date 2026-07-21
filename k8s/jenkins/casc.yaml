@@ -1,0 +1,18 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "kobeep"
+          password: "${KOBEEP_PASSWORD}"
+
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "devops"
+            description: "Full access to Jenkins for DevOps team"
+            permissions:
+              - "Overall/Administer"
+            assignments:
+              - "kobeep"

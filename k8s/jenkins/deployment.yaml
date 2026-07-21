@@ -8,14 +8,20 @@ spec:
   selector:
     matchLabels:
       app: jenkins
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
         app: jenkins
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
       containers:
       - name: jenkins
-        image: jenkins/jenkins:lts
+        image: ghcr.io/kobeep/jenkins_custom:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http
@@ -31,9 +37,30 @@ spec:
         volumeMounts:
         - name: jenkins-data
           mountPath: /var/jenkins_home
+        livenessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
         env:
         - name: JAVA_OPTS
           value: "-Djenkins.install.runSetupWizard=false"
+        - name: REF_PLUGINS_FILE
+          value: "/usr/share/jenkins/ref/plugins.txt"
+        - name: CASC_JENKINS_CONFIG
+          value: "/var/jenkins_home/casc.yaml"
+        - name: KOBEEP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: kobeep-password
       volumes:
       - name: jenkins-data
         persistentVolumeClaim:
