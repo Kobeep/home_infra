@@ -6,7 +6,7 @@
 k3s_version: "v1.28.5+k3s1"
 
 # Resolved dynamically from the control node's primary interface.
-# Can be overridden with a static value if needed, e.g.: server_ip: "192.168.1.24"
+# Can be overridden with a static value if needed, e.g.: server_ip: "192.168.1.16"
 server_ip: "{{ ansible_default_ipv4.address }}"
 
 # ── Paths ─────────────────────────────────────────────────────────────────────

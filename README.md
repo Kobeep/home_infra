@@ -38,10 +38,10 @@ That's it! All services will be automatically deployed and accessible on your lo
 | **OpenWebUI** | `/openwebui` | AI chat interface |
 | **Grocy** | `/grocy` | Grocery management |
 | **InfluxDB** | `/influxdb` | Time-series database |
-| **HashiCorp Vault** | `vault.192.168.1.24.nip.io` | Secrets Management |
+| **HashiCorp Vault** | `vault.192.168.1.16.nip.io` | Secrets Management |
 | **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
 
-Access services natively via `http://<service>.192.168.1.24.nip.io` from any device on your local network (e.g. `http://dashy.192.168.1.24.nip.io`).
+Access services natively via `http://<service>.192.168.1.16.nip.io` from any device on your local network (e.g. `http://dashy.192.168.1.16.nip.io`).
 
 Example: `http://192.168.0.100/jenkins`
 
@@ -151,7 +151,7 @@ vault operator unseal
 ```
 
 ### 2. Accessing Vault UI
-Vault is accessible within your network at `http://vault.192.168.1.24.nip.io` out of the box. Login using the Root Token generated above.
+Vault is accessible within your network at `http://vault.192.168.1.16.nip.io` out of the box. Login using the Root Token generated above.
 
 ### 3. Using External Secrets
 External Secrets fetches secrets from Vault automatically. To connect ESO to your unsealed Vault:

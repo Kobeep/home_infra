@@ -36,16 +36,12 @@
     - /var/services
     - /var/services/logs
 
-- name: Sync home_infra repository to server
-  ansible.builtin.synchronize:
-    src: "{{ home_infra_local_path }}/"
-    dest: "{{ home_infra_remote_path }}/"
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=*.j2"   # templates are rendered separately
-      - "--exclude=__pycache__"
-      - "--exclude=*.pyc"
-  delegate_to: localhost
+- name: Clone home_infra repository on server
+  ansible.builtin.git:
+    repo: 'https://github.com/Kobeep/home_infra.git'
+    dest: "{{ home_infra_remote_path }}"
+    version: main
+    force: yes
 
 - name: Ensure home_infra directory is owned by ansible_user
   ansible.builtin.file:
