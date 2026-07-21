@@ -17,3 +17,5 @@ COPY --chown=jenkins:jenkins casc.yaml /usr/share/jenkins/ref/casc.yaml
 COPY --chown=jenkins:jenkins config.xml /usr/share/jenkins/ref/config.xml
 
 EXPOSE 8080 50000
+
+ENTRYPOINT ["sh", "-c", "jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt && exec /usr/bin/tini -- /usr/local/bin/jenkins.sh"]
