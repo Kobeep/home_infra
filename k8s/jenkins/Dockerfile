@@ -13,6 +13,7 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
     REF_PLUGINS_FILE="/usr/share/jenkins/ref/plugins.txt" \
     CASC_JENKINS_CONFIG="/var/jenkins_home/casc.yaml"
 
+# Copy the plugins.txt file to the Jenkins reference directory
 COPY --chown=jenkins:jenkins plugins.txt /usr/share/jenkins/ref/plugins.txt
 COPY --chown=jenkins:jenkins casc.yaml /usr/share/jenkins/ref/casc.yaml
 COPY --chown=jenkins:jenkins config.xml /usr/share/jenkins/ref/config.xml
