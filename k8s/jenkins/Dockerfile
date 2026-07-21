@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
 
 USER jenkins
 
+WORKDIR /var/jenkins_home
+
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
     REF_PLUGINS_FILE="/usr/share/jenkins/ref/plugins.txt" \
     CASC_JENKINS_CONFIG="/var/jenkins_home/casc.yaml"

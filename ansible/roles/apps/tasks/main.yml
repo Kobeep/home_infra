@@ -95,6 +95,13 @@
   environment: "{{ kubectl_env }}"
   changed_when: false
 
+- name: Ensure cert-manager CRDs are applied directly
+  become: false
+  ansible.builtin.command: >
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.crds.yaml
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
 - name: Install cert-manager via Helm
   become: false
   ansible.builtin.command:
@@ -142,6 +149,24 @@
   changed_when: true
 
 # ── Deploy all application manifests ─────────────────────────────────────────
+- name: Ensure CA directory exists on remote server
+  ansible.builtin.file:
+    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Copy CA certificate and key from local machine to server
+  ansible.builtin.copy:
+    src: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
+    dest: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  loop:
+    - rootCA.crt
+    - rootCA.key
 
 - name: Deploy all K8s application manifests via Kustomize
   become: false
