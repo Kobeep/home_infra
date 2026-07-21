@@ -1,11 +1,5 @@
 ---
 # Home Lab - Full Server Provisioning
-# Run with: ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml
-#
-# Required environment variables (set before running):
-#   GITHUB_USERNAME  - GitHub username for ghcr.io image pull secret
-#   GITHUB_TOKEN     - GitHub personal access token (read:packages scope)
-#   GITHUB_EMAIL     - GitHub email address
 
 - name: Home Lab - Full Server Setup
   hosts: server

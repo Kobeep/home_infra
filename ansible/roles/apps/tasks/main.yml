@@ -118,6 +118,7 @@
   environment: "{{ kubectl_env }}"
   changed_when: false
 
+
 # ── GHCR image pull secret ────────────────────────────────────────────────────
 
 - name: Create ghcr-cred image pull secret in default namespace
@@ -126,9 +127,9 @@
     cmd: |
       kubectl create secret docker-registry ghcr-cred \
         --docker-server=ghcr.io \
-        --docker-username="{{ lookup('env', 'GITHUB_USERNAME') }}" \
-        --docker-password="{{ lookup('env', 'GITHUB_TOKEN') }}" \
-        --docker-email="{{ lookup('env', 'GITHUB_EMAIL') }}" \
+        --docker-username="{{ lookup('env.cfg', 'vault_github_username') }}" \
+        --docker-password="{{ lookup('env.cfg', 'vault_github_token') }}" \
+        --docker-email="{{ lookup('env.cfg', 'vault_github_email') }}" \
         --namespace=default \
         --dry-run=client -o yaml | kubectl apply -f -
   environment: "{{ kubectl_env }}"
