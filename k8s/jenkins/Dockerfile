@@ -1,3 +1,4 @@
+# JCASC + plugins
 FROM jenkins/jenkins:lts
 
 USER root
