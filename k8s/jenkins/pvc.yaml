@@ -4,6 +4,7 @@ metadata:
   name: jenkins-data
   namespace: jenkins
 spec:
+  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:

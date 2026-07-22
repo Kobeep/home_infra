@@ -4,6 +4,7 @@ metadata:
   name: influxdb-data
   namespace: influxdb
 spec:
+  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:
