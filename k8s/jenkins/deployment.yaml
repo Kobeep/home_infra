@@ -10,7 +10,7 @@ spec:
       app: jenkins
   strategy:
     type: Recreate
-  serviceAccountName: jenkins
+  serviceAccountName: jenkins-admin
   template:
     metadata:
       labels:
