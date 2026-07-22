@@ -1,0 +1,46 @@
+pipeline {
+    agent rc-slave
+
+    options {
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    if (params.KUBECTL_COMMAND != null) {
+                        echo "Profile: kubectl-functions"
+                    } else if (params.API_ENDPOINT != null) {
+                        echo "Profile: api-requests"
+                    } else {
+                        error "Pipeline executed without proper parameters from Job DSL!"
+                    }
+                }
+            }
+        }
+
+        stage('Execute') {
+            steps {
+                script {
+                    if (params.KUBECTL_COMMAND != null) {
+                        if (params.KUBECTL_COMMAND == '') {
+                            error "KUBECTL_COMMAND parameter is empty!"
+                        }
+                        def namespaceFlag = params.KUBECTL_NAMESPACE ? "-n ${params.KUBECTL_NAMESPACE}" : ""
+                        sh "kubectl ${params.KUBECTL_COMMAND} ${namespaceFlag}"
+                    }
+                    else if (params.API_ENDPOINT != null) {
+                        sh "curl -X GET https://${params.API_ENDPOINT}/${params.API_REQUEST}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
