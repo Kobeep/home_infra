@@ -4,7 +4,6 @@ metadata:
   name: grafana-data
   namespace: monitoring
 spec:
-  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:
