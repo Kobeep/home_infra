@@ -19,4 +19,4 @@ COPY --chown=jenkins:jenkins config.xml /usr/share/jenkins/ref/config.xml
 
 EXPOSE 8080 50000
 
-ENTRYPOINT ["sh", "-c", "jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt && exec /usr/bin/tini -- /usr/local/bin/jenkins.sh"]
+ENTRYPOINT ["sh", "-c", "jenkins-plugin-cli --jenkins-update-center https://updates.jenkins.io/update-center.json --plugin-file /usr/share/jenkins/ref/plugins.txt && exec /usr/bin/tini -- /usr/local/bin/jenkins.sh"]
