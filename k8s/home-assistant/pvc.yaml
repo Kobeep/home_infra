@@ -4,6 +4,7 @@ metadata:
   name: home-assistant-data
   namespace: home-assistant
 spec:
+  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:

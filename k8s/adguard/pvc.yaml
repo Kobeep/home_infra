@@ -4,6 +4,7 @@ metadata:
   name: adguard-data
   namespace: adguard
 spec:
+  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:

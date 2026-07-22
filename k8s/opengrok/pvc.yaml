@@ -4,6 +4,7 @@ metadata:
   name: opengrok-data
   namespace: opengrok
 spec:
+  storageClassName: local-path-retain
   accessModes:
     - ReadWriteOnce
   resources:
