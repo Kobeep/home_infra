@@ -3,7 +3,7 @@ jenkins:
     local:
       allowsSignup: false
       users:
-        - id: "kobeep"
+        - id: "Kobeep"
           password: "${KOBEEP_PASSWORD}"
 
   authorizationStrategy:
@@ -14,5 +14,5 @@ jenkins:
             description: "Full access to Jenkins for DevOps team"
             permissions:
               - "Overall/Administer"
-            assignments:
-              - "kobeep"
+            entries:
+              - user: "Kobeep"
