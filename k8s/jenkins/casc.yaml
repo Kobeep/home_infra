@@ -1,4 +1,5 @@
 jenkins:
+  systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin(JCASC)\n"
   securityRealm:
     local:
       allowsSignup: false
@@ -29,17 +30,18 @@ jenkins:
         templates:
           - name: "default-agent"
             label: "jenkins-agent"
-            nodeUsageMode: NORMAL
+            idleMinutes: 10
+            activeDeadlineSeconds: 3600
             containers:
               - name: "jnlp"
                 image: "jenkins/inbound-agent:latest-jdk21"
+                alwaysPullImage: true
+                workingDir: "/home/jenkins/agent"
                 resourceRequestCpu: "500m"
                 resourceRequestMemory: "512Mi"
                 resourceLimitCpu: "1000m"
                 resourceLimitMemory: "1Gi"
             volumes:
-              - hostPathVolume:
+              - hostPath:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
-            idleMinutes: 10
-            activeDeadlineSeconds: 3600
