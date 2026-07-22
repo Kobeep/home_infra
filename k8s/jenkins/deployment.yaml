@@ -60,7 +60,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: jenkins-secrets
-              key: KOBEEP_PASSWORD
+              key: kobeep-password
       volumes:
       - name: jenkins-data
         persistentVolumeClaim:
