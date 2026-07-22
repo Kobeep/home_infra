@@ -5,6 +5,9 @@ on:
     branches: ['main']
     paths:
       - 'k8s/jenkins/Dockerfile'
+      - 'k8s/jenkins/plugins.txt'
+      - 'k8s/jenkins/casc.yaml'
+      - 'k8s/jenkins/config.xml'
 
 env:
   REGISTRY: ghcr.io

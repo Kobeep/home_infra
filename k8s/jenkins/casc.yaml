@@ -14,5 +14,6 @@ jenkins:
             description: "Full access to Jenkins for DevOps team"
             permissions:
               - "Overall/Administer"
+              - "Overall/Read"
             entries:
               - user: "Kobeep"
