@@ -15,3 +15,5 @@ blueocean:latest
 antisamy-markup-formatter:latest
 kubernetes:latest
 role-strategy:latest
+sse-gateway:latest
+pubsub-light:latest
