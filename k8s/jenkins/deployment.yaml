@@ -10,12 +10,12 @@ spec:
       app: jenkins
   strategy:
     type: Recreate
-  serviceAccountName: jenkins-admin
   template:
     metadata:
       labels:
         app: jenkins
     spec:
+      serviceAccountName: jenkins-admin
       securityContext:
         fsGroup: 1000
         runAsUser: 1000
