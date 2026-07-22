@@ -15,5 +15,5 @@ jenkins:
             permissions:
               - "Overall/Administer"
               - "Overall/Read"
-            assignments:
-              - "Kobeep"
+            entries:
+              - user: "Kobeep"
