@@ -45,3 +45,6 @@ jenkins:
               - hostPath:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
+unclassified:
+  ansiColorBuildWrapperGlobalConfiguration:
+    globalColorMapName: "XTerm"

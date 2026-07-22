@@ -15,3 +15,4 @@ antisamy-markup-formatter
 kubernetes
 role-strategy
 matrix-auth
+ansicolor
