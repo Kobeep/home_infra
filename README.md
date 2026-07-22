@@ -1,253 +1,97 @@
-# Home Infrastructure
+<div align="center">
+  <h1 align="center">Home Infrastructure</h1>
 
-Fully automated home lab infrastructure using Ansible and K3S. Zero configuration needed - just run one command.
+  <p align="center">
+    Fully automated, GitOps-driven home lab infrastructure deployed via Ansible and K3s.
+    <br />
+    <br />
+    <a href="#about-the-project">About The Project</a>
+    ·
+    <a href="#project-structure">Project Structure</a>
+  </p>
 
-## Quick Start
+  <p align="center">
+    [![API Build][API-badge]][API-url]
+    [![Jenkins Build][Jenkins-badge]][Jenkins-url]
+  </p>
+</div>
 
-```bash
-# 1. Clone repository
-git clone https://github.com/Kobeep/Home_infra.git
-cd home_infra
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
-# 2. Configure your server IP
-nano ansible/inventory.yml
-# Change ansible_host to your server IP
+This repository contains the complete Infrastructure-as-Code (IaC) setup for a modern, self-hosted home lab environment. It utilizes a single-command deployment strategy to provision a lightweight Kubernetes cluster (K3s) on a bare-metal server and automatically deploy a suite of essential home services.
 
-# 3. Deploy everything
-./deploy.sh
-```
+All routing is handled securely via Ingress NGINX without exposing unnecessary NodePorts, and all persistent data is protected by a customized `Retain` storage policy.
 
-That's it! All services will be automatically deployed and accessible on your local network.
+### Core Custom Components
 
-## What Gets Deployed
+In addition to standard open-source tools, this infrastructure features several custom-built components:
+* **Custom Home API:** A dedicated backend (`homelab-api`) serving custom logic and integrations for the home environment.
+* **Custom Jenkins Image:** A pre-configured, hardened Jenkins image built dynamically via CI pipelines.
+* **Automation Binaries/Scripts:** A collection of Python utility scripts (`bin/`) for database management, log cleaning, OS updates, and health monitoring.
 
-| Service | URL Path | Description |
-|---------|----------|-------------|
-| **Dashy** | `/` | Central dashboard for all services |
-| **Jenkins** | `/jenkins` | CI/CD automation |
-| **Home Assistant** | `/homeassistant` | Smart home platform |
-| **Grafana** | `/grafana` | Monitoring dashboards |
-| **Prometheus** | `/prometheus` | Metrics collection |
-| **AdGuard** | `/adguard` | DNS ad blocker |
-| **Dashy** | `/` | Central dashboard for all services |
-| **Jenkins** | `/jenkins` | CI/CD automation |
-| **Home Assistant** | `/homeassistant` | Smart home platform |
-| **Grafana** | `/grafana` | Monitoring dashboards |
-| **Prometheus** | `/prometheus` | Metrics collection |
-| **AdGuard** | `/adguard` | DNS ad blocker |
-| **OpenWebUI** | `/openwebui` | AI chat interface |
-| **Grocy** | `/grocy` | Grocery management |
-| **InfluxDB** | `/influxdb` | Time-series database |
-| **HashiCorp Vault** | `vault.192.168.1.16.nip.io` | Secrets Management |
-| **Cloud DR Backup** | CronJob | Automated backups to Oracle Cloud |
+### Built With
 
-Access services natively via `http://<service>.192.168.1.16.nip.io` from any device on your local network (e.g. `http://dashy.192.168.1.16.nip.io`).
+* [![Kubernetes][Kubernetes-badge]][Kubernetes-url]
+* [![Ansible][Ansible-badge]][Ansible-url]
+* [![Vault][Vault-badge]][Vault-url]
 
-Example: `http://192.168.0.100/jenkins`
+<!-- PROJECT STRUCTURE -->
+## Project Structure
 
-## Architecture
-
-```
-Server (Clean Ubuntu/Debian)
-    ↓
-Ansible installs:
-  - Base packages
-  - K3S (Lightweight Kubernetes)
-  - kubectl & helm
-  - Ingress NGINX Controller
-    ↓
-Ansible deploys all apps to K3S:
-  - Each app in its own namespace
-  - Persistent storage for data
-  - ClusterIP services (internal only)
-  - Ingress rules for HTTP routing
-    ↓
-Access via Ingress NGINX → http://YOUR_IP/<service>
-```
-
-## Features
-
-✅ **Single Entry Point** - All services through Ingress (ports 80/443)
-✅ **Path-based Routing** - Clean URLs like `/jenkins`, `/grafana`
-✅ **No NodePort Exposure** - Increased security with ClusterIP services
-✅ **Health Checks** - Automatic service monitoring in Dashy
-✅ **Zero Configuration** - Ansible handles everything
-✅ **Production Ready** - Standard Kubernetes patterns
-
-## Requirements
-
-- Fresh Ubuntu 20.04+ or Debian 11+ server
-- SSH access to server
-- Ansible installed locally (script auto-installs if missing)
-- Local network access to server
-
-## Manual Deployment
-
-If you prefer manual control:
-
-```bash
-ansible-playbook \
-  -i ansible/inventory.yml \
-  ansible/playbooks/full-setup.yml
-```
-
-## Remote Access
-
-Access your cluster from any computer on your local network:
-
-```bash
-# Copy kubeconfig from server
-scp user@192.168.0.100:/etc/rancher/k3s/k3s.yaml ~/.kube/homelab-config
-
-# Edit server address (change 127.0.0.1 to your server IP)
-nano ~/.kube/homelab-config
-
-# Use kubectl remotely
-export KUBECONFIG=~/.kube/homelab-config
-kubectl get pods -A
-
-# Or use k9s for terminal UI
-k9View Ingress rules
-kubectl get ingress -A
-
-# Restart a service
-kubectl rollout restart deployment/home-assistant -n home-assistant
-
-# View logs
-kubectl logs -f deployment/grafana -n monitoring
-
-# Get Jenkins initial password
-kubectl exec -n jenkins -it deployment/jenkins -- \
-  cat /var/jenkins_home/secrets/initialAdminPassword
-
-# Check Ingress NGINX status
-kubectl get pods -n ingress-nginx
-kubectl get pods --all-namespaces
-
-# Restart a service
-kubectl rollout restart deployment/home-assistant -n home-assistant
-
-# View logs
-kubectl logs -f deployment/grafana -n monitoring
-
-  cat /var/jenkins_home/secrets/initialAdminPassword
-```
-
-## HashiCorp Vault & Secrets Management
-
-This lab comes with **HashiCorp Vault** and **External Secrets Operator (ESO)** pre-installed. All manual secrets management should be handled through Vault instead of plain Kubernetes Secrets.
-
-### 1. Initializing Vault
-Vault starts "sealed" and must be initialized on the first run.
-```bash
-# Exec into the vault pod
-kubectl exec -it vault-0 -n vault -- /bin/sh
-
-# Initialize vault (Save the Unseal Keys and Root Token somewhere safe!)
-vault operator init
-
-# Unseal Vault (Run this 3 times with 3 different keys from the init step)
-vault operator unseal
-```
-
-### 2. Accessing Vault UI
-Vault is accessible within your network at `http://vault.192.168.1.16.nip.io` out of the box. Login using the Root Token generated above.
-
-### 3. Using External Secrets
-External Secrets fetches secrets from Vault automatically. To connect ESO to your unsealed Vault:
-1. Create a `SecretStore` in Kubernetes pointing to Vault.
-2. In Vault, create a KVv2 Secret Engine.
-3. Use `ExternalSecret` manifests in your apps rather than raw `Secret`. ESO will auto-generate the Kubernetes `Secret` containing your Vault payload!
-
-## Structure
-
-```
+```text
 home_infra/
-├── k8s/                    # Kubernetes manifests
-│   ├── ingress-nginx.yaml # Ingress routing rules
-│   ├── jenkins/           # CI/CD
-│   ├── dashy/             # Dashboard
-│   ├── home-assistant/    # Smart home
-│   ├── grafana/           # Monitoring
-│   ├── prometheus/        # Metrics
-│   ├── influxdb/          # Database
-│   ├── adguard/           # DNS
-│   ├── openwebui/         # AI
-│   ├── grocy/             # Inventory
-│   └── backup/            # Cloud DR Orchestrator
-├── ansible/
-│   ├── inventory.yml      # Server configuration
-│   └── playbooks/
-│       └── full-setup.yml # Main playbook (includes Ingress)
-├── deploy.sh              # One-command deployment
-└── troubleshoot.sh        # Debugging helper
+├── ansible/                      # Server provisioning & cluster bootstrapping
+│   ├── group_vars/               # Environment variables
+│   ├── playbooks/                # Ansible playbooks (e.g. full-setup.yml)
+│   ├── roles/                    # Ansible roles (k3s, dependencies)
+│   ├── inventory.yml             # Target server IP configuration
+│   └── ansible.cfg               # Ansible runtime config
+│
+├── bin/                          # Python automation & monitoring scripts
+│   ├── clean_orphaned_logs.py    # Log retention management
+│   ├── db.py                     # Database utility scripts
+│   ├── github.py                 # GitHub integration tasks
+│   ├── monitor.py                # System health monitoring
+│   └── update_os.py              # Automated host OS updates
+├── lib/                          # Python libraries
+│   ├── Utils.py                  # Utility functions
+│   └── Constants.py              # Constants used in the project
+├── homelab-api/                  # Custom Home API backend source code
+│   ├── app/                      # Application logic
+│   └── Dockerfile                # API container image definition
+│
+├── k8s/                          # Kubernetes workloads (Kustomize)
+│   ├── adguard/                  # DNS & Ad-blocking
+│   ├── cert-manager/             # Local CA & TLS certificates
+│   ├── dashy/                    # Central home dashboard
+│   ├── grafana/                  # Metrics visualization
+│   ├── home-assistant/           # Smart home automation
+│   ├── influxdb/                 # Time-series database
+│   ├── infra-api/                # Custom Home API deployment
+│   ├── ingress-nginx/            # HTTP routing controller
+│   ├── jenkins/                  # Custom Jenkins CI/CD deployment
+│   ├── opengrok/                 # Source code search engine
+│   ├── prometheus/               # Cluster monitoring & metrics
+│   ├── vault/                    # HashiCorp Vault for Secrets Management
+│   ├── local-path-retain.yaml    # Custom StorageClass (Retain policy)
+│   └── kustomization.yaml        # Main Kustomize entrypoint
+│
+├── .github/workflows/            # GitHub Actions pipelines
+│   ├── api-build.yml             # Builds & pushes the Home API image
+│   └── jenkins-build.yml         # Builds & pushes the custom Jenkins image
+│
+├── deploy.sh                     # Deployment script wrapper
+└── README.md                     # Project documentation
 ```
 
-## Backup System (Cloud DR Orchestrator)
-
-Automated daily backups to Oracle Cloud Free Tier (20GB free storage):
-
-### Setup
-
-1. **Get Oracle Cloud credentials** (Free Tier)
-   - Sign up at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
-   - Create Object Storage bucket
-   - Generate API keys
-
-2. **Configure backup secrets**
-   ```bash
-   nano k8s/backup/secret.yaml
-   # Add your Oracle Cloud credentials
-   ```
-
-3. **Deploy** (included in main setup)
-   ```bash
-   kubectl apply -f k8s/backup/
-   ```
-
-### Features
-
-- 🗄️ Database backups (PostgreSQL, InfluxDB)
-- 📁 File/config backups (Jenkins, K8s configs)
-- 🔐 AES-256-GCM encryption
-- 📊 Prometheus metrics
-- 🕐 Daily automated runs (2 AM)
-- 💰 Free (Oracle Cloud Free Tier)
-
-### Manual backup
-
-```bash
-kubectl create job --from=cronjob/backup-daily manual-backup-$(date +%s) -n backup
-```
-
-### View backup logs
-
-```bash
-kubectl logs -n backup -l job-name=backup-daily --tail=100
-```
-│   ├── adguard/           # DNS
-│   ├── openwebui/         # AI
-│   └── grocy/             # Inventory
-├── ansible/
-│   ├── inventory.yml      # Server configuration
-│   └── playbooks/
-│       └── fare accessed through **Ingress NGINX** on standard HTTP/HTTPS ports (80/443). No need for port numbers in URLs.
-
-**Services use ClusterIP** (internal K8s networking only) for enhanced security. External access is controlled through Ingress routing rules.
-
-Set your router to give your server a static local IP (e.g., 192.168.0.100) for consistent access.
-
-### Example Access URLs
-- Dashboard: `http://192.168.0.100/`
-- Jenkins: `http://192.168.0.100/jenkins`
-- Grafana: `http://192.168.0.100/grafana`
-
-## Network Access
-
-All services use NodePort (30000-32767 range) for local network access. No domain or public IP required.
-
-Set your router to give your server a static local IP (e.g., 192.168.0.100) for consistent access.
-
-## License
-
-MIT
+[Kubernetes-badge]: https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=for-the-badge&logo=kubernetes&logoColor=white
+[Kubernetes-url]: https://kubernetes.io/
+[Ansible-badge]: https://img.shields.io/badge/ansible-%231A1918.svg?style=for-the-badge&logo=ansible&logoColor=white
+[Ansible-url]: https://www.ansible.com/
+[Vault-badge]: https://img.shields.io/badge/Vault-000000?style=for-the-badge&logo=Vault&logoColor=white
+[Vault-url]: https://www.vaultproject.io/
+[API-badge]: https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml/badge.svg
+[API-url]: https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml
+[Jenkins-badge]: https://github.com/Kobeep/home_infra/actions/workflows/jenkins-build.yml/badge.svg
+[Jenkins-url]: https://github.com/Kobeep/home_infra/actions/workflows/jenkins-build.yml
