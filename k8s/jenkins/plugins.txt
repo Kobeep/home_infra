@@ -11,9 +11,6 @@ maven-plugin:latest
 gradle:latest
 slack:latest
 email-ext:latest
-blueocean:latest
 antisamy-markup-formatter:latest
 kubernetes:latest
 role-strategy:latest
-sse-gateway:latest
-pubsub-light:latest
