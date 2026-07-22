@@ -19,7 +19,7 @@ jenkins:
               - user: "Kobeep"
   clouds:
     - kubernetes:
-        name: "kubernetes"
+        name: "k3s-cloud"
         serverUrl: "https://kubernetes.default.svc.cluster.local"
         namespace: "jenkins-agents"
         jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
