@@ -11,7 +11,7 @@
   </p>
 
   <p align="center">
-    [![Create and publish a API image](https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml/badge.svg)](https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml)
+   [![Create and publish a Docker image](https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml/badge.svg)](https://github.com/Kobeep/home_infra/actions/workflows/api-build.yml)
     [![Create and publish a Jenkins custom image](https://github.com/Kobeep/home_infra/actions/workflows/jenkins-build.yml/badge.svg)](https://github.com/Kobeep/home_infra/actions/workflows/jenkins-build.yml)
   </p>
 </div>
