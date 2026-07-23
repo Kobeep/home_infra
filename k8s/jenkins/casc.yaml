@@ -21,7 +21,7 @@ jenkins:
     - kubernetes:
         name: "k3s-cloud"
         serverUrl: "https://kubernetes.default.svc.cluster.local"
-        namespace: "jenkins-agents"
+        namespace: "jenkins"
         jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
         jenkinsTunnel: "jenkins-agent.jenkins.svc.cluster.local:50000"
         containerCapStr: "50"
