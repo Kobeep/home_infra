@@ -42,7 +42,7 @@ jenkins:
                 resourceLimitCpu: "1000m"
                 resourceLimitMemory: "1Gi"
             volumes:
-              - hostPath:
+              - hostPathVolume:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
 unclassified:
