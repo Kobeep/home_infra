@@ -55,8 +55,6 @@ spec:
           value: "-Djenkins.install.runSetupWizard=false"
         - name: REF_PLUGINS_FILE
           value: "/usr/share/jenkins/ref/plugins.txt"
-        - name: CASC_JENKINS_CONFIG
-          value: "/var/jenkins_home/casc.yaml"
         - name: KOBEEP_PASSWORD
           valueFrom:
             secretKeyRef:
