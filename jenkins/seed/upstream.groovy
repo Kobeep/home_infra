@@ -1,9 +1,9 @@
-def namesPipelines = ['kubectl-functions', 'api-requests']
+def branches = ['main', 'develop']
 
-namesPipelines.each { pipeline ->
+branches.each { pipeline ->
 
-    pipelineJob(pipeline) {
-        description("Generate pipeline: ${pipeline} (Generated automatically by upstream.groovy)")
+    pipelineJob("home_infra-${pipeline}") {
+        description("Generate pipeline for branch: ${pipeline} (Generated automatically by upstream.groovy)")
 
         definition {
             cpsScm {
@@ -13,7 +13,7 @@ namesPipelines.each { pipeline ->
                             url("https://github.com/Kobeep/home_infra.git")
                             credentials('github')
                         }
-                        branches('*/main')
+                        branches("*/${pipeline}")
                     }
                 }
                 scriptPath('jenkins/Jenkinsfile')
@@ -21,29 +21,9 @@ namesPipelines.each { pipeline ->
             }
         }
 
-        if (pipeline == 'kubectl-functions') {
-            parameters {
-                stringParam('KUBECTL_COMMAND', '', 'Command to execute with kubectl')
-                stringParam('KUBECTL_NAMESPACE', '', 'Namespace for the kubectl command')
-            }
-        } else if (pipeline == 'api-requests') {
-            parameters {
-                stringParam('API_ENDPOINT', "api.${get_ip_address()}.nip.io", 'API endpoint to send requests to. Replace "default" with your cluster IP.')
-                stringParam('API_REQUEST', 'pods/deployments/ingresses', 'Payload for the API request')
-            }
-        }
-
         logRotator {
             numToKeep(10)
             daysToKeep(7)
         }
-    }
-}
-
-def get_ip_address() {
-    try {
-        return java.net.InetAddress.getLocalHost().getHostAddress()
-    } catch (Exception e) {
-        return "127.0.0.1"
     }
 }

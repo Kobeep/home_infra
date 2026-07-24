@@ -1,46 +1,103 @@
+// Checkout the repo and run playbook.
 pipeline {
-    agent rc-slave
+    agent {
+      kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: shell
+    image: ubuntu
+    command:
+    - sleep
+    args:
+    - infinity
+    securityContext:
+      runAsUser: 1000
+'''
+            defaultContainer 'shell'
+            retries 2
+        }
+    }
 
     options {
         disableConcurrentBuilds()
     }
 
     stages {
-        stage('Initialize') {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Install dependencies') {
+            steps {
+                sh '''
+                    apt-get update
+                    apt-get install -y ansible kubectl
+                    apt-get install -y python3-pip
+                    pip3 install --upgrade pip
+                    pip3 install ansible
+                '''
+            }
+        }
+        stage('Check available playbooks and kubectl commands') {
             steps {
                 script {
-                    if (params.KUBECTL_COMMAND != null) {
-                        echo "Profile: kubectl-functions"
-                    } else if (params.API_ENDPOINT != null) {
-                        echo "Profile: api-requests"
-                    } else {
-                        error "Pipeline executed without proper parameters from Job DSL!"
-                    }
+                    // List available Ansible playbooks
+                    def playbooks = sh(script: "ls -1 ansible/playbooks/*.yml", returnStdout: true).trim().split("\n")
+                    echo "Available Ansible Playbooks: ${playbooks.join(', ')}"
+
+                    // List available kubectl commands (for demonstration purposes, you can customize this)
+                    def kubectlCommands = ['get pods -A', 'get services -A', 'describe pod <pod-name>']
+                    echo "Available Kubectl Commands: ${kubectlCommands.join(', ')}"
                 }
             }
         }
-
-        stage('Execute') {
+        stage('Pick action: run ansible playbook or execute kubectl command') {
+            steps {
+              choice(
+                choices: ['Run Ansible Playbook', 'Execute Kubectl Command'],
+                description: 'Choose an action to perform',
+                name: 'ACTION'
+              )
+              // Check available playbooks and kubectl commands based on the selected action
+              script {
+                if (ACTION == 'Run Ansible Playbook') {
+                  choice(
+                    choices: playbooks,
+                    description: 'Which playbook you want to run ?',
+                    name: 'PLAYBOOK'
+                  )
+                } else if (ACTION == 'Execute Kubectl Command') {
+                  choice(
+                    choices: kubectlCommands,
+                    description: 'Which kubectl command you want to execute?',
+                    name: 'KUBECTL_COMMAND'
+                  )
+                }
+              }
+            }
+        }
+        stage('Run selected action') {
             steps {
                 script {
-                    if (params.KUBECTL_COMMAND != null) {
-                        if (params.KUBECTL_COMMAND == '') {
-                            error "KUBECTL_COMMAND parameter is empty!"
+                    if (ACTION == 'Run Ansible Playbook') {
+                        input message: "Provide password to machine for Ansible playbook execution", parameters: [password(name: 'MACHINE_PASSWORD', description: 'Machine password')]
+                        input message: "Provide password to vault for Ansible playbook execution", parameters: [password(name: 'VAULT_PASSWORD', description: 'Vault password')]
+                        sh "ansible-playbook ansible/playbooks/${PLAYBOOK} -i ansible/inventory.yml --ask-vault-pass ${VAULT_PASSWORD} -e ansible_ssh_pass=${MACHINE_PASSWORD}"
+                    } else if (ACTION == 'Execute Kubectl Command') {
+                        if (KUBECTL_COMMAND == 'describe pod <pod-name>') {
+                            input message: "Provide the name of the pod to describe", parameters: [string(name: 'POD_NAME', description: 'Pod name')]
+                            sh "kubectl describe pod ${POD_NAME} -A"
+                        } else {
+                            sh "kubectl ${KUBECTL_COMMAND} -A"
                         }
-                        def namespaceFlag = params.KUBECTL_NAMESPACE ? "-n ${params.KUBECTL_NAMESPACE}" : ""
-                        sh "kubectl ${params.KUBECTL_COMMAND} ${namespaceFlag}"
-                    }
-                    else if (params.API_ENDPOINT != null) {
-                        sh "curl -X GET https://${params.API_ENDPOINT}/${params.API_REQUEST}"
+                        // sh "kubectl ${KUBECTL_COMMAND} -A"
                     }
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            cleanWs()
         }
     }
 }
