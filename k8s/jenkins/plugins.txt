@@ -16,3 +16,4 @@ kubernetes
 role-strategy
 matrix-auth
 ansicolor
+uno-choice

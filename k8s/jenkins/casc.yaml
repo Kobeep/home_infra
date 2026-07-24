@@ -68,6 +68,12 @@ jobs:
           }
 
           steps {
+              shell('''
+                  ls ansible/playbooks/*.yml 2>/dev/null | xargs -n1 basename > playbook-manifest.txt || true
+                  if [ ! -s playbook-manifest.txt ]; then
+                      echo "NO_PLAYBOOKS_FOUND" > playbook-manifest.txt
+                  fi
+              ''')
               dsl {
                   external('jenkins/seed/upstream.groovy')
                   removeAction('IGNORE')

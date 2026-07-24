@@ -1,19 +1,18 @@
-// Runs via "Process Job DSLs" build step (sandbox disabled) in the seed job.
-// The seed job must check out this repo first, so ansible/playbooks/
-// is present on disk when this script runs.
-
 def branchList = ['main', 'develop']
 
-def playbooksDir = new File('ansible/playbooks')
-def playbookChoices = playbooksDir.exists()
-    ? playbooksDir.listFiles({ f -> f.name.endsWith('.yml') } as FileFilter)*.name.sort()
-    : ['NO_PLAYBOOKS_FOUND']
+def playbookChoices = readFileFromWorkspace('playbook-manifest.txt')
+    .readLines()
+    *.trim()
+    .findAll { it }
 
 def kubectlChoices = [
     'get pods -A',
     'get services -A',
     'describe pod <pod-name>'
 ]
+
+def playbookChoicesLiteral = "[" + playbookChoices.collect { "'${it}'" }.join(', ') + "]"
+def kubectlChoicesLiteral = "[" + kubectlChoices.collect { "'${it}'" }.join(', ') + "]"
 
 branchList.each { branch ->
 
@@ -22,8 +21,40 @@ branchList.each { branch ->
 
         parameters {
             choiceParam('ACTION', ['Run Ansible Playbook', 'Execute Kubectl Command'], 'What do you want to run?')
-            choiceParam('PLAYBOOK', playbookChoices, 'Playbook to run (only used if ACTION = Run Ansible Playbook)')
-            choiceParam('KUBECTL_COMMAND', kubectlChoices, 'kubectl command (only used if ACTION = Execute Kubectl Command)')
+
+            activeChoiceReactiveParam('PLAYBOOK') {
+                description('Playbook to run — only relevant if ACTION = Run Ansible Playbook')
+                choiceType('SINGLE_SELECT')
+                filterable()
+                groovyScript {
+                    script("""
+                        if (ACTION == 'Run Ansible Playbook') {
+                            return ${playbookChoicesLiteral}
+                        } else {
+                            return ['N/A']
+                        }
+                    """)
+                    fallbackScript('return ["ERROR"]')
+                }
+                referencedParameter('ACTION')
+            }
+
+            activeChoiceReactiveParam('KUBECTL_COMMAND') {
+                description('kubectl command — only relevant if ACTION = Execute Kubectl Command')
+                choiceType('SINGLE_SELECT')
+                groovyScript {
+                    script("""
+                        if (ACTION == 'Execute Kubectl Command') {
+                            return ${kubectlChoicesLiteral}
+                        } else {
+                            return ['N/A']
+                        }
+                    """)
+                    fallbackScript('return ["ERROR"]')
+                }
+                referencedParameter('ACTION')
+            }
+
             stringParam('POD_NAME', '', 'Pod name — only needed for "describe pod <pod-name>"')
         }
 
