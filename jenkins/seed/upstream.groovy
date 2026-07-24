@@ -84,4 +84,3 @@ branchList.each { branch ->
             daysToKeep(7)
         }
     }
-}
