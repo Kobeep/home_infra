@@ -55,7 +55,7 @@ spec:
                     if (params.ACTION == 'Run Ansible Playbook') {
                         withCredentials([
                             usernamePassword(
-                                credentialsId: 'server-machine',
+                                credentialsId: 'ansible-machine-creds',
                                 usernameVariable: 'SSH_USER',
                                 passwordVariable: 'SSH_PASS'
                             ),
@@ -66,7 +66,7 @@ spec:
                         ]) {
                             writeFile file: '.vault_pass', text: VAULT_PASS
                             sh '''
-                                ansible-playbook ansible/playbooks/${PLAYBOOK} \
+                                ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook ansible/playbooks/${PLAYBOOK} \
                                     -i ansible/inventory.yml \
                                     --vault-password-file .vault_pass \
                                     -e ansible_user=${SSH_USER} \
