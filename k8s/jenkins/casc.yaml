@@ -48,3 +48,34 @@ jenkins:
 unclassified:
   ansiColorBuildWrapper:
     globalColorMapName: "XTerm"
+jobs:
+  - script: |
+      freeStyleJob('seed-job') {
+          description('Seed job: regenerates home_infra-* pipelines from jenkins/seed/upstream.groovy. Defined declaratively via JCasC.')
+
+          scm {
+              git {
+                  remote {
+                      url('https://github.com/Kobeep/home_infra.git')
+                      credentials('github')
+                  }
+                  branch('*/main')
+              }
+          }
+
+          triggers {
+              githubPush()
+          }
+
+          steps {
+              dsl {
+                  external('jenkins/seed/upstream.groovy')
+                  removeAction('IGNORE')
+                  useScriptSecurity(false)
+              }
+          }
+
+          logRotator {
+              numToKeep(10)
+          }
+      }
