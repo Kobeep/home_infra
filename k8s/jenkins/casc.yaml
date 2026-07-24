@@ -71,7 +71,6 @@ jobs:
               dsl {
                   external('jenkins/seed/upstream.groovy')
                   removeAction('IGNORE')
-                  sandbox(false)
               }
           }
 
