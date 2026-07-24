@@ -11,13 +11,11 @@ def kubectlChoices = [
     'describe pod <pod-name>'
 ]
 
-def inventoryFile = readFileFromWorkspace('ansible/inventory.yml')
-    .readLines()
+def inventoryText = readFileFromWorkspace('inventory-manifest.txt')
 
-// get ip address from inventory file
-def serverIP = inventoryFile.find { it.startsWith('homelab') }
-    ?.split(' ')[1]
-    ?.trim()
+// Wyciąga adres IP (lub cokolwiek po ansible_host)
+def ipMatcher = (inventoryText =~ /ansible_host:\s*([^\s]+)/)
+def serverIP = ipMatcher ? ipMatcher[0][1] : '127.0.0.1'
 
 def playbookChoicesLiteral = "[" + playbookChoices.collect { "'${it}'" }.join(', ') + "]"
 def kubectlChoicesLiteral = "[" + kubectlChoices.collect { "'${it}'" }.join(', ') + "]"
