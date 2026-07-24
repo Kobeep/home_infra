@@ -17,4 +17,8 @@ role-strategy
 matrix-auth
 ansicolor
 uno-choice
-sshagent
+ssh-agent
+ssh-credentials
+credentials
+workflow-step-api
+structs
