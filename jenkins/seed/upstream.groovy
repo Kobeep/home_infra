@@ -16,6 +16,10 @@ def inventoryText = readFileFromWorkspace('inventory-manifest.txt')
 def ipMatcher = (inventoryText =~ /ansible_host:\s*([^\s]+)/)
 def serverIP = ipMatcher ? ipMatcher[0][1] : '127.0.0.1'
 
+environmentVariables {
+    env('SERVER_IP', serverIP)
+}
+
 def playbookChoicesLiteral = "[" + playbookChoices.collect { "'${it}'" }.join(', ') + "]"
 def kubectlChoicesLiteral = "[" + kubectlChoices.collect { "'${it}'" }.join(', ') + "]"
 

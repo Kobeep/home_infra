@@ -63,10 +63,10 @@ spec:
                 sshagent(credentials: ['serwer-ssh-key']) {
                     sh '''
                         mkdir -p ~/.ssh && chmod 700 ~/.ssh
-                        ssh-keyscan -H ${serverIP} >> ~/.ssh/known_hosts
+                        ssh-keyscan -H ${env.SERVER_IP} >> ~/.ssh/known_hosts
 
                         # Bezpieczne połączenie i wykonanie komendy
-                        ssh ${SSH_USER}@${serverIP} "uptime"
+                        ssh ${SSH_USER}@${env.SERVER_IP} "uptime"
                     '''
                 }
             }
@@ -80,11 +80,11 @@ spec:
                     if (params.ACTION == 'Run Ansible Playbook') {
                         banner("Running playbook: ${params.PLAYBOOK}", '32')
                         withCredentials([
-                            usernamePassword(
-                                credentialsId: 'serwer-ssh-key',
-                                usernameVariable: 'SSH_USER',
-                                sshKeyVariable: 'SSH_KEY'
-                            ),
+                            sshUserPrivateKey(
+                              credentialsId: 'serwer-ssh-key',
+                              keyFileVariable: 'SSH_KEY',
+                              usernameVariable: 'SSH_USER'
+                              ),
                             string(
                                 credentialsId: 'ansible-vault-password',
                                 variable: 'VAULT_PASS'
@@ -96,7 +96,8 @@ spec:
                                     -i ansible/inventory.yml \
                                     --vault-password-file .vault_pass \
                                     -e ansible_user=${SSH_USER} \
-                                    -e ansible_ssh_private_key_file=${SSH_KEY}
+                                    -e ansible_ssh_private_key_file=${SSH_KEY} \
+                                    -e ansible_host=${SERVER_IP}
                                 rm -f .vault_pass
                             '''
                         }
