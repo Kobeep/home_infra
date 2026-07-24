@@ -13,7 +13,6 @@ def kubectlChoices = [
 
 def inventoryText = readFileFromWorkspace('inventory-manifest.txt')
 
-// Wyciąga adres IP (lub cokolwiek po ansible_host)
 def ipMatcher = (inventoryText =~ /ansible_host:\s*([^\s]+)/)
 def serverIP = ipMatcher ? ipMatcher[0][1] : '127.0.0.1'
 
@@ -64,6 +63,7 @@ branchList.each { branch ->
         }
         definition {
             cpsScm {
+                scm {
                     git {
                         remote {
                             url('https://github.com/Kobeep/home_infra.git')
