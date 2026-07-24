@@ -55,7 +55,7 @@ spec:
                     if (params.ACTION == 'Run Ansible Playbook') {
                         withCredentials([
                             usernamePassword(
-                                credentialsId: 'ansible-machine-creds',
+                                credentialsId: 'server-machine',
                                 usernameVariable: 'SSH_USER',
                                 passwordVariable: 'SSH_PASS'
                             ),
