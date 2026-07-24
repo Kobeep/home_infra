@@ -73,6 +73,11 @@ jobs:
                   if [ ! -s playbook-manifest.txt ]; then
                       echo "NO_PLAYBOOKS_FOUND" > playbook-manifest.txt
                   fi
+                  ls ansible/inventory.yml 2>/dev/null | xargs -n1 basename > inventory-manifest.txt || true
+                  if [ ! -s inventory-manifest.txt ]; then
+                      echo "NO_INVENTORY_FOUND" > inventory-manifest.txt
+                  fi
+
               ''')
               dsl {
                   external('jenkins/seed/upstream.groovy')

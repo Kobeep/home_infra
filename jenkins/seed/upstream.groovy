@@ -11,11 +11,11 @@ def kubectlChoices = [
     'describe pod <pod-name>'
 ]
 
-def inventoryFile = 'ansible/inventory.yml'
+def inventoryFile = readFileFromWorkspace('ansible/inventory.yml')
+    .readLines()
 
 // get ip address from inventory file
-def serverIP = new File(inventoryFile).readLines()
-    .find { it.startsWith('homelab') }
+def serverIP = inventoryFile.find { it.startsWith('homelab') }
     ?.split(' ')[1]
     ?.trim()
 
