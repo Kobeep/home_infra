@@ -11,6 +11,14 @@ def kubectlChoices = [
     'describe pod <pod-name>'
 ]
 
+def inventoryFile = 'ansible/inventory.yml'
+
+// get ip address from inventory file
+def serverIP = new File(inventoryFile).readLines()
+    .find { it.startsWith('homelab') }
+    ?.split(' ')[1]
+    ?.trim()
+
 def playbookChoicesLiteral = "[" + playbookChoices.collect { "'${it}'" }.join(', ') + "]"
 def kubectlChoicesLiteral = "[" + kubectlChoices.collect { "'${it}'" }.join(', ') + "]"
 
@@ -38,7 +46,6 @@ branchList.each { branch ->
                 }
                 referencedParameter('ACTION')
             }
-
             activeChoiceReactiveParam('KUBECTL_COMMAND') {
                 description('kubectl command — only relevant if ACTION = Execute Kubectl Command')
                 choiceType('SINGLE_SELECT')
@@ -57,10 +64,8 @@ branchList.each { branch ->
 
             stringParam('POD_NAME', '', 'Pod name — only needed for "describe pod <pod-name>"')
         }
-
         definition {
             cpsScm {
-                scm {
                     git {
                         remote {
                             url('https://github.com/Kobeep/home_infra.git')
