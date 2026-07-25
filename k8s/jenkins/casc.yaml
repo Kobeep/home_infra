@@ -68,9 +68,7 @@ jobs:
           }
 
           steps {
-              shell('''#!/bin/bash
-                  set -eo pipefail
-
+              shell('''
                   if find ansible/playbooks -maxdepth 1 -name "*.yml" 2>/dev/null | grep -q .; then
                       find ansible/playbooks -maxdepth 1 -name "*.yml" -exec basename {} \\; > playbook-manifest.txt
                   else
