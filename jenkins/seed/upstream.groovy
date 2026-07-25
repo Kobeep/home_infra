@@ -1,9 +1,18 @@
 def branchList = ['main', 'develop']
 
-def playbookChoices = readFileFromWorkspace('playbook-manifest.txt')
-    .readLines()
-    *.trim()
-    .findAll { it }
+def playbookChoices = []
+try {
+    playbookChoices = readFileFromWorkspace('playbook-manifest.txt')
+        .readLines()
+        *.trim()
+        .findAll { it && it != 'NO_PLAYBOOKS_FOUND' }
+} catch (Exception e) {
+    println "Ostrzeżenie: Nie udało się odczytać playbook-manifest.txt: ${e.message}"
+}
+
+if (!playbookChoices) {
+    playbookChoices = ['brak_playbookow.yml']
+}
 
 def kubectlChoices = [
     'get pods -A',
@@ -11,10 +20,18 @@ def kubectlChoices = [
     'describe pod <pod-name>'
 ]
 
-def inventoryText = readFileFromWorkspace('inventory-manifest.txt')
+def inventoryText = ''
+try {
+    inventoryText = readFileFromWorkspace('inventory-manifest.txt')
+} catch (Exception e) {
+    println "Warning: Failed to read inventory-manifest.txt: ${e.message}"
+}
 
-def ipMatcher = (inventoryText =~ /ansible_host:\s*([^\s]+)/)
+def ipMatcher = (inventoryText =~ /ansible_host:\s*["']?([0-9a-zA-Z\.\-]+)["']?/)
 def serverIP = ipMatcher ? ipMatcher[0][1] : '127.0.0.1'
+
+println "--> Detected SERVER_IP for pipelines: ${serverIP}"
+
 def playbookChoicesLiteral = "[" + playbookChoices.collect { "'${it}'" }.join(', ') + "]"
 def kubectlChoicesLiteral = "[" + kubectlChoices.collect { "'${it}'" }.join(', ') + "]"
 
@@ -58,33 +75,32 @@ branchList.each { branch ->
                             return ['N/A']
                         }
                     """)
-                    fallbackScript('return ["ERROR"]')
+                    fallbackScript('return ["ACTION"]')
                 }
-                referencedParameter('ACTION')
+
+                stringParam('POD_NAME', '', 'Pod name — only needed for "describe pod <pod-name>"')
             }
 
-            stringParam('POD_NAME', '', 'Pod name — only needed for "describe pod <pod-name>"')
-        }
-
-        definition {
-            cpsScm {
-                scm {
-                    git {
-                        remote {
-                            url('https://github.com/Kobeep/home_infra.git')
-                            credentials('github')
+            definition {
+                cpsScm {
+                    scm {
+                        git {
+                            remote {
+                                url('https://github.com/Kobeep/home_infra.git')
+                                credentials('github')
+                            }
+                            branches("*/${branch}")
                         }
-                        branches("*/${branch}")
                     }
+                    scriptPath('jenkins/Jenkinsfile')
+                    lightweight(true)
                 }
-                scriptPath('jenkins/Jenkinsfile')
-                lightweight(true)
             }
-        }
 
-        logRotator {
-            numToKeep(10)
-            daysToKeep(7)
+            logRotator {
+                numToKeep(10)
+                daysToKeep(7)
+            }
         }
     }
 }

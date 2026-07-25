@@ -68,16 +68,20 @@ jobs:
           }
 
           steps {
-              shell('''
-                  ls ansible/playbooks/*.yml 2>/dev/null | xargs -n1 basename > playbook-manifest.txt || true
-                  if [ ! -s playbook-manifest.txt ]; then
+              shell('''#!/bin/bash
+                  set -eo pipefail
+
+                  if find ansible/playbooks -maxdepth 1 -name "*.yml" 2>/dev/null | grep -q .; then
+                      find ansible/playbooks -maxdepth 1 -name "*.yml" -exec basename {} \\; > playbook-manifest.txt
+                  else
                       echo "NO_PLAYBOOKS_FOUND" > playbook-manifest.txt
                   fi
-                  ls ansible/inventory.yml 2>/dev/null | xargs -n1 basename > inventory-manifest.txt || true
-                  if [ ! -s inventory-manifest.txt ]; then
+
+                  if [ -f ansible/inventory.yml ]; then
+                      cat ansible/inventory.yml > inventory-manifest.txt
+                  else
                       echo "NO_INVENTORY_FOUND" > inventory-manifest.txt
                   fi
-
               ''')
               dsl {
                   external('jenkins/seed/upstream.groovy')
