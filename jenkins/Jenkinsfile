@@ -76,7 +76,7 @@ spec:
                             mkdir -p ~/.ssh && chmod 700 ~/.ssh
                             ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-                            ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=accept-new "${SSH_USER}@${SERVER_IP}" "uptime"
+                            ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa  "${SSH_USER}@${SERVER_IP}" "uptime"
                         '''
                     }
                 }
