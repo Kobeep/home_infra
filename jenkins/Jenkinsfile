@@ -48,7 +48,6 @@ spec:
             steps {
                 banner('Installing ansible, kubectl, and friends', '34')
                 sh '''
-                    set -eo pipefail
                     apt-get update && apt-get install -y --no-install-recommends ansible python3-pip curl ca-certificates
 
                     if ! command -v kubectl &> /dev/null; then
