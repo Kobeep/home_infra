@@ -48,7 +48,8 @@ spec:
             steps {
                 banner('Installing ansible, kubectl, and friends', '34')
                 sh '''
-                    apt-get update && apt-get install -y --no-install-recommends ansible python3-pip curl ca-certificates
+                    apt-get update && apt-get install -y --no-install-recommends python3-pip python3-setuptools curl ca-certificates
+                    pip3 install --no-cache-dir ansible
 
                     if ! command -v kubectl &> /dev/null; then
                         KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
@@ -101,6 +102,19 @@ spec:
                                 variable: 'VAULT_PASS'
                             )
                         ]) {
+                            if (env.ACTION == 'Run Ansible Playbook') {
+                        banner("Running playbook: ${env.PLAYBOOK}", '32')
+                        withCredentials([
+                            sshUserPrivateKey(
+                                credentialsId: 'serwer-ssh-key',
+                                keyFileVariable: 'SSH_KEY',
+                                usernameVariable: 'SSH_USER'
+                            ),
+                            string(
+                                credentialsId: 'ansible-vault-password',
+                                variable: 'VAULT_PASS'
+                            )
+                        ]) {
                             try {
                                 writeFile file: '.vault_pass', text: VAULT_PASS
                                 sh '''
@@ -109,7 +123,8 @@ spec:
                                         --vault-password-file .vault_pass \
                                         -e "ansible_user=${SSH_USER}" \
                                         -e "ansible_ssh_private_key_file=${SSH_KEY}" \
-                                        -e "ansible_host=${SERVER_IP}"
+                                        -e "ansible_host=${SERVER_IP}" \
+                                        -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
                                 '''
                             } finally {
                                 sh 'rm -f .vault_pass'
