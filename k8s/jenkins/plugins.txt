@@ -22,3 +22,4 @@ ssh-credentials
 credentials
 workflow-step-api
 structs
+rebuild
