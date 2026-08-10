@@ -23,3 +23,8 @@ credentials
 workflow-step-api
 structs
 rebuild
+timestamper
+pipeline-utility-steps
+ws-cleanup
+mask-passwords
+warnings-ng

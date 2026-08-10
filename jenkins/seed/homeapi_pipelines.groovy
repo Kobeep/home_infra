@@ -5,7 +5,7 @@ pipelineJob('infra-api-build') {
         stringParam('PYTHON_VERSION', '3.11', 'Python version used by the build container.')
         booleanParam('RUN_TESTS', true, 'Run pytest tests.')
         booleanParam('PUBLISH_IMAGE', true, 'Publish the image to Harbor.')
-        stringParam('IMAGE_REPO', 'harbor.127.0.0.1.nip.io/library/infra-api', 'Image repository (without tag).')
+        stringParam('IMAGE_REPO', 'harbor.192.168.1.16.nip.io/home_infra/infra-api', 'Image repository (without tag). Use your Harbor host and project path.')
         stringParam('IMAGE_TAG', 'latest', 'Docker image tag.')
     }
 

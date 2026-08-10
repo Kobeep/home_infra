@@ -22,7 +22,7 @@ spec:
         - name: harbor-pull-cred
       containers:
         - name: api-container
-          image: ghcr.io/kobeep/home_infra:latest
+          image: harbor.192.168.1.16.nip.io/home_infra/infra-api:latest
           ports:
             - containerPort: 8000
           imagePullPolicy: Always
