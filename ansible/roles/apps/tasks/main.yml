@@ -150,6 +150,23 @@
   environment: "{{ kubectl_env }}"
   changed_when: true
 
+- name: Detect whether Harbor credentials are configured
+  ansible.builtin.set_fact:
+    harbor_credentials_ready: >-
+      {{
+        (vault_harbor_my_username | default('') | length > 0)
+        and (vault_harbor_my_password | default('') | length > 0)
+        and (vault_harbor_jenkins_username | default('') | length > 0)
+        and (vault_harbor_jenkins_password | default('') | length > 0)
+      }}
+
+- name: Warn when Harbor credentials are missing
+  ansible.builtin.debug:
+    msg:
+      - "Harbor credentials are not fully configured; Harbor pull/push secrets and Jenkins Harbor credential patch will be skipped."
+      - "Define vault_harbor_my_username, vault_harbor_my_password, vault_harbor_jenkins_username, vault_harbor_jenkins_password in ansible/env.cfg to enable them."
+  when: not harbor_credentials_ready
+
 - name: Create harbor-pull-cred image pull secret in app namespaces
   become: false
   ansible.builtin.shell:
@@ -167,6 +184,7 @@
     - jenkins
   environment: "{{ kubectl_env }}"
   changed_when: true
+  when: harbor_credentials_ready
 
 - name: Create harbor-jenkins-cred secret in jenkins namespace
   become: false
@@ -181,6 +199,7 @@
         --dry-run=client -o yaml | kubectl apply -f -
   environment: "{{ kubectl_env }}"
   changed_when: true
+  when: harbor_credentials_ready
 
 - name: Attach harbor-pull-cred to default ServiceAccounts
   become: false
@@ -206,6 +225,7 @@
     - jenkins
   environment: "{{ kubectl_env }}"
   changed_when: true
+  when: harbor_credentials_ready
 
 # ── Deploy all application manifests ─────────────────────────────────────────
 - name: Ensure CA directory exists on remote server
@@ -242,6 +262,7 @@
       -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}"}}'
   environment: "{{ kubectl_env }}"
   changed_when: true
+  when: harbor_credentials_ready
 
 # ── HashiCorp Vault ───────────────────────────────────────────────────────────
 

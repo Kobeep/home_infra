@@ -65,21 +65,25 @@ spec:
             secretKeyRef:
               name: jenkins-secrets
               key: harbor-my-username
+              optional: true
         - name: HARBOR_MY_PASSWORD
           valueFrom:
             secretKeyRef:
               name: jenkins-secrets
               key: harbor-my-password
+              optional: true
         - name: HARBOR_JENKINS_USERNAME
           valueFrom:
             secretKeyRef:
               name: jenkins-secrets
               key: harbor-jenkins-username
+              optional: true
         - name: HARBOR_JENKINS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: jenkins-secrets
               key: harbor-jenkins-password
+              optional: true
       volumes:
       - name: jenkins-data
         persistentVolumeClaim:
