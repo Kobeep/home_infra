@@ -109,7 +109,7 @@ jobs:
       }
   - script: |
       freeStyleJob('seed-homeapi-pipelines') {
-          description('Seed job: creates infra-api build / ansible deploy / home-api GET check pipelines from jenkins/seed/homeapi-pipelines.groovy.')
+          description('Seed job: creates infra-api build / ansible deploy / home-api GET check pipelines from jenkins/seed/homeapi_pipelines.groovy.')
 
           scm {
               git {
@@ -127,7 +127,7 @@ jobs:
 
           steps {
               dsl {
-                  external('jenkins/seed/homeapi-pipelines.groovy')
+                  external('jenkins/seed/homeapi_pipelines.groovy')
                   removeAction('IGNORE')
               }
           }
