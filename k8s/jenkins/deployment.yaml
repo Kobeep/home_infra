@@ -96,6 +96,12 @@ spec:
               name: jenkins-secrets
               key: server-ssh-private-key
               optional: true
+        - name: SERVER_SSH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: server-ssh-password
+              optional: true
         - name: ANSIBLE_VAULT_PASSWORD
           valueFrom:
             secretKeyRef:

@@ -42,7 +42,7 @@ spec:
                 banner('Install ansible tooling', '34')
                 sh '''
                     apt-get update
-                    apt-get install -y --no-install-recommends python3-pip python3-setuptools openssh-client
+                    apt-get install -y --no-install-recommends python3-pip python3-setuptools openssh-client sshpass
                     pip3 install --no-cache-dir ansible
                 '''
             }
@@ -51,54 +51,55 @@ spec:
         stage('Run playbook on k3s host') {
             steps {
                 banner("Running ${params.PLAYBOOK} via ansible inventory", '33')
-                sshagent(credentials: ['serwer-ssh-key']) {
-                    withCredentials([
-                        sshUserPrivateKey(credentialsId: 'serwer-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
-                        string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')
-                    ]) {
-                        sh '''
-                            set -eu
-                            mkdir -p ~/.ssh && chmod 700 ~/.ssh
-                            ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts 2>/dev/null || true
+                withCredentials([
+                    string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS'),
+                    string(credentialsId: 'serwer-ssh-password', variable: 'SSH_PASS')
+                ]) {
+                    sh '''
+                        set -eu
+                        mkdir -p ~/.ssh && chmod 700 ~/.ssh
 
-                            VAULT_VALUE="${ANSIBLE_VAULT_PASSWORD:-}"
-                            if [ -z "$VAULT_VALUE" ]; then
-                                VAULT_VALUE="$VAULT_PASS"
-                            fi
+                        VAULT_VALUE="${ANSIBLE_VAULT_PASSWORD:-}"
+                        if [ -z "$VAULT_VALUE" ]; then
+                            VAULT_VALUE="$VAULT_PASS"
+                        fi
 
-                            if [ -z "$VAULT_VALUE" ]; then
-                                echo "ERROR: Missing Ansible Vault password. Fill ANSIBLE_VAULT_PASSWORD textbox or set Jenkins credential ansible-vault-password."
-                                exit 1
-                            fi
+                        if [ -z "$VAULT_VALUE" ]; then
+                            echo "ERROR: Missing Ansible Vault password. Fill ANSIBLE_VAULT_PASSWORD textbox or set Jenkins credential ansible-vault-password."
+                            exit 1
+                        fi
 
-                            TARGET_HOST="${SERVER_IP:-}"
-                            if [ -n "$TARGET_HOST" ]; then
-                                case "$TARGET_HOST" in
-                                    127.0.0.1|localhost)
-                                        echo "ERROR: SERVER_IP points to localhost. In Jenkins pod this is not the k3s host."
-                                        echo "Leave SERVER_IP empty to use ansible_host from inventory or set real host IP/DNS."
-                                        exit 1
-                                        ;;
-                                esac
-                                echo "Using SERVER_IP override: $TARGET_HOST"
-                                ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-                                ANSIBLE_TARGET_EXTRA="-e ansible_host=$TARGET_HOST"
-                            else
-                                echo "Using ansible_host from ansible/inventory.yml"
-                                ANSIBLE_TARGET_EXTRA=""
-                            fi
+                        if [ -z "${SSH_PASS:-}" ]; then
+                            echo "ERROR: Missing SSH password credential serwer-ssh-password."
+                            exit 1
+                        fi
 
-                            printf "%s" "$VAULT_VALUE" | sed -e 's/[[:space:]]*$//' > .vault_pass
-                            ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "$PLAYBOOK" \
-                              -i ansible/inventory.yml \
-                              --vault-password-file .vault_pass \
-                              -e "ansible_user=$SSH_USER" \
-                              -e "ansible_ssh_private_key_file=$SSH_KEY" \
-                              $ANSIBLE_TARGET_EXTRA \
-                              -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
-                            rm -f .vault_pass
-                        '''
-                    }
+                        TARGET_HOST="${SERVER_IP:-}"
+                        if [ -n "$TARGET_HOST" ]; then
+                            case "$TARGET_HOST" in
+                                127.0.0.1|localhost)
+                                    echo "ERROR: SERVER_IP points to localhost. In Jenkins pod this is not the k3s host."
+                                    echo "Leave SERVER_IP empty to use ansible_host from inventory or set real host IP/DNS."
+                                    exit 1
+                                    ;;
+                            esac
+                            echo "Using SERVER_IP override: $TARGET_HOST"
+                            ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+                            ANSIBLE_TARGET_EXTRA="-e ansible_host=$TARGET_HOST"
+                        else
+                            echo "Using ansible_host from ansible/inventory.yml"
+                            ANSIBLE_TARGET_EXTRA=""
+                        fi
+
+                        printf "%s" "$VAULT_VALUE" | sed -e 's/[[:space:]]*$//' > .vault_pass
+                        ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "$PLAYBOOK" \
+                          -i ansible/inventory.yml \
+                          --vault-password-file .vault_pass \
+                          $ANSIBLE_TARGET_EXTRA \
+                          -e "ansible_password=$SSH_PASS" \
+                          -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no -o KbdInteractiveAuthentication=no'"
+                        rm -f .vault_pass
+                    '''
                 }
             }
         }

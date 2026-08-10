@@ -268,15 +268,15 @@
   ansible.builtin.set_fact:
     jenkins_ci_credentials_ready: >-
       {{
-        (vault_server_ssh_private_key | default('') | length > 0)
+        (vault_server_ssh_password | default('') | length > 0)
         and (vault_ansible_vault_password | default('') | length > 0)
       }}
 
 - name: Warn when Jenkins SSH/Vault credentials are missing
   ansible.builtin.debug:
     msg:
-      - "Jenkins CI credentials are not fully configured; serwer-ssh-key and ansible-vault-password will not be injected via JCasC."
-      - "Define vault_server_ssh_private_key and vault_ansible_vault_password in ansible/env.cfg to enable automatic Jenkins credential provisioning."
+      - "Jenkins CI credentials are not fully configured; serwer-ssh-password and ansible-vault-password will not be injected via JCasC."
+      - "Define vault_server_ssh_password and vault_ansible_vault_password in ansible/env.cfg to enable automatic Jenkins credential provisioning."
   when: not jenkins_ci_credentials_ready
 
 - name: Patch jenkins-secrets with SSH and Ansible Vault values used by JCasC
@@ -284,7 +284,7 @@
   ansible.builtin.shell:
     cmd: >
       kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{{ {"stringData": {"server-ssh-username": (vault_server_ssh_username | default("root")), "server-ssh-private-key": vault_server_ssh_private_key, "ansible-vault-password": vault_ansible_vault_password }} | to_json }}'
+      -p '{{ {"stringData": {"server-ssh-password": vault_server_ssh_password, "ansible-vault-password": vault_ansible_vault_password }} | to_json }}'
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: jenkins_ci_credentials_ready
