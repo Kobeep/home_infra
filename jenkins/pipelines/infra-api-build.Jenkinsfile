@@ -93,6 +93,12 @@ spec:
                     container('kaniko') {
                         sh '''
                             set -eu
+                            if [ -z "${HARBOR_USER:-}" ] || [ -z "${HARBOR_PASS:-}" ]; then
+                                echo "ERROR: Jenkins credential harbor-jenkins-creds is missing or empty."
+                                echo "Set harbor-jenkins-username and harbor-jenkins-password in jenkins-secrets and restart Jenkins."
+                                exit 1
+                            fi
+
                             REGISTRY_HOST=$(echo "$IMAGE_REPO" | cut -d/ -f1)
                             mkdir -p /kaniko/.docker
 
