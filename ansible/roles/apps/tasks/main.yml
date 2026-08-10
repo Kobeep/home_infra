@@ -150,6 +150,63 @@
   environment: "{{ kubectl_env }}"
   changed_when: true
 
+- name: Create harbor-pull-cred image pull secret in app namespaces
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      kubectl create secret docker-registry harbor-pull-cred \
+        --docker-server="harbor.{{ server_ip }}.nip.io" \
+        --docker-username="{{ vault_harbor_my_username }}" \
+        --docker-password="{{ vault_harbor_my_password }}" \
+        --docker-email="{{ vault_github_email }}" \
+        --namespace={{ item }} \
+        --dry-run=client -o yaml | kubectl apply -f -
+  loop:
+    - default
+    - api
+    - jenkins
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Create harbor-jenkins-cred secret in jenkins namespace
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      kubectl create secret docker-registry harbor-jenkins-cred \
+        --docker-server="harbor.{{ server_ip }}.nip.io" \
+        --docker-username="{{ vault_harbor_jenkins_username }}" \
+        --docker-password="{{ vault_harbor_jenkins_password }}" \
+        --docker-email="{{ vault_github_email }}" \
+        --namespace=jenkins \
+        --dry-run=client -o yaml | kubectl apply -f -
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Attach harbor-pull-cred to default ServiceAccounts
+  become: false
+  ansible.builtin.shell:
+    cmd: |
+      set -e
+      existing="$(kubectl get sa default -n {{ item }} -o jsonpath='{.imagePullSecrets[*].name}' 2>/dev/null || true)"
+
+      if echo "$existing" | tr ' ' '\n' | grep -qx 'harbor-pull-cred'; then
+        exit 0
+      fi
+
+      if [ -z "$existing" ]; then
+        kubectl patch sa default -n {{ item }} --type='json' \
+          -p='[{"op":"add","path":"/imagePullSecrets","value":[{"name":"harbor-pull-cred"}]}]'
+      else
+        kubectl patch sa default -n {{ item }} --type='json' \
+          -p='[{"op":"add","path":"/imagePullSecrets/-","value":{"name":"harbor-pull-cred"}}]'
+      fi
+  loop:
+    - default
+    - api
+    - jenkins
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
 # ── Deploy all application manifests ─────────────────────────────────────────
 - name: Ensure CA directory exists on remote server
   ansible.builtin.file:
@@ -174,6 +231,15 @@
   become: false
   ansible.builtin.command:
     cmd: kubectl apply -k {{ home_infra_remote_path }}/k8s/
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Patch jenkins-secrets with Harbor credentials used by JCasC
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      kubectl patch secret jenkins-secrets -n jenkins --type merge
+      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}"}}'
   environment: "{{ kubectl_env }}"
   changed_when: true
 

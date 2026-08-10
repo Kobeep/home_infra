@@ -45,6 +45,22 @@ jenkins:
               - hostPathVolume:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "harbor-my-creds"
+              username: "${HARBOR_MY_USERNAME}"
+              password: "${HARBOR_MY_PASSWORD}"
+              description: "Harbor credentials (owner account)"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "harbor-jenkins-creds"
+              username: "${HARBOR_JENKINS_USERNAME}"
+              password: "${HARBOR_JENKINS_PASSWORD}"
+              description: "Harbor credentials for CI publish"
 unclassified:
   ansiColorBuildWrapper:
     globalColorMapName: "XTerm"
@@ -89,5 +105,34 @@ jobs:
 
           logRotator {
               numToKeep(10)
+          }
+      }
+  - script: |
+      freeStyleJob('seed-homeapi-pipelines') {
+          description('Seed job: creates infra-api build / ansible deploy / home-api GET check pipelines from jenkins/seed/homeapi-pipelines.groovy.')
+
+          scm {
+              git {
+                  remote {
+                      url('https://github.com/Kobeep/home_infra.git')
+                      credentials('github')
+                  }
+                  branch('*/main')
+              }
+          }
+
+          triggers {
+              githubPush()
+          }
+
+          steps {
+              dsl {
+                  external('jenkins/seed/homeapi-pipelines.groovy')
+                  removeAction('IGNORE')
+              }
+          }
+
+          logRotator {
+              numToKeep(20)
           }
       }

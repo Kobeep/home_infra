@@ -60,6 +60,26 @@ spec:
             secretKeyRef:
               name: jenkins-secrets
               key: kobeep-password
+        - name: HARBOR_MY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-my-username
+        - name: HARBOR_MY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-my-password
+        - name: HARBOR_JENKINS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-jenkins-username
+        - name: HARBOR_JENKINS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-jenkins-password
       volumes:
       - name: jenkins-data
         persistentVolumeClaim:
