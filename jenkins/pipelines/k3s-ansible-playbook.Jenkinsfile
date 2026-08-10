@@ -50,7 +50,7 @@ spec:
 
         stage('Run playbook on k3s host') {
             steps {
-                banner("Running ${params.PLAYBOOK} on ${params.SERVER_IP}", '33')
+                banner("Running ${params.PLAYBOOK} via ansible inventory", '33')
                 sshagent(credentials: ['serwer-ssh-key']) {
                     withCredentials([
                         sshUserPrivateKey(credentialsId: 'serwer-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
@@ -71,14 +71,31 @@ spec:
                                 exit 1
                             fi
 
+                            TARGET_HOST="${SERVER_IP:-}"
+                            if [ -n "$TARGET_HOST" ]; then
+                                case "$TARGET_HOST" in
+                                    127.0.0.1|localhost)
+                                        echo "ERROR: SERVER_IP points to localhost. In Jenkins pod this is not the k3s host."
+                                        echo "Leave SERVER_IP empty to use ansible_host from inventory or set real host IP/DNS."
+                                        exit 1
+                                        ;;
+                                esac
+                                echo "Using SERVER_IP override: $TARGET_HOST"
+                                ssh-keyscan -H "$TARGET_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+                                ANSIBLE_TARGET_EXTRA="-e ansible_host=$TARGET_HOST"
+                            else
+                                echo "Using ansible_host from ansible/inventory.yml"
+                                ANSIBLE_TARGET_EXTRA=""
+                            fi
+
                             printf "%s" "$VAULT_VALUE" | sed -e 's/[[:space:]]*$//' > .vault_pass
                             ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "$PLAYBOOK" \
                               -i ansible/inventory.yml \
                               --vault-password-file .vault_pass \
                               -e "ansible_user=$SSH_USER" \
                               -e "ansible_ssh_private_key_file=$SSH_KEY" \
-                              -e "ansible_host=$SERVER_IP" \
-                                                            -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
+                              $ANSIBLE_TARGET_EXTRA \
+                              -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
                             rm -f .vault_pass
                         '''
                     }
