@@ -78,7 +78,7 @@ spec:
                               -e "ansible_user=$SSH_USER" \
                               -e "ansible_ssh_private_key_file=$SSH_KEY" \
                               -e "ansible_host=$SERVER_IP" \
-                              -e "ansible_ssh_common_args=-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa"
+                                                            -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
                             rm -f .vault_pass
                         '''
                     }
