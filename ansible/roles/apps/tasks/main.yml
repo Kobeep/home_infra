@@ -43,6 +43,8 @@
       dest: "{{ home_infra_remote_path }}/k8s/prometheus/ingress.yaml"
     - src: "{{ home_infra_local_path }}/k8s/vault/values.yaml.j2"
       dest: "{{ home_infra_remote_path }}/k8s/vault/values.yaml"
+    - src: "{{ home_infra_local_path }}/k8s/harbor/values.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/harbor/values.rendered.yaml"
 
 # ── Ingress NGINX ─────────────────────────────────────────────────────────────
 
@@ -199,6 +201,20 @@
       helm upgrade --install vault hashicorp/vault
       --namespace vault
       -f {{ home_infra_remote_path }}/k8s/vault/values.yaml
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+# ── Harbor ────────────────────────────────────────────────────────────────────
+
+- name: Install Harbor via local Helm chart
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install harbor {{ home_infra_remote_path }}/k8s/harbor
+      --namespace harbor
+      --create-namespace
+      -f {{ home_infra_remote_path }}/k8s/harbor/values.rendered.yaml
+      --timeout 15m0s
   environment: "{{ kubectl_env }}"
   changed_when: true
 

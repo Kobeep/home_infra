@@ -30,6 +30,7 @@
           - "  🛡️  AdGuard:        https://adguard.{{ server_ip }}.nip.io"
           - "  💾 InfluxDB:       https://influxdb.{{ server_ip }}.nip.io"
           - "  🔐 Vault:          https://vault.{{ server_ip }}.nip.io"
+          - "  📦 Harbor:         https://harbor.{{ server_ip }}.nip.io"
           - "  🔍 API:            https://api.{{ server_ip }}.nip.io"
           - "  📚 OpenGrok:       https://opengrok.{{ server_ip }}.nip.io"
           - ""

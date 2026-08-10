@@ -1,0 +1,43 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-tls
+  ingress:
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: local-ca
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    hosts:
+      core: harbor.{{ server_ip }}.nip.io
+
+externalURL: https://harbor.{{ server_ip }}.nip.io
+
+persistence:
+  enabled: true
+  resourcePolicy: keep
+  persistentVolumeClaim:
+    registry:
+      storageClass: local-path-retain
+      accessMode: ReadWriteOnce
+      size: 50Gi
+    jobservice:
+      jobLog:
+        storageClass: local-path-retain
+        accessMode: ReadWriteOnce
+        size: 5Gi
+    database:
+      storageClass: local-path-retain
+      accessMode: ReadWriteOnce
+      size: 5Gi
+    redis:
+      storageClass: local-path-retain
+      accessMode: ReadWriteOnce
+      size: 2Gi
+    trivy:
+      storageClass: local-path-retain
+      accessMode: ReadWriteOnce
+      size: 10Gi
