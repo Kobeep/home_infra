@@ -57,10 +57,21 @@ spec:
                         string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASS')
                     ]) {
                         sh '''
+                            set -eu
                             mkdir -p ~/.ssh && chmod 700 ~/.ssh
                             ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-                            printf "%s" "$VAULT_PASS" > .vault_pass
+                            VAULT_VALUE="${ANSIBLE_VAULT_PASSWORD:-}"
+                            if [ -z "$VAULT_VALUE" ]; then
+                                VAULT_VALUE="$VAULT_PASS"
+                            fi
+
+                            if [ -z "$VAULT_VALUE" ]; then
+                                echo "ERROR: Missing Ansible Vault password. Fill ANSIBLE_VAULT_PASSWORD textbox or configure ansible-vault-password credential."
+                                exit 1
+                            fi
+
+                            printf "%s" "$VAULT_VALUE" | sed -e 's/[[:space:]]*$//' > .vault_pass
                             ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "$PLAYBOOK" \
                               -i ansible/inventory.yml \
                               --vault-password-file .vault_pass \

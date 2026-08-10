@@ -35,6 +35,7 @@ pipelineJob('k3s-ansible-playbook') {
     parameters {
         stringParam('SERVER_IP', '127.0.0.1', 'k3s host IP or DNS name.')
         stringParam('PLAYBOOK', 'ansible/playbooks/full-setup.yml', 'Playbook path to run.')
+        textParam('ANSIBLE_VAULT_PASSWORD', '', 'Optional Ansible Vault password textbox. Leave empty to use Jenkins credential ansible-vault-password.')
     }
 
     definition {
