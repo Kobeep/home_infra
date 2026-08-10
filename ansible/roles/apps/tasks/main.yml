@@ -236,7 +236,24 @@
     group: "{{ ansible_user }}"
     mode: "0700"
 
-- name: Copy CA certificate and key from local machine to server
+- name: Check whether CA files exist on Ansible controller
+  become: false
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
+  loop:
+    - rootCA.crt
+    - rootCA.key
+  register: local_ca_files
+
+- name: Determine if controller CA files are complete
+  ansible.builtin.set_fact:
+    controller_ca_files_ready: >-
+      {{
+        (local_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
+      }}
+
+- name: Copy CA certificate and key from controller to server when available
   ansible.builtin.copy:
     src: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
     dest: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
@@ -246,6 +263,48 @@
   loop:
     - rootCA.crt
     - rootCA.key
+  when: controller_ca_files_ready
+
+- name: Check whether remote CA files already exist
+  ansible.builtin.stat:
+    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
+  loop:
+    - rootCA.crt
+    - rootCA.key
+  register: remote_ca_files
+  when: not controller_ca_files_ready
+
+- name: Determine if remote CA files are complete
+  ansible.builtin.set_fact:
+    remote_ca_files_ready: >-
+      {{
+        (remote_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
+      }}
+  when: not controller_ca_files_ready
+
+- name: Generate local CA keypair on remote server when controller files are missing
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      openssl req -x509 -nodes -newkey rsa:4096
+      -keyout {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key
+      -out {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt
+      -days 3650
+      -subj /CN=homelab-local-ca
+  args:
+    creates: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key"
+  when:
+    - not controller_ca_files_ready
+    - not remote_ca_files_ready
+
+- name: Warn when CA files are generated on remote server
+  ansible.builtin.debug:
+    msg:
+      - "CA files were not found on the Ansible controller; generated a new local CA on the remote server."
+      - "If you want stable TLS across fresh controllers, persist k8s/cert-manager/ca/rootCA.crt and rootCA.key in a secure secret store."
+  when:
+    - not controller_ca_files_ready
+    - not remote_ca_files_ready
 
 - name: Deploy all K8s application manifests via Kustomize
   become: false
