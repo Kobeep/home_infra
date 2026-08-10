@@ -52,14 +52,14 @@ credentials:
           - usernamePassword:
               scope: GLOBAL
               id: "harbor-my-creds"
-              username: "${HARBOR_MY_USERNAME}"
-              password: "${HARBOR_MY_PASSWORD}"
+              username: "${HARBOR_MY_USERNAME:-}"
+              password: "${HARBOR_MY_PASSWORD:-}"
               description: "Harbor credentials (owner account)"
           - usernamePassword:
               scope: GLOBAL
               id: "harbor-jenkins-creds"
-              username: "${HARBOR_JENKINS_USERNAME}"
-              password: "${HARBOR_JENKINS_PASSWORD}"
+              username: "${HARBOR_JENKINS_USERNAME:-}"
+              password: "${HARBOR_JENKINS_PASSWORD:-}"
               description: "Harbor credentials for CI publish"
 unclassified:
   ansiColorBuildWrapper:
