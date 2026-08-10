@@ -109,24 +109,24 @@ spec:
                     container('kaniko') {
                         sh """
                             set -eu
-                            REGISTRY_HOST=$(echo "${IMAGE_REPO}" | cut -d/ -f1)
+                                                        REGISTRY_HOST=\$(echo "\${IMAGE_REPO}" | cut -d/ -f1)
                             mkdir -p /kaniko/.docker
 
                             cat > /kaniko/.docker/config.json <<EOF
                             {
                               "auths": {
-                                "${REGISTRY_HOST}": {
-                                  "username": "${HARBOR_USER}",
-                                  "password": "${HARBOR_PASS}"
+                                                                "\${REGISTRY_HOST}": {
+                                                                    "username": "\${HARBOR_USER}",
+                                                                    "password": "\${HARBOR_PASS}"
                                 }
                               }
                             }
                             EOF
 
                             /kaniko/executor \
-                              --context "${WORKSPACE}/homelab-api" \
-                              --dockerfile "${WORKSPACE}/homelab-api/Dockerfile" \
-                              --destination "${IMAGE_REPO}:${IMAGE_TAG}" \
+                                                            --context "\${WORKSPACE}/homelab-api" \
+                                                            --dockerfile "\${WORKSPACE}/homelab-api/Dockerfile" \
+                                                            --destination "\${IMAGE_REPO}:\${IMAGE_TAG}" \
                               --snapshot-mode=redo \
                               --use-new-run
                         """
@@ -219,15 +219,15 @@ spec:
                     ]) {
                         sh """
                             mkdir -p ~/.ssh && chmod 700 ~/.ssh
-                            ssh-keyscan -H "${SERVER_IP}" >> ~/.ssh/known_hosts 2>/dev/null || true
+                                                        ssh-keyscan -H "\${SERVER_IP}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
-                            printf "%s" "$VAULT_PASS" > .vault_pass
-                            ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "${PLAYBOOK}" \
+                                                        printf "%s" "\$VAULT_PASS" > .vault_pass
+                                                        ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook "\${PLAYBOOK}" \
                               -i ansible/inventory.yml \
                               --vault-password-file .vault_pass \
-                              -e "ansible_user=${SSH_USER}" \
-                              -e "ansible_ssh_private_key_file=${SSH_KEY}" \
-                              -e "ansible_host=${SERVER_IP}" \
+                                                            -e "ansible_user=\${SSH_USER}" \
+                                                            -e "ansible_ssh_private_key_file=\${SSH_KEY}" \
+                                                            -e "ansible_host=\${SERVER_IP}" \
                               -e "ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new -o PubkeyAcceptedKeyTypes=+ssh-rsa'"
                             rm -f .vault_pass
                         """
@@ -293,15 +293,15 @@ spec:
                 banner("Checking API at ${params.BASE_URL}", '34')
                 sh """
                     set -eu
-                    echo "$ENDPOINTS" | while IFS= read -r endpoint; do
-                        [ -z "$endpoint" ] && continue
-                        url="${BASE_URL}${endpoint}"
+                    echo "\$ENDPOINTS" | while IFS= read -r endpoint; do
+                        [ -z "\$endpoint" ] && continue
+                        url="\${BASE_URL}\${endpoint}"
 
-                        code=$(curl -k -sS -o /tmp/resp_body -w "%{http_code}" "$url")
-                        if [ "$code" -ge 200 ] && [ "$code" -lt 300 ]; then
-                            printf "\\033[1;32m[OK]\\033[0m GET %s -> %s\\n" "$url" "$code"
+                        code=\$(curl -k -sS -o /tmp/resp_body -w "%{http_code}" "\$url")
+                        if [ "\$code" -ge 200 ] && [ "\$code" -lt 300 ]; then
+                            printf "\\033[1;32m[OK]\\033[0m GET %s -> %s\\n" "\$url" "\$code"
                         else
-                            printf "\\033[1;31m[FAIL]\\033[0m GET %s -> %s\\n" "$url" "$code"
+                            printf "\\033[1;31m[FAIL]\\033[0m GET %s -> %s\\n" "\$url" "\$code"
                             echo "--- response body ---"
                             cat /tmp/resp_body || true
                             exit 1
