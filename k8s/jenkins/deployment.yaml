@@ -84,6 +84,24 @@ spec:
               name: jenkins-secrets
               key: harbor-jenkins-password
               optional: true
+        - name: SERVER_SSH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: server-ssh-username
+              optional: true
+        - name: SERVER_SSH_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: server-ssh-private-key
+              optional: true
+        - name: ANSIBLE_VAULT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: ansible-vault-password
+              optional: true
       volumes:
       - name: jenkins-data
         persistentVolumeClaim:

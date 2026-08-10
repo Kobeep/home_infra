@@ -67,7 +67,7 @@ spec:
                             fi
 
                             if [ -z "$VAULT_VALUE" ]; then
-                                echo "ERROR: Missing Ansible Vault password. Fill ANSIBLE_VAULT_PASSWORD textbox or configure ansible-vault-password credential."
+                                echo "ERROR: Missing Ansible Vault password. Fill ANSIBLE_VAULT_PASSWORD textbox or set Jenkins credential ansible-vault-password."
                                 exit 1
                             fi
 

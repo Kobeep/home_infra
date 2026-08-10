@@ -46,21 +46,34 @@ jenkins:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
 credentials:
-  system:
-    domainCredentials:
-      - credentials:
-          - usernamePassword:
-              scope: GLOBAL
-              id: "harbor-my-creds"
-              username: "${HARBOR_MY_USERNAME:-}"
-              password: "${HARBOR_MY_PASSWORD:-}"
-              description: "Harbor credentials (owner account)"
-          - usernamePassword:
-              scope: GLOBAL
-              id: "harbor-jenkins-creds"
-              username: "${HARBOR_JENKINS_USERNAME:-}"
-              password: "${HARBOR_JENKINS_PASSWORD:-}"
-              description: "Harbor credentials for CI publish"
+    system:
+        domainCredentials:
+            - credentials:
+                    - basicSSHUserPrivateKey:
+                            scope: GLOBAL
+                            id: "serwer-ssh-key"
+                            username: "${SERVER_SSH_USERNAME:-root}"
+                            privateKeySource:
+                                directEntry:
+                                    privateKey: "${SERVER_SSH_PRIVATE_KEY:-}"
+                            description: "SSH key for connecting to the k3s host"
+                    - string:
+                            scope: GLOBAL
+                            id: "ansible-vault-password"
+                            secret: "${ANSIBLE_VAULT_PASSWORD:-}"
+                            description: "Ansible Vault password for playbook runs"
+                    - usernamePassword:
+                            scope: GLOBAL
+                            id: "harbor-my-creds"
+                            username: "${HARBOR_MY_USERNAME:-}"
+                            password: "${HARBOR_MY_PASSWORD:-}"
+                            description: "Harbor credentials (owner account)"
+                    - usernamePassword:
+                            scope: GLOBAL
+                            id: "harbor-jenkins-creds"
+                            username: "${HARBOR_JENKINS_USERNAME:-}"
+                            password: "${HARBOR_JENKINS_PASSWORD:-}"
+                            description: "Harbor credentials for CI publish"
 unclassified:
   ansiColorBuildWrapper:
     globalColorMapName: "XTerm"
