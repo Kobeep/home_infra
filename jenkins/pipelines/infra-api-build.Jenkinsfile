@@ -25,7 +25,6 @@ spec:
 
     options {
         ansiColor('xterm')
-        timestamps()
         disableConcurrentBuilds()
         timeout(time: 25, unit: 'MINUTES')
     }
