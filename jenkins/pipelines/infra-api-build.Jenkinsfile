@@ -150,7 +150,9 @@ spec:
                     container('py') {
                         sh '''
                             set -eu
+                            set -a
                             . ./.harbor_env
+                            set +a
                             python3 jenkins/scripts/harbor_verify.py
                         '''
                     }

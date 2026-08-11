@@ -6,13 +6,45 @@ import urllib.parse
 import urllib.request
 
 
+def load_harbor_env_file(file_path: str) -> dict:
+    values = {}
+    if not os.path.exists(file_path):
+        return values
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            values[key.strip()] = val.strip()
+    return values
+
+
+def pick(key: str, fallback: dict) -> str:
+    v = os.getenv(key, "").strip()
+    if v:
+        return v
+    return fallback.get(key, "")
+
+
 def main() -> None:
+    fallback = load_harbor_env_file(".harbor_env")
+
     owner_user = os.getenv("HARBOR_OWNER_USER", "")
     owner_pass = os.getenv("HARBOR_OWNER_PASS", "")
-    host_value = os.getenv("REGISTRY_HOST", "")
-    project_name = os.getenv("PROJECT_NAME", "")
-    repository_name = os.getenv("REPOSITORY_NAME", "")
-    image_tag = os.getenv("IMAGE_TAG", "")
+    host_value = pick("REGISTRY_HOST", fallback)
+    project_name = pick("PROJECT_NAME", fallback)
+    repository_name = pick("REPOSITORY_NAME", fallback)
+    image_tag = pick("IMAGE_TAG", fallback)
+
+    if not host_value:
+        raise SystemExit("ERROR: REGISTRY_HOST is empty in environment and .harbor_env")
+    if not project_name:
+        raise SystemExit("ERROR: PROJECT_NAME is empty in environment and .harbor_env")
+    if not repository_name:
+        raise SystemExit("ERROR: REPOSITORY_NAME is empty in environment and .harbor_env")
+    if not image_tag:
+        raise SystemExit("ERROR: IMAGE_TAG is empty in environment and .harbor_env")
 
     ctx = ssl._create_unverified_context()
     auth = "Basic " + base64.b64encode(f"{owner_user}:{owner_pass}".encode("utf-8")).decode("ascii")
