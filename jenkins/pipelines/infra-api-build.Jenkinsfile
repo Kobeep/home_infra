@@ -191,7 +191,8 @@ env_lines = [
     f"IMAGE_TAG={image_tag}",
 ]
 with open('.harbor_env', 'w', encoding='utf-8') as f:
-    f.write('\n'.join(env_lines) + '\n')
+    for line in env_lines:
+        print(line, file=f)
 
 print(f"Pushing image to {dest_repo}:{image_tag}")
 PY
