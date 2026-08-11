@@ -29,6 +29,12 @@ spec:
         timeout(time: 25, unit: 'MINUTES')
     }
 
+    environment {
+        CFG_HARBOR_HOST = "${env.HARBOR_HOST}"
+        CFG_HARBOR_PROJECT_NAME = "${env.HARBOR_PROJECT_NAME}"
+        CFG_HARBOR_REPOSITORY_NAME = "${env.HARBOR_REPOSITORY_NAME}"
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -109,9 +115,9 @@ spec:
                                 exit 1
                             fi
 
-                            PROJECT_NAME="${PROJECT_NAME:-${HARBOR_PROJECT_NAME:-home-infra}}"
-                            REPOSITORY_NAME="${REPOSITORY_NAME:-${HARBOR_REPOSITORY_NAME:-infra-api}}"
-                            HARBOR_HOST_VALUE="${HARBOR_HOST:-}"
+                            PROJECT_NAME="${PROJECT_NAME:-${CFG_HARBOR_PROJECT_NAME:-home-infra}}"
+                            REPOSITORY_NAME="${REPOSITORY_NAME:-${CFG_HARBOR_REPOSITORY_NAME:-infra-api}}"
+                            HARBOR_HOST_VALUE="${HARBOR_HOST_OVERRIDE:-${CFG_HARBOR_HOST:-}}"
                             IMAGE_REPO_OVERRIDE="${IMAGE_REPO:-}"
 
                             if [ -z "$PROJECT_NAME" ]; then
