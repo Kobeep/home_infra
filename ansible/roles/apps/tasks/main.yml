@@ -326,7 +326,7 @@
   ansible.builtin.shell:
     cmd: >
       kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}"}}'
+      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}","harbor-project-name":"{{ vault_harbor_project_name | default('home-infra') }}","harbor-host":"harbor.{{ server_ip }}.nip.io"}}'
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: harbor_credentials_ready
@@ -404,7 +404,7 @@
       set -eu
 
       HARBOR_HOST="harbor.{{ server_ip }}.nip.io"
-      PROJECT_NAME="{{ vault_harbor_project_name | default('home_infra') }}"
+      PROJECT_NAME="{{ vault_harbor_project_name | default('home-infra') }}"
       HARBOR_USER="{{ vault_harbor_my_username }}"
       HARBOR_PASS="{{ vault_harbor_my_password }}"
       HARBOR_EMAIL="{{ vault_github_email | default('kobeep@local.invalid') }}"

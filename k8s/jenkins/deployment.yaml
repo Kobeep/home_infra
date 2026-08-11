@@ -84,6 +84,18 @@ spec:
               name: jenkins-secrets
               key: harbor-jenkins-password
               optional: true
+        - name: HARBOR_PROJECT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-project-name
+              optional: true
+        - name: HARBOR_HOST
+          valueFrom:
+            secretKeyRef:
+              name: jenkins-secrets
+              key: harbor-host
+              optional: true
         - name: SERVER_SSH_USERNAME
           valueFrom:
             secretKeyRef:
