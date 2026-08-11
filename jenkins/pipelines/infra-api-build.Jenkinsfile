@@ -124,16 +124,8 @@ spec:
                             BUILD_CREATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
                             mkdir -p /kaniko/.docker
-                            cat > /kaniko/.docker/config.json <<EOF
-                            {
-                              "auths": {
-                                "$REGISTRY_HOST": {
-                                  "username": "$HARBOR_USER",
-                                  "password": "$HARBOR_PASS"
-                                }
-                              }
-                            }
-                            EOF
+                                                        printf '{"auths":{"%s":{"username":"%s","password":"%s"}}}\n' \
+                                                            "$REGISTRY_HOST" "$HARBOR_USER" "$HARBOR_PASS" > /kaniko/.docker/config.json
 
                             /kaniko/executor \
                               --context "$WORKSPACE/homelab-api" \

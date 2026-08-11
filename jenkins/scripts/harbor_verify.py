@@ -1,6 +1,7 @@
 import base64
 import os
 import ssl
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -50,29 +51,56 @@ def main() -> None:
     auth = "Basic " + base64.b64encode(f"{owner_user}:{owner_pass}".encode("utf-8")).decode("ascii")
 
     repo_path = urllib.parse.quote(repository_name, safe="")
-    checks = [
-        (f"/api/v2.0/projects/{urllib.parse.quote(project_name, safe='')}/repositories/{repo_path}", "repository"),
-        (
-            f"/api/v2.0/projects/{urllib.parse.quote(project_name, safe='')}/repositories/{repo_path}/artifacts/{urllib.parse.quote(image_tag, safe='')}",
-            "artifact",
-        ),
-    ]
+    project_path = urllib.parse.quote(project_name, safe="")
+    full_repo = f"{project_name}/{repository_name}"
+    full_repo_path = urllib.parse.quote(full_repo, safe="")
 
-    for path, kind in checks:
-        url = f"https://{host_value}{path}"
-        req = urllib.request.Request(url=url, method="GET")
-        req.add_header("Authorization", auth)
-        try:
-            with urllib.request.urlopen(req, context=ctx) as resp:
-                if resp.status != 200:
-                    raise SystemExit(f"ERROR: Harbor {kind} verification failed with HTTP {resp.status} for {url}")
-        except urllib.error.HTTPError as e:
-            payload = e.read().decode("utf-8")
-            raise SystemExit(f"ERROR: Harbor {kind} verification failed with HTTP {e.code} for {url}. Payload: {payload}")
+    # Harbor indexing can lag right after push; retry for a short window.
+    retries = 15
+    delay_sec = 2
+    last_error = ""
 
-    print(
-        f"Harbor verification passed: https://{host_value}/harbor/projects/{project_name}/repositories/{repository_name}/artifacts-tab"
-    )
+    for _ in range(retries):
+        repo_ok = False
+        repo_candidates = [
+            f"/api/v2.0/projects/{project_path}/repositories/{repo_path}",
+            f"/api/v2.0/projects/{project_path}/repositories/{full_repo_path}",
+        ]
+
+        for repo_endpoint in repo_candidates:
+            repo_url = f"https://{host_value}{repo_endpoint}"
+            req = urllib.request.Request(url=repo_url, method="GET")
+            req.add_header("Authorization", auth)
+            try:
+                with urllib.request.urlopen(req, context=ctx) as resp:
+                    if resp.status == 200:
+                        repo_ok = True
+                        break
+            except urllib.error.HTTPError as e:
+                payload = e.read().decode("utf-8")
+                last_error = f"repository HTTP {e.code} for {repo_url}. Payload: {payload}"
+
+        if repo_ok:
+            artifact_url = (
+                f"https://{host_value}/api/v2.0/projects/{project_path}/repositories/{repo_path}/artifacts/{urllib.parse.quote(image_tag, safe='')}"
+            )
+            req = urllib.request.Request(url=artifact_url, method="GET")
+            req.add_header("Authorization", auth)
+            try:
+                with urllib.request.urlopen(req, context=ctx) as resp:
+                    if resp.status == 200:
+                        print(
+                            f"Harbor verification passed: https://{host_value}/harbor/projects/{project_name}/repositories/{repository_name}/artifacts-tab"
+                        )
+                        return
+                    last_error = f"artifact HTTP {resp.status} for {artifact_url}"
+            except urllib.error.HTTPError as e:
+                payload = e.read().decode("utf-8")
+                last_error = f"artifact HTTP {e.code} for {artifact_url}. Payload: {payload}"
+
+        time.sleep(delay_sec)
+
+    raise SystemExit(f"ERROR: Harbor verification failed after retries. Last error: {last_error}")
 
 
 if __name__ == "__main__":
