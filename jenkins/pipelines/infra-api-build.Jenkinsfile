@@ -118,6 +118,7 @@ spec:
                             python3 - <<'PY'
 import json
 import os
+import re
 import ssl
 import urllib.request
 import urllib.error
@@ -131,16 +132,72 @@ def norm(v: str) -> str:
         return ''
     return vv
 
+def read_simple_var(file_path: str, key: str) -> str:
+    if not os.path.exists(file_path):
+        return ''
+    pattern = re.compile(r'^\s*' + re.escape(key) + r'\s*:\s*(.+?)\s*$')
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            m = pattern.match(line)
+            if not m:
+                continue
+            raw = m.group(1).strip()
+            if raw.startswith('#'):
+                continue
+            if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
+                raw = raw[1:-1]
+            return norm(raw)
+    return ''
+
+def infer_harbor_host_from_inventory(file_path: str) -> str:
+    if not os.path.exists(file_path):
+        return ''
+    host_re = re.compile(r'^\s*ansible_host\s*:\s*(.+?)\s*$')
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            m = host_re.match(line)
+            if not m:
+                continue
+            val = m.group(1).strip()
+            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                val = val[1:-1]
+            val = norm(val)
+            if not val:
+                continue
+            if val.startswith('harbor.'):
+                return val
+            return f'harbor.{val}.nip.io'
+    return ''
+
 owner_user = norm(os.getenv('HARBOR_OWNER_USER'))
 owner_pass = norm(os.getenv('HARBOR_OWNER_PASS'))
-project_name = norm(os.getenv('PROJECT_NAME')) or norm(os.getenv('CFG_HARBOR_PROJECT_NAME')) or 'home-infra'
-repository_name = norm(os.getenv('REPOSITORY_NAME')) or norm(os.getenv('CFG_HARBOR_REPOSITORY_NAME')) or 'infra-api'
+project_name = (
+    norm(os.getenv('PROJECT_NAME'))
+    or norm(os.getenv('CFG_HARBOR_PROJECT_NAME'))
+    or read_simple_var('ansible/group_vars/all.yml', 'harbor_project_name')
+    or 'home-infra'
+)
+repository_name = (
+    norm(os.getenv('REPOSITORY_NAME'))
+    or norm(os.getenv('CFG_HARBOR_REPOSITORY_NAME'))
+    or read_simple_var('ansible/group_vars/all.yml', 'harbor_repository_name')
+    or 'infra-api'
+)
 host_value = norm(os.getenv('HARBOR_HOST_OVERRIDE')) or norm(os.getenv('CFG_HARBOR_HOST'))
 repo_override = norm(os.getenv('IMAGE_REPO'))
 image_tag = norm(os.getenv('IMAGE_TAG')) or 'latest'
 
 if not host_value and repo_override:
     host_value = repo_override.split('/')[0]
+
+if not host_value:
+    host_var = read_simple_var('ansible/group_vars/all.yml', 'harbor_host')
+    # harbor_host in group_vars can be templated (e.g. harbor.{{ server_ip }}.nip.io)
+    if host_var and '{{' not in host_var and '}}' not in host_var:
+        host_value = host_var
+
+if not host_value:
+    host_value = infer_harbor_host_from_inventory('ansible/inventory.yml')
 
 if not host_value:
     raise SystemExit('ERROR: Harbor host is not set. Configure HARBOR_HOST in jenkins-secrets or pass HARBOR_HOST_OVERRIDE/IMAGE_REPO.')
