@@ -22,7 +22,7 @@ spec:
         - name: harbor-pull-cred
       containers:
         - name: api-container
-          image: harbor.192.168.1.16.nip.io/home-infra/infra-api:latest
+          image: {{ harbor_host }}/{{ harbor_project_name }}/{{ harbor_repository_name }}:latest
           ports:
             - containerPort: 8000
           imagePullPolicy: Always

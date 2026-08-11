@@ -31,6 +31,8 @@
       dest: "{{ home_infra_remote_path }}/k8s/home-assistant/ingress.yaml"
     - src: "{{ home_infra_local_path }}/k8s/infra-api/ingress.yaml.j2"
       dest: "{{ home_infra_remote_path }}/k8s/infra-api/ingress.yaml"
+    - src: "{{ home_infra_local_path }}/k8s/infra-api/deployment.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/infra-api/deployment.yaml"
     - src: "{{ home_infra_local_path }}/k8s/influxdb/ingress.yaml.j2"
       dest: "{{ home_infra_remote_path }}/k8s/influxdb/ingress.yaml"
     - src: "{{ home_infra_local_path }}/k8s/jenkins/ingress.yaml.j2"
@@ -180,7 +182,7 @@
   ansible.builtin.shell:
     cmd: |
       kubectl create secret docker-registry harbor-pull-cred \
-        --docker-server="harbor.{{ server_ip }}.nip.io" \
+        --docker-server="{{ harbor_host }}" \
         --docker-username="{{ vault_harbor_my_username }}" \
         --docker-password="{{ vault_harbor_my_password }}" \
         --docker-email="{{ vault_github_email }}" \
@@ -199,7 +201,7 @@
   ansible.builtin.shell:
     cmd: |
       kubectl create secret docker-registry harbor-jenkins-cred \
-        --docker-server="harbor.{{ server_ip }}.nip.io" \
+        --docker-server="{{ harbor_host }}" \
         --docker-username="{{ vault_harbor_jenkins_username }}" \
         --docker-password="{{ vault_harbor_jenkins_password }}" \
         --docker-email="{{ vault_github_email }}" \
@@ -326,10 +328,19 @@
   ansible.builtin.shell:
     cmd: >
       kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}","harbor-project-name":"{{ vault_harbor_project_name | default('home-infra') }}","harbor-host":"harbor.{{ server_ip }}.nip.io"}}'
+      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}"}}'
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: harbor_credentials_ready
+
+- name: Patch jenkins-secrets with Harbor routing config (non-secret)
+  become: false
+  ansible.builtin.shell:
+    cmd: >
+      kubectl patch secret jenkins-secrets -n jenkins --type merge
+      -p '{{ {"stringData": {"harbor-project-name": harbor_project_name, "harbor-host": harbor_host, "harbor-repository-name": harbor_repository_name }} | to_json }}'
+  environment: "{{ kubectl_env }}"
+  changed_when: true
 
 - name: Detect whether Jenkins SSH and Vault credentials are configured
   ansible.builtin.set_fact:
@@ -403,8 +414,8 @@
     cmd: |
       set -eu
 
-      HARBOR_HOST="harbor.{{ server_ip }}.nip.io"
-      PROJECT_NAME="{{ vault_harbor_project_name | default('home-infra') }}"
+      HARBOR_HOST="{{ harbor_host }}"
+      PROJECT_NAME="{{ harbor_project_name }}"
       HARBOR_USER="{{ vault_harbor_my_username }}"
       HARBOR_PASS="{{ vault_harbor_my_password }}"
       HARBOR_EMAIL="{{ vault_github_email | default('kobeep@local.invalid') }}"
@@ -477,7 +488,7 @@
   ansible.builtin.debug:
     msg:
       - "Harbor user/project bootstrap was skipped because owner credentials are incomplete."
-      - "Define vault_harbor_my_username and vault_harbor_my_password (and optional vault_harbor_project_name, default: home_infra)."
+      - "Define vault_harbor_my_username and vault_harbor_my_password in ansible/env.cfg."
   when: not harbor_owner_credentials_ready
 
 # ── External Secrets Operator ─────────────────────────────────────────────────

@@ -6,6 +6,7 @@ pipelineJob('infra-api-build') {
         booleanParam('RUN_TESTS', true, 'Run pytest tests.')
         booleanParam('PUBLISH_IMAGE', true, 'Publish the image to Harbor.')
         stringParam('PROJECT_NAME', '', 'Harbor project name. Leave empty to use HARBOR_PROJECT_NAME from Jenkins environment.')
+        stringParam('REPOSITORY_NAME', '', 'Harbor repository name. Leave empty to use HARBOR_REPOSITORY_NAME from Jenkins environment.')
         stringParam('IMAGE_REPO', '', 'Optional full repository override, e.g. harbor.host/project/infra-api. Leave empty for automatic harbor/<project>/infra-api.')
         stringParam('IMAGE_TAG', 'latest', 'Docker image tag.')
     }

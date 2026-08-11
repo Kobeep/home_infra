@@ -14,3 +14,8 @@ home_infra_remote_path: "/home/{{ ansible_user }}/home_infra"
 # ── Helm chart versions ───────────────────────────────────────────────────────
 cert_manager_version: "v1.14.4"
 external_secrets_version: "0.9.14"
+
+# ── Harbor (non-secret config) ───────────────────────────────────────────────
+harbor_host: "harbor.{{ server_ip }}.nip.io"
+harbor_project_name: "home-infra"
+harbor_repository_name: "infra-api"

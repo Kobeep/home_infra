@@ -110,11 +110,17 @@ spec:
                             fi
 
                             PROJECT_NAME="${PROJECT_NAME:-${HARBOR_PROJECT_NAME:-home-infra}}"
+                            REPOSITORY_NAME="${REPOSITORY_NAME:-${HARBOR_REPOSITORY_NAME:-infra-api}}"
                             HARBOR_HOST_VALUE="${HARBOR_HOST:-}"
                             IMAGE_REPO_OVERRIDE="${IMAGE_REPO:-}"
 
                             if [ -z "$PROJECT_NAME" ]; then
                                 echo "ERROR: PROJECT_NAME is empty."
+                                exit 1
+                            fi
+
+                            if [ -z "$REPOSITORY_NAME" ]; then
+                                echo "ERROR: REPOSITORY_NAME is empty."
                                 exit 1
                             fi
 
@@ -130,7 +136,7 @@ spec:
                             if [ -n "$IMAGE_REPO_OVERRIDE" ]; then
                                 DEST_REPO="$IMAGE_REPO_OVERRIDE"
                             else
-                                DEST_REPO="${HARBOR_HOST_VALUE}/${PROJECT_NAME}/infra-api"
+                                DEST_REPO="${HARBOR_HOST_VALUE}/${PROJECT_NAME}/${REPOSITORY_NAME}"
                             fi
 
                             PROJECT_CODE="$(curl -ks -o /tmp/harbor-project-check.out -w '%{http_code}' -u "${HARBOR_OWNER_USER}:${HARBOR_OWNER_PASS}" "https://${HARBOR_HOST_VALUE}/api/v2.0/projects/${PROJECT_NAME}")"
