@@ -183,12 +183,15 @@ if code == 404:
 elif code != 200:
     raise SystemExit(f"ERROR: Harbor project check failed with HTTP {code}. Payload: {payload}")
 
+env_lines = [
+    f"DEST_REPO={dest_repo}",
+    f"REGISTRY_HOST={host_value}",
+    f"PROJECT_NAME={project_name}",
+    f"REPOSITORY_NAME={repository_name}",
+    f"IMAGE_TAG={image_tag}",
+]
 with open('.harbor_env', 'w', encoding='utf-8') as f:
-    f.write(f"DEST_REPO={dest_repo}\n")
-    f.write(f"REGISTRY_HOST={host_value}\n")
-    f.write(f"PROJECT_NAME={project_name}\n")
-    f.write(f"REPOSITORY_NAME={repository_name}\n")
-    f.write(f"IMAGE_TAG={image_tag}\n")
+    f.write('\n'.join(env_lines) + '\n')
 
 print(f"Pushing image to {dest_repo}:{image_tag}")
 PY
