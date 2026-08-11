@@ -5,6 +5,9 @@ resources:
   - namespace.yaml
   - issuer.yaml
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 secretGenerator:
   - name: homelab-ca-secret
     namespace: cert-manager
