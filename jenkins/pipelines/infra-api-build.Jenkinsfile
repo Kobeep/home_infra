@@ -101,7 +101,7 @@ spec:
                         passwordVariable: 'HARBOR_PASS'
                     )
                 ]) {
-                    container('kaniko') {
+                    container('py') {
                         sh '''
                             set -eu
                             if [ -z "${HARBOR_OWNER_USER:-}" ] || [ -z "${HARBOR_OWNER_PASS:-}" ]; then
@@ -115,61 +115,92 @@ spec:
                                 exit 1
                             fi
 
-                            PROJECT_NAME="${PROJECT_NAME:-${CFG_HARBOR_PROJECT_NAME:-home-infra}}"
-                            REPOSITORY_NAME="${REPOSITORY_NAME:-${CFG_HARBOR_REPOSITORY_NAME:-infra-api}}"
-                            HARBOR_HOST_VALUE="${HARBOR_HOST_OVERRIDE:-${CFG_HARBOR_HOST:-}}"
-                            IMAGE_REPO_OVERRIDE="${IMAGE_REPO:-}"
+                            python3 - <<'PY'
+import json
+import os
+import ssl
+import urllib.request
+import urllib.error
+import urllib.parse
 
-                            if [ -z "$PROJECT_NAME" ]; then
-                                echo "ERROR: PROJECT_NAME is empty."
-                                exit 1
-                            fi
+def norm(v: str) -> str:
+    if v is None:
+        return ''
+    vv = str(v).strip()
+    if vv.lower() in ('', 'null', 'none'):
+        return ''
+    return vv
 
-                            if [ -z "$REPOSITORY_NAME" ]; then
-                                echo "ERROR: REPOSITORY_NAME is empty."
-                                exit 1
-                            fi
+owner_user = norm(os.getenv('HARBOR_OWNER_USER'))
+owner_pass = norm(os.getenv('HARBOR_OWNER_PASS'))
+project_name = norm(os.getenv('PROJECT_NAME')) or norm(os.getenv('CFG_HARBOR_PROJECT_NAME')) or 'home-infra'
+repository_name = norm(os.getenv('REPOSITORY_NAME')) or norm(os.getenv('CFG_HARBOR_REPOSITORY_NAME')) or 'infra-api'
+host_value = norm(os.getenv('HARBOR_HOST_OVERRIDE')) or norm(os.getenv('CFG_HARBOR_HOST'))
+repo_override = norm(os.getenv('IMAGE_REPO'))
+image_tag = norm(os.getenv('IMAGE_TAG')) or 'latest'
 
-                            if [ -z "$HARBOR_HOST_VALUE" ] && [ -n "$IMAGE_REPO_OVERRIDE" ]; then
-                                HARBOR_HOST_VALUE="$(echo "$IMAGE_REPO_OVERRIDE" | cut -d/ -f1)"
-                            fi
+if not host_value and repo_override:
+    host_value = repo_override.split('/')[0]
 
-                            if [ -z "$HARBOR_HOST_VALUE" ]; then
-                                echo "ERROR: Harbor host is not set. Configure HARBOR_HOST in jenkins-secrets or pass IMAGE_REPO override."
-                                exit 1
-                            fi
+if not host_value:
+    raise SystemExit('ERROR: Harbor host is not set. Configure HARBOR_HOST in jenkins-secrets or pass HARBOR_HOST_OVERRIDE/IMAGE_REPO.')
+if not project_name:
+    raise SystemExit('ERROR: PROJECT_NAME is empty.')
+if not repository_name:
+    raise SystemExit('ERROR: REPOSITORY_NAME is empty.')
 
-                            if [ -n "$IMAGE_REPO_OVERRIDE" ]; then
-                                DEST_REPO="$IMAGE_REPO_OVERRIDE"
-                            else
-                                DEST_REPO="${HARBOR_HOST_VALUE}/${PROJECT_NAME}/${REPOSITORY_NAME}"
-                            fi
+if repo_override:
+    dest_repo = repo_override
+else:
+    dest_repo = f"{host_value}/{project_name}/{repository_name}"
 
-                            PROJECT_CODE="$(curl -ks -o /tmp/harbor-project-check.out -w '%{http_code}' -u "${HARBOR_OWNER_USER}:${HARBOR_OWNER_PASS}" "https://${HARBOR_HOST_VALUE}/api/v2.0/projects/${PROJECT_NAME}")"
-                            if [ "$PROJECT_CODE" = "404" ]; then
-                                CREATE_CODE="$(curl -ks -o /tmp/harbor-project-create.out -w '%{http_code}' \
-                                  -u "${HARBOR_OWNER_USER}:${HARBOR_OWNER_PASS}" \
-                                  -H 'Content-Type: application/json' \
-                                  -X POST "https://${HARBOR_HOST_VALUE}/api/v2.0/projects" \
-                                  -d "{\"project_name\":\"${PROJECT_NAME}\",\"metadata\":{\"public\":\"false\"}}")"
-                                if [ "$CREATE_CODE" != "201" ] && [ "$CREATE_CODE" != "409" ]; then
-                                    echo "ERROR: Harbor project bootstrap failed with HTTP ${CREATE_CODE}."
-                                    cat /tmp/harbor-project-create.out
-                                    exit 1
-                                fi
-                            elif [ "$PROJECT_CODE" != "200" ]; then
-                                echo "ERROR: Harbor project check failed with HTTP ${PROJECT_CODE}."
-                                cat /tmp/harbor-project-check.out
-                                exit 1
-                            fi
+ctx = ssl._create_unverified_context()
 
-                            echo "Pushing image to ${DEST_REPO}:${IMAGE_TAG}"
+def call(method: str, path: str, body=None):
+    url = f"https://{host_value}{path}"
+    req = urllib.request.Request(url=url, method=method)
+    creds = f"{owner_user}:{owner_pass}".encode('utf-8')
+    auth = 'Basic ' + __import__('base64').b64encode(creds).decode('ascii')
+    req.add_header('Authorization', auth)
+    if body is not None:
+        data = json.dumps(body).encode('utf-8')
+        req.add_header('Content-Type', 'application/json')
+    else:
+        data = None
+    try:
+        with urllib.request.urlopen(req, data=data, context=ctx) as resp:
+            raw = resp.read().decode('utf-8')
+            return resp.status, raw
+    except urllib.error.HTTPError as e:
+        raw = e.read().decode('utf-8')
+        return e.code, raw
 
-                            REGISTRY_HOST="$(echo "$DEST_REPO" | cut -d/ -f1)"
-                            REPO_NAME="$(echo "$DEST_REPO" | cut -d/ -f3-)"
+code, payload = call('GET', f"/api/v2.0/projects/{urllib.parse.quote(project_name, safe='')}")
+if code == 404:
+    c2, p2 = call('POST', '/api/v2.0/projects', {'project_name': project_name, 'metadata': {'public': 'false'}})
+    if c2 not in (201, 409):
+        raise SystemExit(f"ERROR: Harbor project bootstrap failed with HTTP {c2}. Payload: {p2}")
+elif code != 200:
+    raise SystemExit(f"ERROR: Harbor project check failed with HTTP {code}. Payload: {payload}")
+
+with open('.harbor_env', 'w', encoding='utf-8') as f:
+    f.write(f"DEST_REPO={dest_repo}\n")
+    f.write(f"REGISTRY_HOST={host_value}\n")
+    f.write(f"PROJECT_NAME={project_name}\n")
+    f.write(f"REPOSITORY_NAME={repository_name}\n")
+    f.write(f"IMAGE_TAG={image_tag}\n")
+
+print(f"Pushing image to {dest_repo}:{image_tag}")
+PY
+                        '''
+                    }
+                    container('kaniko') {
+                        sh '''
+                            set -eu
+                            . ./.harbor_env
                             BUILD_CREATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-                            mkdir -p /kaniko/.docker
 
+                            mkdir -p /kaniko/.docker
                             cat > /kaniko/.docker/config.json <<EOF
                             {
                               "auths": {
@@ -184,33 +215,57 @@ spec:
                             /kaniko/executor \
                               --context "$WORKSPACE/homelab-api" \
                               --dockerfile "$WORKSPACE/homelab-api/Dockerfile" \
-                                                            --destination "$DEST_REPO:$IMAGE_TAG" \
-                                                            --skip-tls-verify-registry "$REGISTRY_HOST" \
-                                                            --label "org.opencontainers.image.source=https://github.com/Kobeep/home_infra" \
-                                                            --label "org.opencontainers.image.revision=${GIT_COMMIT:-unknown}" \
-                                                            --label "org.opencontainers.image.created=${BUILD_CREATED_AT}" \
+                              --destination "$DEST_REPO:$IMAGE_TAG" \
+                              --skip-tls-verify-registry "$REGISTRY_HOST" \
+                              --label "org.opencontainers.image.source=https://github.com/Kobeep/home_infra" \
+                              --label "org.opencontainers.image.revision=${GIT_COMMIT:-unknown}" \
+                              --label "org.opencontainers.image.created=${BUILD_CREATED_AT}" \
                               --snapshot-mode=redo \
                               --use-new-run
+                        '''
+                    }
+                    container('py') {
+                        sh '''
+                            set -eu
+                            . ./.harbor_env
+                            python3 - <<'PY'
+import base64
+import os
+import ssl
+import urllib.request
+import urllib.error
+import urllib.parse
 
-                                                        REPO_CODE="$(curl -ks -o /tmp/harbor-repo-check.out -w '%{http_code}' \
-                                                            -u "${HARBOR_OWNER_USER}:${HARBOR_OWNER_PASS}" \
-                                                            "https://${HARBOR_HOST_VALUE}/api/v2.0/projects/${PROJECT_NAME}/repositories/${REPO_NAME}")"
-                                                        if [ "$REPO_CODE" != "200" ]; then
-                                                                echo "ERROR: Harbor repository verification failed for ${PROJECT_NAME}/${REPO_NAME} (HTTP ${REPO_CODE})."
-                                                                cat /tmp/harbor-repo-check.out
-                                                                exit 1
-                                                        fi
+owner_user = os.getenv('HARBOR_OWNER_USER', '')
+owner_pass = os.getenv('HARBOR_OWNER_PASS', '')
+host_value = os.getenv('REGISTRY_HOST', '')
+project_name = os.getenv('PROJECT_NAME', '')
+repository_name = os.getenv('REPOSITORY_NAME', '')
+image_tag = os.getenv('IMAGE_TAG', '')
 
-                                                        ARTIFACT_CODE="$(curl -ks -o /tmp/harbor-artifact-check.out -w '%{http_code}' \
-                                                            -u "${HARBOR_OWNER_USER}:${HARBOR_OWNER_PASS}" \
-                                                            "https://${HARBOR_HOST_VALUE}/api/v2.0/projects/${PROJECT_NAME}/repositories/${REPO_NAME}/artifacts/${IMAGE_TAG}")"
-                                                        if [ "$ARTIFACT_CODE" != "200" ]; then
-                                                                echo "ERROR: Harbor artifact tag verification failed for ${PROJECT_NAME}/${REPO_NAME}:${IMAGE_TAG} (HTTP ${ARTIFACT_CODE})."
-                                                                cat /tmp/harbor-artifact-check.out
-                                                                exit 1
-                                                        fi
+ctx = ssl._create_unverified_context()
+auth = 'Basic ' + base64.b64encode(f"{owner_user}:{owner_pass}".encode('utf-8')).decode('ascii')
 
-                                                        echo "Harbor verification passed: https://${HARBOR_HOST_VALUE}/harbor/projects/${PROJECT_NAME}/repositories/${REPO_NAME}/artifacts-tab"
+repo_path = urllib.parse.quote(repository_name, safe='')
+checks = [
+    (f"/api/v2.0/projects/{urllib.parse.quote(project_name, safe='')}/repositories/{repo_path}", 'repository'),
+    (f"/api/v2.0/projects/{urllib.parse.quote(project_name, safe='')}/repositories/{repo_path}/artifacts/{urllib.parse.quote(image_tag, safe='')}", 'artifact'),
+]
+
+for path, kind in checks:
+    url = f"https://{host_value}{path}"
+    req = urllib.request.Request(url=url, method='GET')
+    req.add_header('Authorization', auth)
+    try:
+        with urllib.request.urlopen(req, context=ctx) as resp:
+            if resp.status != 200:
+                raise SystemExit(f"ERROR: Harbor {kind} verification failed with HTTP {resp.status} for {url}")
+    except urllib.error.HTTPError as e:
+        payload = e.read().decode('utf-8')
+        raise SystemExit(f"ERROR: Harbor {kind} verification failed with HTTP {e.code} for {url}. Payload: {payload}")
+
+print(f"Harbor verification passed: https://{host_value}/harbor/projects/{project_name}/repositories/{repository_name}/artifacts-tab")
+PY
                         '''
                     }
                 }
