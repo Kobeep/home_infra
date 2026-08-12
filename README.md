@@ -24,14 +24,13 @@ Quick start (dry-run)
 ```bash
 rg --hidden -n "(^|\\s)(shell:|command:|raw:)" || true
 ```
-2) Syntax check important playbooks:
+2) Syntax check an important playbook, for example:
 ```bash
-ansible-playbook -i ansible/inventory.yml ansible/playbooks/archive/k3s.yml --syntax-check
-ansible-playbook -i ansible/inventory.yml ansible/playbooks/archive/server-homelab.yml --syntax-check
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml --syntax-check
 ```
 3) Example check-run (no changes applied):
 ```bash
-ansible-playbook -i ansible/inventory.yml ansible/playbooks/archive/k3s.yml --check --diff
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml --check --diff
 ```
 
 Important scripts (selected)
