@@ -1,0 +1,3 @@
+---
+# Defaults for common role
+home_infra_remote_path: "/home/{{ ansible_user }}/home_infra"

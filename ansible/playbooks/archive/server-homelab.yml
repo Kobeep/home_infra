@@ -277,32 +277,24 @@
       tags: ['setup', 'permissions']
 
     - name: Build Jenkins custom image
-      command: docker compose build jenkins
-      args:
-        chdir: "{{ homelab_base_dir }}"
+      script: "{{ playbook_dir }}/../ansible/scripts/docker_compose_build.sh {{ homelab_base_dir }} jenkins"
       register: build_result
       changed_when: "'Building' in build_result.stderr or 'built' in build_result.stdout"
       tags: ['docker', 'build']
 
     - name: Pull Docker images (exclude Jenkins)
-      command: docker compose pull --ignore-buildable
-      args:
-        chdir: "{{ homelab_base_dir }}"
+      script: "{{ playbook_dir }}/../ansible/scripts/docker_compose_pull.sh {{ homelab_base_dir }}"
       changed_when: false
       tags: ['docker', 'pull']
 
     - name: Start homelab services
-      command: docker compose up -d
-      args:
-        chdir: "{{ homelab_base_dir }}"
+      script: "{{ playbook_dir }}/../ansible/scripts/docker_compose_up.sh {{ homelab_base_dir }}"
       register: compose_result
       changed_when: "'Started' in compose_result.stdout or 'Creating' in compose_result.stdout"
       tags: ['start']
 
     - name: Wait for services to be healthy
-      command: docker compose ps
-      args:
-        chdir: "{{ homelab_base_dir }}"
+      script: "{{ playbook_dir }}/../ansible/scripts/docker_compose_ps.sh {{ homelab_base_dir }}"
       register: services_status
       until: services_status.rc == 0
       retries: 5

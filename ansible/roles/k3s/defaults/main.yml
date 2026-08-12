@@ -1,0 +1,4 @@
+---
+# Defaults for k3s role
+k3s_version: "v1.28.5+k3s1"
+server_ip: "{{ ansible_default_ipv4.address }}"
