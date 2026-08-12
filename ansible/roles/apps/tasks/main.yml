@@ -177,6 +177,13 @@
       - "Define vault_harbor_my_username, vault_harbor_my_password, vault_harbor_jenkins_username, vault_harbor_jenkins_password in ansible/env.cfg to enable them."
   when: not harbor_credentials_ready
 
+- name: Warn when Harbor owner credentials are missing
+  ansible.builtin.debug:
+    msg:
+      - "Harbor owner credentials are not configured; harbor-pull-cred cannot be created."
+      - "Define vault_harbor_my_username and vault_harbor_my_password in ansible/env.cfg to enable image pulls from Harbor."
+  when: not harbor_owner_credentials_ready
+
 - name: Create harbor-pull-cred image pull secret in app namespaces
   become: false
   ansible.builtin.shell:
@@ -194,7 +201,7 @@
     - jenkins
   environment: "{{ kubectl_env }}"
   changed_when: true
-  when: harbor_credentials_ready
+  when: harbor_owner_credentials_ready
 
 - name: Create harbor-jenkins-cred secret in jenkins namespace
   become: false
@@ -235,7 +242,7 @@
     - jenkins
   environment: "{{ kubectl_env }}"
   changed_when: true
-  when: harbor_credentials_ready
+  when: harbor_owner_credentials_ready
 
 # ── Deploy all application manifests ─────────────────────────────────────────
 - name: Ensure CA directory exists on remote server
@@ -315,6 +322,55 @@
   when:
     - not controller_ca_files_ready
     - not remote_ca_files_ready
+
+- name: Install homelab root CA in system trust store for container runtime
+  become: true
+  ansible.builtin.copy:
+    src: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
+    remote_src: true
+    dest: /usr/local/share/ca-certificates/homelab-root-ca.crt
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Update system CA certificates
+  become: true
+  ansible.builtin.command: update-ca-certificates
+  register: update_ca_result
+  changed_when: "'0 added, 0 removed; done.' not in update_ca_result.stdout"
+
+- name: Configure K3s containerd trust for Harbor registry
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/registries.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      mirrors:
+        "{{ harbor_host }}":
+          endpoint:
+            - "https://{{ harbor_host }}"
+      configs:
+        "{{ harbor_host }}":
+          tls:
+            ca_file: "/usr/local/share/ca-certificates/homelab-root-ca.crt"
+  register: k3s_registries_config
+
+- name: Restart K3s when registry trust config changed
+  become: true
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  when: k3s_registries_config.changed
+
+- name: Wait for K3s node to become Ready after restart
+  become: false
+  ansible.builtin.command:
+    cmd: kubectl wait --for=condition=Ready node --all --timeout=180s
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  when: k3s_registries_config.changed
 
 - name: Deploy all K8s application manifests via Kustomize
   become: false
