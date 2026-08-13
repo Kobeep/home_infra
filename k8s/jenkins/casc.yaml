@@ -50,6 +50,10 @@ jenkins:
 unclassified:
   ansiColorBuildWrapper:
     globalColorMapName: "XTerm"
+appearance:
+  themeManager:
+    disableUserThemes: true
+    theme: "darkSystem"
 jobs:
   - script: |
       freeStyleJob('seed-job') {
