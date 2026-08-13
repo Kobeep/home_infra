@@ -6,6 +6,7 @@ resources:
 - namespace.yaml
 - pvc.yaml
 - service.yaml
+- configmap.yaml
 images:
 - name: grafana/grafana
   newTag: 10.3.3
