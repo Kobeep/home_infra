@@ -45,31 +45,8 @@ jenkins:
               - hostPathVolume:
                   mountPath: "/var/run/docker.sock"
                   hostPath: "/var/run/docker.sock"
-credentials:
-  providers:
-    - kubernetes:
-        namespace: jenkins
-        secretNamePrefix: jenkins-secrets
-        mappings:
-          - secretKey: harbor-my-username
-            id: harbor-my-creds
-            type: usernamePassword
-            usernameKey: harbor-my-username
-            passwordKey: harbor-my-password
-          - secretKey: harbor-jenkins-username
-            id: harbor-jenkins-creds
-            type: usernamePassword
-            usernameKey: harbor-jenkins-username
-            passwordKey: harbor-jenkins-password
-          - secretKey: server-ssh-password
-            id: serwer-ssh-password
-            type: secretText
-          - secretKey: server-ssh-private-key
-            id: serwer-ssh-key
-            type: sshPrivateKey
-          - secretKey: ansible-vault-password
-            id: ansible-vault-password
-            type: secretText
+# Credentials are provisioned automatically from Kubernetes Secret objects by the
+# kubernetes-credentials-provider plugin. No static JCASC credentials block is needed here.
 unclassified:
   ansiColorBuildWrapper:
     globalColorMapName: "XTerm"

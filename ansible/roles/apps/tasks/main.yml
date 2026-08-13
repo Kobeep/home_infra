@@ -296,18 +296,39 @@
   changed_when: true
   when: harbor_owner_credentials_ready
 
-- name: Patch jenkins-secrets with Harbor credentials used by JCasC
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh '{{ {\"stringData\":{\"harbor-my-username\": vault_harbor_my_username, \"harbor-my-password\": vault_harbor_my_password, \"harbor-jenkins-username\": vault_harbor_jenkins_username, \"harbor-jenkins-password\": vault_harbor_jenkins_password}} | to_json }}'"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_credentials_ready
-
 - name: Patch jenkins-secrets with Harbor routing config (non-secret)
   become: false
   ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh '{{ {\"stringData\": {\"harbor-project-name\": harbor_project_name, \"harbor-host\": harbor_host, \"harbor-repository-name\": harbor_repository_name }} | to_json }}'"
   environment: "{{ kubectl_env }}"
   changed_when: true
+
+- name: Create Harbor owner Jenkins credential via Kubernetes secret provider
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl -n jenkins create secret generic harbor-my-creds \
+      --from-literal=username="{{ vault_harbor_my_username }}" \
+      --from-literal=password="{{ vault_harbor_my_password }}" \
+      --dry-run=client -o yaml | kubectl apply -f -
+    kubectl -n jenkins label secret harbor-my-creds jenkins.io/credentials-type=usernamePassword jenkins.io/credentials-scope=global --overwrite
+    kubectl -n jenkins annotate secret harbor-my-creds jenkins.io/credentials-description="Harbor owner credentials for Jenkins" --overwrite
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: harbor_owner_credentials_ready
+
+- name: Create Harbor Jenkins credential via Kubernetes secret provider
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl -n jenkins create secret generic harbor-jenkins-creds \
+      --from-literal=username="{{ vault_harbor_jenkins_username }}" \
+      --from-literal=password="{{ vault_harbor_jenkins_password }}" \
+      --dry-run=client -o yaml | kubectl apply -f -
+    kubectl -n jenkins label secret harbor-jenkins-creds jenkins.io/credentials-type=usernamePassword jenkins.io/credentials-scope=global --overwrite
+    kubectl -n jenkins annotate secret harbor-jenkins-creds jenkins.io/credentials-description="Harbor Jenkins robot account" --overwrite
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: harbor_credentials_ready
 
 - name: Detect whether Jenkins SSH and Vault credentials are configured
   ansible.builtin.set_fact:
@@ -320,16 +341,32 @@
 - name: Warn when Jenkins SSH/Vault credentials are missing
   ansible.builtin.debug:
     msg:
-      - "Jenkins CI credentials are not fully configured; serwer-ssh-password and ansible-vault-password will not be injected via JCasC."
+      - "Jenkins CI credentials are not fully configured; serwer-ssh-password and ansible-vault-password will not be created as Kubernetes-backed Jenkins credentials."
       - "Define vault_server_ssh_password and vault_ansible_vault_password in ansible/env.cfg to enable automatic Jenkins credential provisioning."
   when: not jenkins_ci_credentials_ready
 
-- name: Patch jenkins-secrets with SSH and Ansible Vault values used by JCasC
+- name: Create SSH password credential via Kubernetes secret provider
   become: false
-  ansible.builtin.shell:
-    cmd: >
-      kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{{ {"stringData": {"server-ssh-password": vault_server_ssh_password, "ansible-vault-password": vault_ansible_vault_password }} | to_json }}'
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl -n jenkins create secret generic serwer-ssh-password \
+      --from-literal=text="{{ vault_server_ssh_password }}" \
+      --dry-run=client -o yaml | kubectl apply -f -
+    kubectl -n jenkins label secret serwer-ssh-password jenkins.io/credentials-type=secretText jenkins.io/credentials-scope=global --overwrite
+    kubectl -n jenkins annotate secret serwer-ssh-password jenkins.io/credentials-description="SSH password for the remote Ansible server" --overwrite
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: jenkins_ci_credentials_ready
+
+- name: Create Ansible Vault password credential via Kubernetes secret provider
+  become: false
+  ansible.builtin.shell: |
+    set -euo pipefail
+    kubectl -n jenkins create secret generic ansible-vault-password \
+      --from-literal=text="{{ vault_ansible_vault_password }}" \
+      --dry-run=client -o yaml | kubectl apply -f -
+    kubectl -n jenkins label secret ansible-vault-password jenkins.io/credentials-type=secretText jenkins.io/credentials-scope=global --overwrite
+    kubectl -n jenkins annotate secret ansible-vault-password jenkins.io/credentials-description="Ansible Vault password for Jenkins pipelines" --overwrite
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: jenkins_ci_credentials_ready
