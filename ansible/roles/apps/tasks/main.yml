@@ -39,6 +39,8 @@
       dest: "{{ home_infra_remote_path }}/k8s/jenkins/ingress.yaml"
     - src: "{{ home_infra_local_path }}/k8s/ingress-nginx/service-patch.yaml.j2"
       dest: "{{ home_infra_remote_path }}/k8s/ingress-nginx/service-patch.yaml"
+    - src: "{{ home_infra_local_path }}/k8s/opengrok/deployment.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/opengrok/deployment.yaml"
     - src: "{{ home_infra_local_path }}/k8s/opengrok/ingress.yaml.j2"
       dest: "{{ home_infra_remote_path }}/k8s/opengrok/ingress.yaml"
     - src: "{{ home_infra_local_path }}/k8s/prometheus/ingress.yaml.j2"
