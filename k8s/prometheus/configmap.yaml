@@ -7,6 +7,7 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      evaluation_interval: 15s
 
     scrape_configs:
       - job_name: 'prometheus'
@@ -16,3 +17,24 @@ data:
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: pod
+          - source_labels: [__address__]
+            action: replace
+            target_label: instance
+
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      - job_name: 'kubernetes-services'
+        kubernetes_sd_configs:
+          - role: service

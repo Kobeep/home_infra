@@ -28,12 +28,31 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /var/lib/grafana
+        - name: grafana-config
+          mountPath: /etc/grafana/grafana.ini
+          subPath: grafana.ini
+        - name: grafana-config
+          mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+          subPath: datasources.yaml
+        - name: grafana-config
+          mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+          subPath: dashboards.yaml
+        - name: grafana-config
+          mountPath: /etc/grafana/provisioning/dashboards/prometheus-overview.json
+          subPath: prometheus-overview.json
         env:
+        - name: GF_SECURITY_ADMIN_USER
+          value: Kobeep
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: admin
         - name: GF_INSTALL_PLUGINS
           value: ""
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
       volumes:
       - name: storage
         persistentVolumeClaim:
           claimName: grafana-data
+      - name: grafana-config
+        configMap:
+          name: grafana-config
