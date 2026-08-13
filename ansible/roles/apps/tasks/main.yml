@@ -489,9 +489,10 @@
         exit 1
       fi
 
+      # Ensure owner is a member (Developer role_id 2)
       member_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/projects/${project_id}/members?page_size=100")"
-      member_exists="$(printf '%s' "$member_json" | python3 -c 'import sys, json; user=sys.argv[1]; d=json.load(sys.stdin); print("yes" if any((x.get("entity_name") == user) for x in d) else "no")' "$HARBOR_USER")"
-      if [ "$member_exists" = "no" ]; then
+      member_exists_owner="$(printf '%s' "$member_json" | python3 -c 'import sys, json; user=sys.argv[1]; d=json.load(sys.stdin); print("yes" if any((x.get("entity_name") == user) for x in d) else "no")' "$HARBOR_USER")"
+      if [ "$member_exists_owner" = "no" ]; then
         add_member_code="$(curl -ks -o /tmp/harbor_member_add.out -w '%{http_code}' \
           -u "admin:${ADMIN_PASS}" \
           -H 'Content-Type: application/json' \
@@ -499,6 +500,43 @@
           -d "{\"role_id\":2,\"member_user\":{\"user_id\":${user_id}}}")"
         if [ "$add_member_code" != "201" ] && [ "$add_member_code" != "409" ]; then
           cat /tmp/harbor_member_add.out
+          exit 1
+        fi
+      fi
+
+      # Ensure Jenkins robot user exists and is added as Developer
+      JEN_USER="{{ vault_harbor_jenkins_username }}"
+      JEN_PASS="{{ vault_harbor_jenkins_password }}"
+      jen_user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${JEN_USER}")"
+      jen_user_id="$(printf '%s' "$jen_user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
+      if [ -z "$jen_user_id" ]; then
+        create_jen_user_code="$(curl -ks -o /tmp/harbor_jen_user_create.out -w '%{http_code}' \
+          -u "admin:${ADMIN_PASS}" \
+          -H 'Content-Type: application/json' \
+          -X POST "https://${HARBOR_HOST}/api/v2.0/users" \
+          -d "{\"username\":\"${JEN_USER}\",\"password\":\"${JEN_PASS}\",\"realname\":\"jenkins\",\"email\":\"jenkins@local.invalid\"}")"
+        if [ "$create_jen_user_code" != "201" ] && [ "$create_jen_user_code" != "409" ]; then
+          cat /tmp/harbor_jen_user_create.out
+          exit 1
+        fi
+        jen_user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${JEN_USER}")"
+        jen_user_id="$(printf '%s' "$jen_user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
+      fi
+
+      if [ -z "$jen_user_id" ]; then
+        echo "ERROR: Unable to resolve Jenkins robot user id"
+        exit 1
+      fi
+
+      member_exists_jen="$(printf '%s' "$member_json" | python3 -c 'import sys, json; user=sys.argv[1]; d=json.load(sys.stdin); print("yes" if any((x.get("entity_name") == user) for x in d) else "no")' "$JEN_USER")"
+      if [ "$member_exists_jen" = "no" ]; then
+        add_member_code="$(curl -ks -o /tmp/harbor_member_add_jenkins.out -w '%{http_code}' \
+          -u "admin:${ADMIN_PASS}" \
+          -H 'Content-Type: application/json' \
+          -X POST "https://${HARBOR_HOST}/api/v2.0/projects/${project_id}/members" \
+          -d "{\"role_id\":2,\"member_user\":{\"user_id\":${jen_user_id}}}")"
+        if [ "$add_member_code" != "201" ] && [ "$add_member_code" != "409" ]; then
+          cat /tmp/harbor_member_add_jenkins.out
           exit 1
         fi
       fi
