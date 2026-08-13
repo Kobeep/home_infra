@@ -254,6 +254,16 @@
   environment: "{{ kubectl_env }}"
   changed_when: true
 
+- name: Verify Jenkins namespace exists before creating provider-backed credentials
+  become: false
+  ansible.builtin.command: kubectl get namespace jenkins
+  environment: "{{ kubectl_env }}"
+  register: jenkins_namespace_check
+  retries: 20
+  delay: 3
+  until: jenkins_namespace_check.rc == 0
+  failed_when: jenkins_namespace_check.rc != 0
+
 - name: Create harbor-pull-cred image pull secret in app namespaces
   become: false
   ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh harbor-pull-cred '{{ harbor_host }}' '{{ vault_harbor_my_username }}' '{{ vault_harbor_my_password }}' '{{ vault_github_email }}' {{ item }}"
