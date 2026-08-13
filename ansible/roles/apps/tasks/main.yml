@@ -52,81 +52,33 @@
 
 - name: Install Ingress NGINX Controller
   become: false
-  ansible.builtin.command:
-    cmd: kubectl apply -k {{ home_infra_remote_path }}/k8s/ingress-nginx/
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_ingress_nginx.sh {{ home_infra_remote_path }}/k8s/ingress-nginx/"
   environment: "{{ kubectl_env }}"
   changed_when: true
 
 - name: Wait for Ingress NGINX deployment to appear
   become: false
-  ansible.builtin.shell:
-    cmd: >
-      kubectl get deployment -n ingress-nginx
-      -l app.kubernetes.io/name=ingress-nginx
-      -o jsonpath='{.items[*].metadata.name}'
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_ingress_controller.sh 12 10"
   environment: "{{ kubectl_env }}"
-  register: ingress_deployment
-  until: ingress_deployment.stdout != ""
-  retries: 12
-  delay: 10
   changed_when: false
 
 - name: Wait for Ingress NGINX controller pod to be ready
   become: false
-  ansible.builtin.command:
-    cmd: >
-      kubectl wait --namespace ingress-nginx
-      --for=condition=ready pod
-      --selector=app.kubernetes.io/component=controller
-      --timeout=180s
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh ingress-nginx 'app.kubernetes.io/component=controller' 180s"
   environment: "{{ kubectl_env }}"
   changed_when: false
 
 # ── cert-manager ─────────────────────────────────────────────────────────────
 
-- name: Add Jetstack Helm repository
+- name: Install cert-manager (add repo, apply CRDs, install via helm)
   become: false
-  ansible.builtin.command:
-    cmd: helm repo add jetstack https://charts.jetstack.io
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-  failed_when: false   # helm repo add is idempotent but exits 1 if already present
-
-- name: Update Helm repositories
-  become: false
-  ansible.builtin.command:
-    cmd: helm repo update
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-- name: Ensure cert-manager CRDs are applied directly
-  become: false
-  ansible.builtin.command: >
-    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.4/cert-manager.crds.yaml
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-- name: Install cert-manager via Helm
-  become: false
-  ansible.builtin.command:
-    cmd: >
-      helm upgrade --install cert-manager jetstack/cert-manager
-      --namespace cert-manager
-      --create-namespace
-      --version {{ cert_manager_version }}
-      --set crds.enabled=true
-      --timeout 10m0s
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/cert_manager_install.sh {{ cert_manager_version }}"
   environment: "{{ kubectl_env }}"
   changed_when: true
 
 - name: Wait for cert-manager webhook pods to be ready
   become: false
-  ansible.builtin.command:
-    cmd: >
-      kubectl wait --for=condition=ready pod
-      -l app.kubernetes.io/instance=cert-manager
-      -n cert-manager
-      --timeout=180s
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh cert-manager 'app.kubernetes.io/instance=cert-manager' 180s"
   environment: "{{ kubectl_env }}"
   changed_when: false
 
@@ -140,15 +92,7 @@
 
 - name: Create ghcr-cred image pull secret in default namespace
   become: false
-  ansible.builtin.shell:
-    cmd: |
-      kubectl create secret docker-registry ghcr-cred \
-        --docker-server=ghcr.io \
-        --docker-username="{{ vault_github_username }}" \
-        --docker-password="{{ vault_github_token }}" \
-        --docker-email="{{ vault_github_email }}" \
-        --namespace=default \
-        --dry-run=client -o yaml | kubectl apply -f -
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh ghcr-cred ghcr.io '{{ vault_github_username }}' '{{ vault_github_token }}' '{{ vault_github_email }}' default"
   environment: "{{ kubectl_env }}"
   changed_when: true
 
@@ -184,65 +128,6 @@
       - "Define vault_harbor_my_username and vault_harbor_my_password in ansible/env.cfg to enable image pulls from Harbor."
   when: not harbor_owner_credentials_ready
 
-- name: Create harbor-pull-cred image pull secret in app namespaces
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      kubectl create secret docker-registry harbor-pull-cred \
-        --docker-server="{{ harbor_host }}" \
-        --docker-username="{{ vault_harbor_my_username }}" \
-        --docker-password="{{ vault_harbor_my_password }}" \
-        --docker-email="{{ vault_github_email }}" \
-        --namespace={{ item }} \
-        --dry-run=client -o yaml | kubectl apply -f -
-  loop:
-    - default
-    - api
-    - jenkins
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_owner_credentials_ready
-
-- name: Create harbor-jenkins-cred secret in jenkins namespace
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      kubectl create secret docker-registry harbor-jenkins-cred \
-        --docker-server="{{ harbor_host }}" \
-        --docker-username="{{ vault_harbor_jenkins_username }}" \
-        --docker-password="{{ vault_harbor_jenkins_password }}" \
-        --docker-email="{{ vault_github_email }}" \
-        --namespace=jenkins \
-        --dry-run=client -o yaml | kubectl apply -f -
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_credentials_ready
-
-- name: Attach harbor-pull-cred to default ServiceAccounts
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -e
-      existing="$(kubectl get sa default -n {{ item }} -o jsonpath='{.imagePullSecrets[*].name}' 2>/dev/null || true)"
-
-      if echo "$existing" | tr ' ' '\n' | grep -qx 'harbor-pull-cred'; then
-        exit 0
-      fi
-
-      if [ -z "$existing" ]; then
-        kubectl patch sa default -n {{ item }} --type='json' \
-          -p='[{"op":"add","path":"/imagePullSecrets","value":[{"name":"harbor-pull-cred"}]}]'
-      else
-        kubectl patch sa default -n {{ item }} --type='json' \
-          -p='[{"op":"add","path":"/imagePullSecrets/-","value":{"name":"harbor-pull-cred"}}]'
-      fi
-  loop:
-    - default
-    - api
-    - jenkins
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_owner_credentials_ready
 
 # ── Deploy all application manifests ─────────────────────────────────────────
 - name: Ensure CA directory exists on remote server
@@ -301,15 +186,7 @@
 
 - name: Generate local CA keypair on remote server when controller files are missing
   become: false
-  ansible.builtin.command:
-    cmd: >
-      openssl req -x509 -nodes -newkey rsa:4096
-      -keyout {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key
-      -out {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt
-      -days 3650
-      -subj /CN=homelab-local-ca
-  args:
-    creates: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key"
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/generate_ca.sh {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
   when:
     - not controller_ca_files_ready
     - not remote_ca_files_ready
@@ -335,7 +212,7 @@
 
 - name: Update system CA certificates
   become: true
-  ansible.builtin.command: update-ca-certificates
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/update_ca_certificates.sh"
   register: update_ca_result
   changed_when: "'0 added, 0 removed; done.' not in update_ca_result.stdout"
 
@@ -366,35 +243,69 @@
 
 - name: Wait for K3s node to become Ready after restart
   become: false
-  ansible.builtin.command:
-    cmd: kubectl wait --for=condition=Ready node --all --timeout=180s
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_nodes_ready.sh 180s"
   environment: "{{ kubectl_env }}"
   changed_when: false
   when: k3s_registries_config.changed
 
 - name: Deploy all K8s application manifests via Kustomize
   become: false
-  ansible.builtin.command:
-    cmd: kubectl apply -k {{ home_infra_remote_path }}/k8s/
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/apply_kustomize.sh {{ home_infra_remote_path }}/k8s/"
   environment: "{{ kubectl_env }}"
   changed_when: true
 
+- name: Create harbor-pull-cred image pull secret in app namespaces
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh harbor-pull-cred '{{ harbor_host }}' '{{ vault_harbor_my_username }}' '{{ vault_harbor_my_password }}' '{{ vault_github_email }}' {{ item }}"
+  loop:
+    - default
+    - api
+    - jenkins
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: harbor_owner_credentials_ready
+
+- name: Create harbor-jenkins-cred secret in jenkins namespace
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh harbor-jenkins-cred '{{ harbor_host }}' '{{ vault_harbor_jenkins_username }}' '{{ vault_harbor_jenkins_password }}' '{{ vault_github_email }}' jenkins"
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: harbor_credentials_ready
+
+- name: Wait for default ServiceAccount in app namespaces
+  become: false
+  ansible.builtin.command: kubectl -n {{ item }} get sa default
+  register: sa_check
+  retries: 30
+  delay: 2
+  until: sa_check.rc == 0
+  loop:
+    - default
+    - api
+    - jenkins
+  environment: "{{ kubectl_env }}"
+
+- name: Attach harbor-pull-cred to default ServiceAccounts
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/attach_imagepullsecret.sh harbor-pull-cred {{ item }}"
+  loop:
+    - default
+    - api
+    - jenkins
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: harbor_owner_credentials_ready
+
 - name: Patch jenkins-secrets with Harbor credentials used by JCasC
   become: false
-  ansible.builtin.shell:
-    cmd: >
-      kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{"stringData":{"harbor-my-username":"{{ vault_harbor_my_username }}","harbor-my-password":"{{ vault_harbor_my_password }}","harbor-jenkins-username":"{{ vault_harbor_jenkins_username }}","harbor-jenkins-password":"{{ vault_harbor_jenkins_password }}"}}'
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh '{{ {\"stringData\":{\"harbor-my-username\": vault_harbor_my_username, \"harbor-my-password\": vault_harbor_my_password, \"harbor-jenkins-username\": vault_harbor_jenkins_username, \"harbor-jenkins-password\": vault_harbor_jenkins_password}} | to_json }}'"
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: harbor_credentials_ready
 
 - name: Patch jenkins-secrets with Harbor routing config (non-secret)
   become: false
-  ansible.builtin.shell:
-    cmd: >
-      kubectl patch secret jenkins-secrets -n jenkins --type merge
-      -p '{{ {"stringData": {"harbor-project-name": harbor_project_name, "harbor-host": harbor_host, "harbor-repository-name": harbor_repository_name }} | to_json }}'
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh '{{ {\"stringData\": {\"harbor-project-name\": harbor_project_name, \"harbor-host\": harbor_host, \"harbor-repository-name\": harbor_repository_name }} | to_json }}'"
   environment: "{{ kubectl_env }}"
   changed_when: true
 
@@ -422,6 +333,17 @@
   environment: "{{ kubectl_env }}"
   changed_when: true
   when: jenkins_ci_credentials_ready
+
+- name: Restart Jenkins to apply updated jenkins-secrets (JCASC)
+  become: false
+  ansible.builtin.command:
+    cmd: kubectl -n jenkins rollout restart deployment jenkins
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when: >-
+    (harbor_credentials_ready | default(false))
+    or (harbor_owner_credentials_ready | default(false))
+    or (jenkins_ci_credentials_ready | default(false))
 
 # ── HashiCorp Vault ───────────────────────────────────────────────────────────
 

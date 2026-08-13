@@ -28,3 +28,4 @@ pipeline-utility-steps
 ws-cleanup
 mask-passwords
 warnings-ng
+kubernetes-credentials-provider

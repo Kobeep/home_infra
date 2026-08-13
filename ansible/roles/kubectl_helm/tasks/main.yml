@@ -15,12 +15,7 @@
   when: not kubectl_binary.stat.exists
 
 - name: Download and install kubectl
-  ansible.builtin.shell:
-    cmd: |
-      curl -LO "https://dl.k8s.io/release/{{ kubectl_stable_version.content | trim }}/bin/linux/amd64/kubectl"
-      chmod +x kubectl
-      mv kubectl /usr/local/bin/kubectl
-    chdir: /tmp
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_kubectl.sh '{{ kubectl_stable_version.content | trim }}'"
   when: not kubectl_binary.stat.exists
   changed_when: true
 
@@ -30,7 +25,6 @@
   register: helm_binary
 
 - name: Install Helm via official script
-  ansible.builtin.shell:
-    cmd: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_helm.sh"
   when: not helm_binary.stat.exists
   changed_when: true

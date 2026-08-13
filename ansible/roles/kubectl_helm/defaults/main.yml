@@ -1,0 +1,5 @@
+---
+# Defaults for kubectl_helm role
+helm_version: "v3.13.0"
+# kubectl default left empty to prefer stable channel resolution
+kubectl_version: ""
