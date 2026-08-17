@@ -1,5 +1,11 @@
 all:
   children:
+    pc:
+      hosts:
+        KobeePC:
+          ansible_host: localhost
+        KingaPC:
+          ansible_host:
     server:
       hosts:
         homelab:
