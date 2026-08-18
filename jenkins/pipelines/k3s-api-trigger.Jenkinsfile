@@ -52,7 +52,7 @@ spec:
 
         stage('Run API Trigger') {
             steps {
-                banner("Triggering action ${params.Action} on ${if (params.DeploymentName) {echo "deployment " + params.DeploymentName } if else { echo "pod " + params.PodName } else { echo "cluster" }} in namespace ${params.Namespace}", '33')
+                banner("Triggering action ${params.Action} on ${if (params.DeploymentName) {echo "deployment " + params.DeploymentName } elif { echo "pod " + params.PodName } else { echo "cluster" }} in namespace ${params.Namespace}", '33')
                 sh '''
                     #!/bin/bash
                     set -euo pipefail
@@ -63,6 +63,9 @@ spec:
                     elif [[ -n "${PodName}" ]]; then
                         echo "Triggering action ${Action} on pod ${PodName} in namespace ${Namespace}"
                         curl -X POST "https://${IPaddress}.nip.io/api/kubernetes/${Action}/${PodName}/${Namespace}"
+                    elif [[ "${Action}" == "clean-cluster" ]]; then
+                        echo "Triggering action ${Action} on the cluster"
+                        curl -X POST "https://${IPaddress}.nip.io/api/kubernetes/${Action}"
                     else
                         echo "No DeploymentName or PodName provided. Exiting."
                         exit 1
