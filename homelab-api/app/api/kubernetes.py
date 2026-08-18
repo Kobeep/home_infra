@@ -22,7 +22,7 @@ def _load_kube_config():
 
 _load_kube_config()
 
-
+# all get endpoints gets data from All namespaces, unless a namespace parameter is provided. This is to avoid the need for multiple endpoints for each namespace.
 @router.get("/kubernetes", tags=["Kubernetes"])
 async def kubernetes_info():
     """Get cluster version and API server URL."""
@@ -155,9 +155,9 @@ async def get_cluster_info():
         return {"error": str(e)}
 
 
-@router.get("/kubernetes/events", tags=["Kubernetes"])
+@router.get("/kubernetes/events/{deployment_name}/{namespace}", tags=["Kubernetes"])
 async def get_events(namespace: str = None):
-    """Get events — optionally filtered by namespace, otherwise cluster-wide."""
+    """Get all events across all namespaces or for a specific namespace."""
     try:
         v1 = client.CoreV1Api()
         if namespace:
@@ -172,9 +172,11 @@ async def get_events(namespace: str = None):
                     "reason": e.reason,
                     "message": e.message,
                     "type": e.type,
-                    "count": e.count,
-                    "first_time": str(e.first_timestamp),
-                    "last_time": str(e.last_timestamp),
+                    "involved_object": {
+                        "kind": e.involved_object.kind,
+                        "name": e.involved_object.name,
+                        "namespace": e.involved_object.namespace,
+                    },
                 }
                 for e in events.items
             ]
@@ -241,7 +243,7 @@ async def get_cluster_metrics():
         return {"error": str(e)}
 
 
-@router.get("/kubernetes/logs", tags=["Kubernetes"])
+@router.get("/kubernetes/logs/{pod_name}", tags=["Kubernetes"])
 async def get_pod_logs(pod_name: str, namespace: str = "default", tail_lines: int = 100):
     """Get logs from a specific pod (optionally tail N lines)."""
     try:
@@ -254,58 +256,6 @@ async def get_pod_logs(pod_name: str, namespace: str = "default", tail_lines: in
         return {"pod_name": pod_name, "namespace": namespace, "logs": logs}
     except Exception as e:
         return {"error": str(e)}
-
-
-@router.get("/kubernetes/exec", tags=["Kubernetes"])
-async def exec_command_in_pod(pod_name: str, namespace: str = "default", command: str = "echo Hello"):
-    """Execute a shell command inside a running pod."""
-    try:
-        v1 = client.CoreV1Api()
-        resp = stream(
-            v1.connect_get_namespaced_pod_exec,
-            pod_name,
-            namespace,
-            command=["/bin/sh", "-c", command],
-            stderr=True,
-            stdin=False,
-            stdout=True,
-            tty=False,
-        )
-        return {"pod_name": pod_name, "namespace": namespace, "command": command, "output": resp}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@router.get("/kubernetes/scale", tags=["Kubernetes"])
-async def scale_deployment(deployment_name: str, namespace: str = "default", replicas: int = 1):
-    """Scale a deployment to the specified number of replicas."""
-    try:
-        apps_v1 = client.AppsV1Api()
-        scale = apps_v1.read_namespaced_deployment_scale(deployment_name, namespace)
-        scale.spec.replicas = replicas
-        apps_v1.replace_namespaced_deployment_scale(deployment_name, namespace, scale)
-        return {"deployment_name": deployment_name, "namespace": namespace, "replicas": replicas}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@router.get("/kubernetes/rollout", tags=["Kubernetes"])
-async def rollout_status(deployment_name: str, namespace: str = "default"):
-    """Get rollout status for a deployment."""
-    try:
-        apps_v1 = client.AppsV1Api()
-        deployment = apps_v1.read_namespaced_deployment(deployment_name, namespace)
-        return {
-            "deployment_name": deployment.metadata.name,
-            "namespace": deployment.metadata.namespace,
-            "desired_replicas": deployment.spec.replicas,
-            "ready_replicas": deployment.status.ready_replicas,
-            "available_replicas": deployment.status.available_replicas,
-            "unavailable_replicas": deployment.status.unavailable_replicas,
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
 
 @router.get("/kubernetes/configmaps", tags=["Kubernetes"])
 async def get_configmaps(namespace: str = None):
@@ -418,7 +368,7 @@ async def get_ingresses():
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/kubernetes/exec", tags=["Kubernetes"])
+@router.post("/kubernetes/exec/{pod_name}/{namespace}", tags=["Kubernetes"])
 async def exec_command_in_pod_post(pod_name: str, namespace: str = "default", command: str = "echo Hello"):
     """Execute a shell command inside a running pod (POST version)."""
     try:
@@ -437,7 +387,7 @@ async def exec_command_in_pod_post(pod_name: str, namespace: str = "default", co
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/kubernetes/rollout-restart/{deployment_name}/{namespace}", tags=["Kubernetes"])
+@router.post("/kubernetes/rollout/{deployment_name}/{namespace}", tags=["Kubernetes"])
 async def rollout_restart(deployment_name: str, namespace: str = "default"):
     """Trigger a rollout restart for a deployment."""
     try:

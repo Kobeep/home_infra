@@ -40,17 +40,20 @@ async def list_endpoints():
         {"path": "/api/kubernetes/services", "description": "Get a list of all services in the Kubernetes cluster."},
         {"path": "/api/kubernetes/deployments", "description": "Get a list of all deployments in the Kubernetes cluster."},
         {"path": "/api/kubernetes/cluster-info", "description": "Get information about the Kubernetes cluster."},
-        {"path": "/api/kubernetes/events", "description": "Get a list of all events in the Kubernetes cluster."},
+        {"path": "/api/kubernetes/events/{deployment_name}/{namespace}", "description": "Get a list of all events in the Kubernetes cluster."},
         {"path": "/api/kubernetes/state", "description": "Get the current state of the Kubernetes cluster."},
         {"path": "/api/kubernetes/cluster-metrics", "description": "Get metrics about the Kubernetes cluster, such as CPU and memory usage."},
-        {"path": "/api/kubernetes/logs", "description": "Get logs from a specific pod in the Kubernetes cluster."},
-        {"path": "/api/kubernetes/exec", "description": "Execute a command in a specific pod in the Kubernetes cluster."},
-        {"path": "/api/kubernetes/scale", "description": "Scale a deployment in the Kubernetes cluster."},
-        {"path": "/api/kubernetes/rollout", "description": "Manage rollouts for deployments in the Kubernetes cluster."},
+        {"path": "/api/kubernetes/logs/{pod_name}/{namespace}", "description": "Get logs from a specific pod in the Kubernetes cluster."},
         {"path": "/api/kubernetes/configmaps", "description": "Get a list of all ConfigMaps in the Kubernetes cluster."},
         {"path": "/api/kubernetes/secrets", "description": "Get a list of all Secrets in the Kubernetes cluster."},
         {"path": "/api/kubernetes/persistent-volumes", "description": "Get a list of all PersistentVolumes in the Kubernetes cluster."},
         {"path": "/api/kubernetes/persistent-volume-claims", "description": "Get a list of all PersistentVolumeClaims in the Kubernetes cluster."},
         {"path": "/api/kubernetes/ingresses", "description": "Get a list of all Ingresses in the Kubernetes cluster."},
+        # Post endpoints for Kubernetes management
+        {"path": "/api/kubernetes/rollout/{deployment_name}/{namespace}", "description": "Manage rollouts for deployments in the Kubernetes cluster."},
+        {"path": "/api/kubernetes/kill/pods/{pod_name}/{namespace}", "description": "Delete a pod to simulate a failure."},
+        {"path": "/api/kubernetes/kill/deployments/{deployment_name}/{namespace}", "description": "Delete a deployment to simulate a failure."},
+        {"path": "/api/kubernetes/clean-cluster", "description": "Delete all resources in the cluster (except master nodes)."},
+        {"path": "/api/kubernetes/exec/{pod_name}/{namespace}", "description": "Execute a command in a specific pod in the Kubernetes cluster."}
     ]
     return {"endpoints": endpoints}
