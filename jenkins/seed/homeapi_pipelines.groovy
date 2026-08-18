@@ -65,8 +65,8 @@ pipelineJob('home-api-get-checks') {
     description('Sends GET requests to home-api and validates HTTP statuses.')
 
     parameters {
-        stringParam('BASE_URL', 'https://api.127.0.0.1.nip.io', 'Base API URL without trailing slash.')
-        textParam('ENDPOINTS', '/health\n/docs', 'Endpoint list, one per line, e.g. /health')
+        stringParam('BASE_URL', "https://api.${getJenkinsHostIp()}.nip.io", 'Base API URL without trailing slash.')
+        textParam('AVAILABLE_ENDPOINTS', getListOfApiEndpoints().join('\n'))
     }
 
     definition {
@@ -87,4 +87,22 @@ pipelineJob('home-api-get-checks') {
     logRotator {
         numToKeep(30)
     }
+}
+// call homeapi /api to get list of endpoints and add them to the ENDPOINTS parameter
+def getListOfApiEndpoints() {
+    def endpoints = []
+    def baseUrl = "https://api.${getJenkinsHostIp()}.nip.io/api"
+    def response = httpRequest(url: baseUrl, validResponseCodes: '200')
+    def jsonResponse = readJSON text: response.content
+    jsonResponse.each { endpoint ->
+        endpoints.add(endpoint.path)
+}
+    return endpoints
+}
+
+// check hostname for jenkins to fetch the IP for the API URL
+def getJenkinsHostIp() {
+    def hostname = sh(script: 'hostname', returnStdout: true).trim()
+    def ipAddress = sh(script: "getent hosts ${hostname} | awk '{ print \$1 }'", returnStdout: true).trim()
+    return ipAddress
 }

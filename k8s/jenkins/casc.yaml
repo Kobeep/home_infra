@@ -56,48 +56,6 @@ appearance:
     theme: "darkSystem"
 jobs:
   - script: |
-      freeStyleJob('seed-job') {
-          description('Seed job: regenerates home_infra-* pipelines from jenkins/seed/upstream.groovy. Defined declaratively via JCasC.')
-
-          scm {
-              git {
-                  remote {
-                      url('https://github.com/Kobeep/home_infra.git')
-                      credentials('github')
-                  }
-                  branch('*/main')
-              }
-          }
-
-          triggers {
-              githubPush()
-          }
-
-          steps {
-              shell('''
-                  if find ansible/playbooks -maxdepth 1 -name "*.yml" 2>/dev/null | grep -q .; then
-                      find ansible/playbooks -maxdepth 1 -name "*.yml" -exec basename {} \\; > playbook-manifest.txt
-                  else
-                      echo "NO_PLAYBOOKS_FOUND" > playbook-manifest.txt
-                  fi
-
-                  if [ -f ansible/inventory.yml ]; then
-                      cat ansible/inventory.yml > inventory-manifest.txt
-                  else
-                      echo "NO_INVENTORY_FOUND" > inventory-manifest.txt
-                  fi
-              ''')
-              dsl {
-                  external('jenkins/seed/upstream.groovy')
-                  removeAction('IGNORE')
-              }
-          }
-
-          logRotator {
-              numToKeep(10)
-          }
-      }
-  - script: |
       freeStyleJob('seed-homeapi-pipelines') {
           description('Seed job: creates infra-api build / ansible deploy / home-api GET check pipelines from jenkins/seed/homeapi_pipelines.groovy.')
 
