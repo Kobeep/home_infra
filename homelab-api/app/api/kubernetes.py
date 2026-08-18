@@ -1,4 +1,5 @@
 # Kubernetes API endpoints for showing the state of the Kubernetes cluster
+import datetime
 import os
 from fastapi import APIRouter
 from kubernetes import client, config
@@ -414,5 +415,93 @@ async def get_ingresses():
                 for ing in ingresses.items
             ]
         }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/kubernetes/exec", tags=["Kubernetes"])
+async def exec_command_in_pod_post(pod_name: str, namespace: str = "default", command: str = "echo Hello"):
+    """Execute a shell command inside a running pod (POST version)."""
+    try:
+        v1 = client.CoreV1Api()
+        resp = stream(
+            v1.connect_get_namespaced_pod_exec,
+            pod_name,
+            namespace,
+            command=["/bin/sh", "-c", command],
+            stderr=True,
+            stdin=False,
+            stdout=True,
+            tty=False,
+        )
+        return {"pod_name": pod_name, "namespace": namespace, "command": command, "output": resp}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/kubernetes/rollout-restart/{deployment_name}/{namespace}", tags=["Kubernetes"])
+async def rollout_restart(deployment_name: str, namespace: str = "default"):
+    """Trigger a rollout restart for a deployment."""
+    try:
+        apps_v1 = client.AppsV1Api()
+        deployment = apps_v1.read_namespaced_deployment(deployment_name, namespace)
+        if deployment.spec.template.metadata.annotations is None:
+            deployment.spec.template.metadata.annotations = {}
+        deployment.spec.template.metadata.annotations["kubectl.kubernetes.io/restartedAt"] = datetime.datetime.utcnow().isoformat() + "Z"
+        apps_v1.patch_namespaced_deployment(deployment_name=deployment_name, namespace=namespace, body=deployment)
+        return {"deployment_name": deployment_name, "namespace": namespace, "message": "Rollout restart triggered."}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/kubernetes/kill/pods/{pod_name}/{namespace}", tags=["Kubernetes"])
+async def kill_pod(pod_name: str, namespace: str = "default"):
+    """Delete a pod to simulate a failure."""
+    try:
+        v1 = client.CoreV1Api()
+        v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
+        return {"pod_name": pod_name, "namespace": namespace, "message": "Pod deleted (killed)."}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/kubernetes/kill/deployments/{deployment_name}/{namespace}", tags=["Kubernetes"])
+async def kill_deployment(deployment_name: str, namespace: str = "default"):
+    """Delete a deployment to simulate a failure."""
+    try:
+        apps_v1 = client.AppsV1Api()
+        apps_v1.delete_namespaced_deployment(name=deployment_name, namespace=namespace)
+        return {"deployment_name": deployment_name, "namespace": namespace, "message": "Deployment deleted (killed)."}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Clean the cluster (besides the master nodes) by deleting all pods, deployments, services, etc. This is a dangerous operation and should be used with caution.
+@router.post("/kubernetes/clean-cluster", tags=["Kubernetes"])
+async def clean_cluster():
+    """Delete all resources in the cluster (except master nodes)."""
+    try:
+        v1 = client.CoreV1Api()
+        apps_v1 = client.AppsV1Api()
+        networking_v1 = client.NetworkingV1Api()
+
+        # Delete all deployments
+        deployments = apps_v1.list_deployment_for_all_namespaces()
+        for d in deployments.items:
+            apps_v1.delete_namespaced_deployment(name=d.metadata.name, namespace=d.metadata.namespace)
+
+        # Delete all services (except kube-system)
+        services = v1.list_service_for_all_namespaces()
+        for s in services.items:
+            if s.metadata.namespace != "kube-system":
+                v1.delete_namespaced_service(name=s.metadata.name, namespace=s.metadata.namespace)
+
+        # Delete all pods (except kube-system)
+        pods = v1.list_pod_for_all_namespaces()
+        for p in pods.items:
+            if p.metadata.namespace != "kube-system":
+                v1.delete_namespaced_pod(name=p.metadata.name, namespace=p.metadata.namespace)
+
+        # Delete all ingresses
+        ingresses = networking_v1.list_ingress_for_all_namespaces()
+        for ing in ingresses.items:
+            networking_v1.delete_namespaced_ingress(name=ing.metadata.name, namespace=ing.metadata.namespace)
+
+        return {"message": "Cluster cleaned (all resources deleted except kube-system)."}
     except Exception as e:
         return {"error": str(e)}
