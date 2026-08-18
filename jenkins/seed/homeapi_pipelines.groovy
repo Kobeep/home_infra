@@ -1,3 +1,51 @@
+pipelineJob('k3s-api-trigger') {
+    description('Allows executing a specific API endpoint on the home-api service running in the k3s cluster. Useful for triggering actions like rollouts or pod restarts.')
+
+    environmentVariables {
+        env('IPaddress', getJenkinsHostIp())
+    }
+    parameters {
+        checkboxParam('Pod', false, 'Action will be triggered on a specific pod.')
+        checkboxParam('Deployment', false, 'Action will be triggered on a specific deployment.')
+        checkboxParam('Cluster', false, 'Action will be triggered on the entire cluster.')
+        if ((params.Deployment)) {
+            stringParam('DeploymentName', '', 'The name of the deployment to trigger the action on.')
+            choiceParam("Action", ["kill", "rollout", "scale"], "Pick the action to perform.")
+            stringParam('Namespace', '', 'Optional namespace override, e.g. default. Leave empty to use the default namespace.')
+        }
+        if ((params.Pod)) {
+            stringParam('PodName', '', 'The name of the pod to trigger the action on.')
+            choiceParam("Action", ["kill", "exec"], "Pick the action to perform.")
+            stringParam('Namespace', '', 'Optional namespace override, e.g. default. Leave empty to use the default namespace.')
+        }
+        if ((params.Cluster)) {
+            choiceParam("Action", ["clean-cluster"], "Pick the action to perform.")
+        }
+    }
+    environmentVariables {
+        env('IPaddress', getJenkinsHostIp())
+    }
+
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url('https://github.com/Kobeep/home_infra.git')
+                    }
+                    branches('*/main')
+                }
+            }
+            scriptPath('jenkins/pipelines/k3s-api-trigger.Jenkinsfile')
+            lightweight(true)
+        }
+    }
+
+    logRotator {
+        numToKeep(30)
+    }
+}
+
 pipelineJob('infra-api-build') {
     description('Build/test/publish pipeline for the infra-api project (homelab-api).')
 
