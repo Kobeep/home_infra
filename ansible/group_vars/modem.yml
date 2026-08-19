@@ -1,0 +1,6 @@
+# group_vars for 'modem' — shared defaults for every host in this group.
+# For a host that needs different settings than the rest of the group,
+# use ansible/host_vars/<hostname>.yml instead — it takes priority over
+# this file for that one host.
+# ansible_user: someuser
+# ansible_ssh_private_key_file: ~/.ssh/id_rsa

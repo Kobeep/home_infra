@@ -1,0 +1,7 @@
+# host_vars for 'iphone' (group: phone, ip: 192.168.1.18)
+# These override ansible/group_vars/phone.yml for this host only.
+# Uncomment and set whatever differs for this specific machine:
+#
+# ansible_user: someuser
+# ansible_ssh_private_key_file: ~/.ssh/id_rsa
+# ansible_port: 22

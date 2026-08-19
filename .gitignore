@@ -1,8 +1,6 @@
 old-configs/
 old-roles/
 old-inventories/
-ansible/group_vars/
-ansible/host_vars/
 inventory.yml.bak*
 inventory.yml
 ansible/.host_state.tsv
