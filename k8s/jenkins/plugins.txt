@@ -51,3 +51,4 @@ blueocean-display-url
 pipeline-build-step
 pipeline-milestone-step
 pipeline-stage-view
+envinject
