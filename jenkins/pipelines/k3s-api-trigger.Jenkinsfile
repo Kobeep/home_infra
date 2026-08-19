@@ -52,7 +52,17 @@ spec:
 
         stage('Run API Trigger') {
             steps {
-                banner("Triggering action ${params.Action} on ${if (params.DeploymentName) {echo "deployment " + params.DeploymentName } elif { echo "pod " + params.PodName } else { echo "cluster" }} in namespace ${params.Namespace}", '33')
+                script {
+                    def targetInfo = ""
+                    if (params.DeploymentName) {
+                        targetInfo = "deployment ${params.DeploymentName}"
+                    } else if (params.PodName) {
+                        targetInfo = "pod ${params.PodName}"
+                    } else {
+                        targetInfo = "cluster"
+                    }
+                    banner("Triggering action ${params.Action} on ${targetInfo} in namespace ${params.Namespace}", '33')
+                }
                 sh '''
                     #!/bin/bash
                     set -euo pipefail

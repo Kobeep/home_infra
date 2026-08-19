@@ -4,26 +4,13 @@ pipelineJob('k3s-api-trigger') {
     environmentVariables {
         env('IPaddress', getJenkinsHostIp())
     }
+
     parameters {
-        checkboxParam('Pod', false, 'Action will be triggered on a specific pod.')
-        checkboxParam('Deployment', false, 'Action will be triggered on a specific deployment.')
-        checkboxParam('Cluster', false, 'Action will be triggered on the entire cluster.')
-        if ((params.Deployment)) {
-            stringParam('DeploymentName', '', 'The name of the deployment to trigger the action on.')
-            choiceParam("Action", ["kill", "rollout", "scale"], "Pick the action to perform.")
-            stringParam('Namespace', '', 'Optional namespace override, e.g. default. Leave empty to use the default namespace.')
-        }
-        if ((params.Pod)) {
-            stringParam('PodName', '', 'The name of the pod to trigger the action on.')
-            choiceParam("Action", ["kill", "exec"], "Pick the action to perform.")
-            stringParam('Namespace', '', 'Optional namespace override, e.g. default. Leave empty to use the default namespace.')
-        }
-        if ((params.Cluster)) {
-            choiceParam("Action", ["clean-cluster"], "Pick the action to perform.")
-        }
-    }
-    environmentVariables {
-        env('IPaddress', getJenkinsHostIp())
+        choiceParam('TargetType', ['Deployment', 'Pod', 'Cluster'], 'Select what type of resource to target.')
+        stringParam('DeploymentName', '', 'The name of the deployment to trigger the action on (if TargetType is Deployment).')
+        stringParam('PodName', '', 'The name of the pod to trigger the action on (if TargetType is Pod).')
+        choiceParam('Action', ['kill', 'rollout', 'scale', 'exec', 'clean-cluster'], 'Pick the action to perform.')
+        stringParam('Namespace', 'default', 'Optional namespace override.')
     }
 
     definition {
