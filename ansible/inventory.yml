@@ -2,6 +2,12 @@ all:
   children:
     infra:
       children:
+        server:
+          hosts:
+            ubuntu:
+              ansible_host: 192.168.1.16
+              ansible_user: server
+              ansible_ssh_private_key_file: ~/.ssh/server/id_rsa
         modem:
           hosts:
             funbox:

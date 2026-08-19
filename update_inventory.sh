@@ -14,7 +14,6 @@ HOST_VARS_DIR="$ANSIBLE_DIR/host_vars"
 DEFAULT_GROUP="server"
 PING_TIMEOUT=1
 
-# --- Fixed nesting: meta-group -> its leaf groups (in display order) ---
 declare -A META_CHILDREN=(
     [infra]="server modem"
     [clients]="pc phone other"
