@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 pipelineJob('k3s-api-trigger') {
     description('Allows executing a specific API endpoint on the home-api service running in the k3s cluster. Useful for triggering actions like rollouts or pod restarts.')
 
@@ -125,19 +127,20 @@ pipelineJob('home-api-get-checks') {
 }
 // call homeapi /api to get list of endpoints and add them to the ENDPOINTS parameter
 def getListOfApiEndpoints() {
-    def endpoints = []
-    def baseUrl = "https://api.${getJenkinsHostIp()}.nip.io/api"
-    def response = httpRequest(url: baseUrl, validResponseCodes: '200')
-    def jsonResponse = readJSON text: response.content
-    jsonResponse.each { endpoint ->
-        endpoints.add(endpoint.path)
-}
-    return endpoints
+    try {
+        def baseUrl = "https://api.${getJenkinsHostIp()}.nip.io/api"
+        def responseText = baseUrl.toURL().text
+        def jsonResponse = new JsonSlurper().parseText(responseText)
+        return jsonResponse.collect { it.path }
+    } catch (Exception e) {
+        println "Couldnt fetch endpoints: ${e.message}"
+        return []
+    }
 }
 
 // check hostname for jenkins to fetch the IP for the API URL
 def getJenkinsHostIp() {
-    def hostname = sh(script: 'hostname', returnStdout: true).trim()
-    def ipAddress = sh(script: "getent hosts ${hostname} | awk '{ print \$1 }'", returnStdout: true).trim()
-    return ipAddress
+    def hostname = "hostname".execute().text.trim()
+    def ipAddress = ["sh", "-c", "getent hosts ${hostname} | awk '{print \$1}'"].execute().text.trim()
+    return ipAddress ?: "127.0.0.1"
 }
