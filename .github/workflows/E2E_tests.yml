@@ -71,9 +71,10 @@ jobs:
 
       - name: Check for tracked secret files & raw private keys
         run: |
-          # Check if ansible/env.cfg is accidentally tracked in git
-          if git ls-files --error-unmatch ansible/env.cfg >/dev/null 2>&1; then
-            echo "ERROR: ansible/env.cfg is tracked in git repository!"
+          # Check if ansible/env.cfg is encrypted by ansible-vault
+          ansible-vault view ansible/env.cfg --vault-password-file ansible/vault_pass.txt
+          if [ $? -ne 0 ]; then
+            echo "ERROR: ansible/env.cfg is not encrypted by ansible-vault!"
             exit 1
           fi
 
