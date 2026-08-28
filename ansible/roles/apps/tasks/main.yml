@@ -1,584 +1,68 @@
 ---
-# Role: apps
-# Renders J2 templates, installs Ingress NGINX, cert-manager, and deploys all apps.
-
-# ── Environment for kubectl/helm calls ───────────────────────────────────────
-# We run all K8s commands as the server user so KUBECONFIG points to their home.
-- name: Set shared kubectl environment fact
-  ansible.builtin.set_fact:
-    kubectl_env:
-      KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
-
-# ── Render Jinja2 templates ───────────────────────────────────────────────────
-
-- name: Render ingress and config Jinja2 templates
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0644"
-  loop:
-    - src: "{{ home_infra_local_path }}/k8s/adguard/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/adguard/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/dashy/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/dashy/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/dashy/configmap.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/dashy/configmap.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/grafana/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/grafana/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/home-assistant/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/home-assistant/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/infra-api/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/infra-api/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/infra-api/deployment.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/infra-api/deployment.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/influxdb/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/influxdb/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/jenkins/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/jenkins/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/ingress-nginx/service-patch.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/ingress-nginx/service-patch.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/opengrok/deployment.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/opengrok/deployment.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/opengrok/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/opengrok/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/prometheus/ingress.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/prometheus/ingress.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/vault/values.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/vault/values.yaml"
-    - src: "{{ home_infra_local_path }}/k8s/harbor/values.yaml.j2"
-      dest: "{{ home_infra_remote_path }}/k8s/harbor/values.rendered.yaml"
-
-# ── Ingress NGINX ─────────────────────────────────────────────────────────────
-
-- name: Install Ingress NGINX Controller
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_ingress_nginx.sh {{ home_infra_remote_path }}/k8s/ingress-nginx/"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Wait for Ingress NGINX deployment to appear
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_ingress_controller.sh 12 10"
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-- name: Wait for Ingress NGINX controller pod to be ready
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh ingress-nginx 'app.kubernetes.io/component=controller' 180s"
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-# ── cert-manager ─────────────────────────────────────────────────────────────
-
-- name: Install cert-manager (add repo, apply CRDs, install via helm)
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/cert_manager_install.sh {{ cert_manager_version }}"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Wait for cert-manager webhook pods to be ready
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh cert-manager 'app.kubernetes.io/instance=cert-manager' 180s"
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-
-# ── GHCR image pull secret ────────────────────────────────────────────────────
-
-- name: Load encrypted env.cfg variables
-  ansible.builtin.include_vars:
-    file: "{{ home_infra_local_path }}/ansible/env.cfg"
-  no_log: true
-
-- name: Create ghcr-cred image pull secret in default namespace
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh ghcr-cred ghcr.io '{{ vault_github_username }}' '{{ vault_github_token }}' '{{ vault_github_email }}' default"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Detect whether Harbor credentials are configured
-  ansible.builtin.set_fact:
-    harbor_credentials_ready: >-
-      {{
-        (vault_harbor_my_username | default('') | length > 0)
-        and (vault_harbor_my_password | default('') | length > 0)
-        and (vault_harbor_jenkins_username | default('') | length > 0)
-        and (vault_harbor_jenkins_password | default('') | length > 0)
-      }}
-
-- name: Detect whether Harbor owner credentials are configured
-  ansible.builtin.set_fact:
-    harbor_owner_credentials_ready: >-
-      {{
-        (vault_harbor_my_username | default('') | length > 0)
-        and (vault_harbor_my_password | default('') | length > 0)
-      }}
-
-- name: Warn when Harbor credentials are missing
-  ansible.builtin.debug:
-    msg:
-      - "Harbor credentials are not fully configured; Harbor pull/push secrets and Jenkins Harbor credential patch will be skipped."
-      - "Define vault_harbor_my_username, vault_harbor_my_password, vault_harbor_jenkins_username, vault_harbor_jenkins_password in ansible/env.cfg to enable them."
-  when: not harbor_credentials_ready
-
-- name: Warn when Harbor owner credentials are missing
-  ansible.builtin.debug:
-    msg:
-      - "Harbor owner credentials are not configured; harbor-pull-cred cannot be created."
-      - "Define vault_harbor_my_username and vault_harbor_my_password in ansible/env.cfg to enable image pulls from Harbor."
-  when: not harbor_owner_credentials_ready
-
-
-# ── Deploy all application manifests ─────────────────────────────────────────
-- name: Ensure CA directory exists on remote server
-  ansible.builtin.file:
-    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca"
-    state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0700"
-
-- name: Check whether CA files exist on Ansible controller
-  become: false
-  delegate_to: localhost
-  ansible.builtin.stat:
-    path: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
-  loop:
-    - rootCA.crt
-    - rootCA.key
-  register: local_ca_files
-
-- name: Determine if controller CA files are complete
-  ansible.builtin.set_fact:
-    controller_ca_files_ready: >-
-      {{
-        (local_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
-      }}
-
-- name: Copy CA certificate and key from controller to server when available
-  ansible.builtin.copy:
-    src: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
-    dest: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0600"
-  loop:
-    - rootCA.crt
-    - rootCA.key
-  when: controller_ca_files_ready
-
-- name: Check whether remote CA files already exist
-  ansible.builtin.stat:
-    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
-  loop:
-    - rootCA.crt
-    - rootCA.key
-  register: remote_ca_files
-  when: not controller_ca_files_ready
-
-- name: Determine if remote CA files are complete
-  ansible.builtin.set_fact:
-    remote_ca_files_ready: >-
-      {{
-        (remote_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
-      }}
-  when: not controller_ca_files_ready
-
-- name: Generate local CA keypair on remote server when controller files are missing
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/generate_ca.sh {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
-  when:
-    - not controller_ca_files_ready
-    - not remote_ca_files_ready
-
-- name: Warn when CA files are generated on remote server
-  ansible.builtin.debug:
-    msg:
-      - "CA files were not found on the Ansible controller; generated a new local CA on the remote server."
-      - "If you want stable TLS across fresh controllers, persist k8s/cert-manager/ca/rootCA.crt and rootCA.key in a secure secret store."
-  when:
-    - not controller_ca_files_ready
-    - not remote_ca_files_ready
-
-- name: Install homelab root CA in system trust store for container runtime
-  become: true
-  ansible.builtin.copy:
-    src: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
-    remote_src: true
-    dest: /usr/local/share/ca-certificates/homelab-root-ca.crt
-    owner: root
-    group: root
-    mode: "0644"
-
-- name: Update system CA certificates
-  become: true
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/update_ca_certificates.sh"
-  register: update_ca_result
-  changed_when: "'0 added, 0 removed; done.' not in update_ca_result.stdout"
-
-- name: Configure K3s containerd trust for Harbor registry
-  become: true
-  ansible.builtin.copy:
-    dest: /etc/rancher/k3s/registries.yaml
-    owner: root
-    group: root
-    mode: "0644"
-    content: |
-      mirrors:
-        "{{ harbor_host }}":
-          endpoint:
-            - "https://{{ harbor_host }}"
-      configs:
-        "{{ harbor_host }}":
-          tls:
-            ca_file: "/usr/local/share/ca-certificates/homelab-root-ca.crt"
-  register: k3s_registries_config
-
-- name: Restart K3s when registry trust config changed
-  become: true
-  ansible.builtin.systemd:
-    name: k3s
-    state: restarted
-  when: k3s_registries_config.changed
-
-- name: Wait for K3s node to become Ready after restart
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_nodes_ready.sh 180s"
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-  when: k3s_registries_config.changed
-
-- name: Deploy all K8s application manifests via Kustomize
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/apply_kustomize.sh {{ home_infra_remote_path }}/k8s/"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Verify Jenkins namespace exists before creating provider-backed credentials
-  become: false
-  ansible.builtin.command: kubectl get namespace jenkins
-  environment: "{{ kubectl_env }}"
-  register: jenkins_namespace_check
-  retries: 20
-  delay: 3
-  until: jenkins_namespace_check.rc == 0
-  failed_when: jenkins_namespace_check.rc != 0
-
-- name: Create harbor-pull-cred image pull secret in app namespaces
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh harbor-pull-cred '{{ harbor_host }}' '{{ vault_harbor_my_username }}' '{{ vault_harbor_my_password }}' '{{ vault_github_email }}' {{ item }}"
-  loop:
-    - default
-    - api
-    - jenkins
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_owner_credentials_ready
-
-- name: Create harbor-jenkins-cred secret in jenkins namespace
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh harbor-jenkins-cred '{{ harbor_host }}' '{{ vault_harbor_jenkins_username }}' '{{ vault_harbor_jenkins_password }}' '{{ vault_github_email }}' jenkins"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_credentials_ready
-
-- name: Wait for default ServiceAccount in app namespaces
-  become: false
-  ansible.builtin.command: kubectl -n {{ item }} get sa default
-  register: sa_check
-  retries: 30
-  delay: 2
-  until: sa_check.rc == 0
-  loop:
-    - default
-    - api
-    - jenkins
-  environment: "{{ kubectl_env }}"
-
-- name: Attach harbor-pull-cred to default ServiceAccounts
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/attach_imagepullsecret.sh harbor-pull-cred {{ item }}"
-  loop:
-    - default
-    - api
-    - jenkins
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_owner_credentials_ready
-
-- name: Patch jenkins-secrets with Harbor routing config (non-secret)
-  become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh '{{ {\"stringData\": {\"harbor-project-name\": harbor_project_name, \"harbor-host\": harbor_host, \"harbor-repository-name\": harbor_repository_name }} | to_json }}'"
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Create Harbor owner Jenkins credential via Kubernetes secret provider
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -euo pipefail
-      kubectl -n jenkins create secret generic harbor-my-creds \
-        --from-literal=username="{{ vault_harbor_my_username }}" \
-        --from-literal=password="{{ vault_harbor_my_password }}" \
-        --dry-run=client -o yaml | kubectl apply -f -
-      kubectl -n jenkins label secret harbor-my-creds jenkins.io/credentials-type=usernamePassword jenkins.io/credentials-scope=global --overwrite
-      kubectl -n jenkins annotate secret harbor-my-creds jenkins.io/credentials-description="Harbor owner credentials for Jenkins" --overwrite
-    executable: /bin/bash
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_owner_credentials_ready
-
-
-- name: Create Harbor Jenkins credential via Kubernetes secret provider
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -euo pipefail
-      kubectl -n jenkins create secret generic harbor-jenkins-creds \
-        --from-literal=username="{{ vault_harbor_jenkins_username }}" \
-        --from-literal=password="{{ vault_harbor_jenkins_password }}" \
-        --dry-run=client -o yaml | kubectl apply -f -
-      kubectl -n jenkins label secret harbor-jenkins-creds jenkins.io/credentials-type=usernamePassword jenkins.io/credentials-scope=global --overwrite
-      kubectl -n jenkins annotate secret harbor-jenkins-creds jenkins.io/credentials-description="Harbor Jenkins robot account" --overwrite
-    executable: /bin/bash
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: harbor_credentials_ready
-
-- name: Detect whether Jenkins SSH and Vault credentials are configured
-  ansible.builtin.set_fact:
-    jenkins_ci_credentials_ready: >-
-      {{
-        (vault_server_ssh_password | default('') | length > 0)
-        and (vault_ansible_vault_password | default('') | length > 0)
-      }}
-
-- name: Warn when Jenkins SSH/Vault credentials are missing
-  ansible.builtin.debug:
-    msg:
-      - "Jenkins CI credentials are not fully configured; serwer-ssh-password and ansible-vault-password will not be created as Kubernetes-backed Jenkins credentials."
-      - "Define vault_server_ssh_password and vault_ansible_vault_password in ansible/env.cfg to enable automatic Jenkins credential provisioning."
-  when: not jenkins_ci_credentials_ready
-
-- name: Create SSH password credential via Kubernetes secret provider
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -euo pipefail
-      kubectl -n jenkins create secret generic serwer-ssh-password \
-        --from-literal=text="{{ vault_server_ssh_password }}" \
-        --dry-run=client -o yaml | kubectl apply -f -
-      kubectl -n jenkins label secret serwer-ssh-password jenkins.io/credentials-type=secretText jenkins.io/credentials-scope=global --overwrite
-      kubectl -n jenkins annotate secret serwer-ssh-password jenkins.io/credentials-description="SSH password for the remote Ansible server" --overwrite
-    executable: /bin/bash
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: jenkins_ci_credentials_ready
-
-- name: Create Ansible Vault password credential via Kubernetes secret provider
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -euo pipefail
-      kubectl -n jenkins create secret generic ansible-vault-password \
-        --from-literal=text="{{ vault_ansible_vault_password }}" \
-        --dry-run=client -o yaml | kubectl apply -f -
-      kubectl -n jenkins label secret ansible-vault-password jenkins.io/credentials-type=secretText jenkins.io/credentials-scope=global --overwrite
-      kubectl -n jenkins annotate secret ansible-vault-password jenkins.io/credentials-description="Ansible Vault password for Jenkins pipelines" --overwrite
-    executable: /bin/bash
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-  when: jenkins_ci_credentials_ready
-
-# ── HashiCorp Vault ───────────────────────────────────────────────────────────
-
-- name: Add HashiCorp Helm repository
-  become: false
-  ansible.builtin.command:
-    cmd: helm repo add hashicorp https://helm.releases.hashicorp.com
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-  failed_when: false
-
-- name: Update Helm repositories (post HashiCorp add)
-  become: false
-  ansible.builtin.command:
-    cmd: helm repo update
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-- name: Install HashiCorp Vault via Helm
-  become: false
-  ansible.builtin.command:
-    cmd: >
-      helm upgrade --install vault hashicorp/vault
-      --namespace vault
-      -f {{ home_infra_remote_path }}/k8s/vault/values.yaml
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-# ── Harbor ────────────────────────────────────────────────────────────────────
-
-- name: Install Harbor via local Helm chart
-  become: false
-  ansible.builtin.command:
-    cmd: >
-      helm upgrade --install harbor {{ home_infra_remote_path }}/k8s/harbor
-      --namespace harbor
-      --create-namespace
-      -f {{ home_infra_remote_path }}/k8s/harbor/values.rendered.yaml
-      --timeout 15m0s
-  environment: "{{ kubectl_env }}"
-  changed_when: true
-
-- name: Bootstrap Harbor user and project
-  become: false
-  ansible.builtin.shell:
-    cmd: |
-      set -eu
-
-      HARBOR_HOST="{{ harbor_host }}"
-      PROJECT_NAME="{{ harbor_project_name }}"
-      HARBOR_USER="{{ vault_harbor_my_username }}"
-      HARBOR_PASS="{{ vault_harbor_my_password }}"
-      HARBOR_EMAIL="{{ vault_github_email | default('kobeep@local.invalid') }}"
-      ADMIN_PASS="$(kubectl -n harbor get secret harbor-core -o jsonpath='{.data.HARBOR_ADMIN_PASSWORD}' | base64 --decode)"
-
-      for _ in $(seq 1 30); do
-        code="$(curl -ks -o /dev/null -w '%{http_code}' -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/projects")"
-        if [ "$code" = "200" ]; then
-          break
-        fi
-        sleep 5
-      done
-
-      user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${HARBOR_USER}")"
-      user_id="$(printf '%s' "$user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
-
-      if [ -z "$user_id" ]; then
-        create_user_code="$(curl -ks -o /tmp/harbor_user_create.out -w '%{http_code}' \
-          -u "admin:${ADMIN_PASS}" \
-          -H 'Content-Type: application/json' \
-          -X POST "https://${HARBOR_HOST}/api/v2.0/users" \
-          -d "{\"username\":\"${HARBOR_USER}\",\"password\":\"${HARBOR_PASS}\",\"realname\":\"Kobeep\",\"email\":\"${HARBOR_EMAIL}\",\"comment\":\"home_infra owner\"}")"
-        if [ "$create_user_code" != "201" ] && [ "$create_user_code" != "409" ]; then
-          cat /tmp/harbor_user_create.out
-          exit 1
-        fi
-        user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${HARBOR_USER}")"
-        user_id="$(printf '%s' "$user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
-      fi
-
-      project_code="$(curl -ks -o /dev/null -w '%{http_code}' -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/projects/${PROJECT_NAME}")"
-      if [ "$project_code" = "404" ]; then
-        create_project_code="$(curl -ks -o /tmp/harbor_project_create.out -w '%{http_code}' \
-          -u "admin:${ADMIN_PASS}" \
-          -H 'Content-Type: application/json' \
-          -X POST "https://${HARBOR_HOST}/api/v2.0/projects" \
-          -d "{\"project_name\":\"${PROJECT_NAME}\",\"metadata\":{\"public\":\"false\"}}")"
-        if [ "$create_project_code" != "201" ] && [ "$create_project_code" != "409" ]; then
-          cat /tmp/harbor_project_create.out
-          exit 1
-        fi
-      fi
-
-      project_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/projects?name=${PROJECT_NAME}")"
-      project_id="$(printf '%s' "$project_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["project_id"] if d else "")')"
-      if [ -z "$project_id" ] || [ -z "$user_id" ]; then
-        echo "ERROR: Unable to resolve Harbor project_id/user_id during bootstrap"
-        exit 1
-      fi
-
-      # Ensure owner is a member (Developer role_id 2)
-      member_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/projects/${project_id}/members?page_size=100")"
-      member_exists_owner="$(printf '%s' "$member_json" | python3 -c 'import sys, json; user=sys.argv[1]; d=json.load(sys.stdin); print("yes" if any((x.get("entity_name") == user) for x in d) else "no")' "$HARBOR_USER")"
-      if [ "$member_exists_owner" = "no" ]; then
-        add_member_code="$(curl -ks -o /tmp/harbor_member_add.out -w '%{http_code}' \
-          -u "admin:${ADMIN_PASS}" \
-          -H 'Content-Type: application/json' \
-          -X POST "https://${HARBOR_HOST}/api/v2.0/projects/${project_id}/members" \
-          -d "{\"role_id\":2,\"member_user\":{\"user_id\":${user_id}}}")"
-        if [ "$add_member_code" != "201" ] && [ "$add_member_code" != "409" ]; then
-          cat /tmp/harbor_member_add.out
-          exit 1
-        fi
-      fi
-
-      # Ensure Jenkins robot user exists and is added as Developer
-      JEN_USER="{{ vault_harbor_jenkins_username }}"
-      JEN_PASS="{{ vault_harbor_jenkins_password }}"
-      jen_user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${JEN_USER}")"
-      jen_user_id="$(printf '%s' "$jen_user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
-      if [ -z "$jen_user_id" ]; then
-        create_jen_user_code="$(curl -ks -o /tmp/harbor_jen_user_create.out -w '%{http_code}' \
-          -u "admin:${ADMIN_PASS}" \
-          -H 'Content-Type: application/json' \
-          -X POST "https://${HARBOR_HOST}/api/v2.0/users" \
-          -d "{\"username\":\"${JEN_USER}\",\"password\":\"${JEN_PASS}\",\"realname\":\"jenkins\",\"email\":\"jenkins@local.invalid\"}")"
-        if [ "$create_jen_user_code" != "201" ] && [ "$create_jen_user_code" != "409" ]; then
-          cat /tmp/harbor_jen_user_create.out
-          exit 1
-        fi
-        jen_user_json="$(curl -ks -u "admin:${ADMIN_PASS}" "https://${HARBOR_HOST}/api/v2.0/users/search?username=${JEN_USER}")"
-        jen_user_id="$(printf '%s' "$jen_user_json" | python3 -c 'import sys, json; d=json.load(sys.stdin); print(d[0]["user_id"] if d else "")')"
-      fi
-
-      if [ -z "$jen_user_id" ]; then
-        echo "ERROR: Unable to resolve Jenkins robot user id"
-        exit 1
-      fi
-
-      member_exists_jen="$(printf '%s' "$member_json" | python3 -c 'import sys, json; user=sys.argv[1]; d=json.load(sys.stdin); print("yes" if any((x.get("entity_name") == user) for x in d) else "no")' "$JEN_USER")"
-      if [ "$member_exists_jen" = "no" ]; then
-        add_member_code="$(curl -ks -o /tmp/harbor_member_add_jenkins.out -w '%{http_code}' \
-          -u "admin:${ADMIN_PASS}" \
-          -H 'Content-Type: application/json' \
-          -X POST "https://${HARBOR_HOST}/api/v2.0/projects/${project_id}/members" \
-          -d "{\"role_id\":2,\"member_user\":{\"user_id\":${jen_user_id}}}")"
-        if [ "$add_member_code" != "201" ] && [ "$add_member_code" != "409" ]; then
-          cat /tmp/harbor_member_add_jenkins.out
-          exit 1
-        fi
-      fi
-  environment: "{{ kubectl_env }}"
-  no_log: true
-  changed_when: true
-  when: harbor_owner_credentials_ready
-
-- name: Warn when Harbor project bootstrap is skipped
-  ansible.builtin.debug:
-    msg:
-      - "Harbor user/project bootstrap was skipped because owner credentials are incomplete."
-      - "Define vault_harbor_my_username and vault_harbor_my_password in ansible/env.cfg."
-  when: not harbor_owner_credentials_ready
-
-# ── External Secrets Operator ─────────────────────────────────────────────────
-
-- name: Add External Secrets Helm repository
-  become: false
-  ansible.builtin.command:
-    cmd: helm repo add external-secrets https://charts.external-secrets.io
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-  failed_when: false
-
-- name: Update Helm repositories (post ESO add)
-  become: false
-  ansible.builtin.command:
-    cmd: helm repo update
-  environment: "{{ kubectl_env }}"
-  changed_when: false
-
-- name: Install External Secrets Operator via Helm
-  become: false
-  ansible.builtin.command:
-    cmd: >
-      helm upgrade --install external-secrets external-secrets/external-secrets
-      -n external-secrets
-      --create-namespace
-      --version {{ external_secrets_version }}
-      --set installCRDs=true
-  environment: "{{ kubectl_env }}"
-  changed_when: true
+# Meta-role: apps
+# Triggers individual service and application roles for backward compatibility.
+
+- name: Setup GHCR image pull secret
+  ansible.builtin.include_role:
+    name: ghcr_secret
+  tags: [apps, secrets, ghcr]
+
+- name: Deploy Ingress NGINX controller
+  ansible.builtin.include_role:
+    name: ingress_nginx
+  tags: [apps, ingress]
+
+- name: Deploy cert-manager
+  ansible.builtin.include_role:
+    name: cert_manager
+  tags: [apps, cert-manager]
+
+- name: Deploy External Secrets Operator
+  ansible.builtin.include_role:
+    name: external_secrets
+  tags: [apps, external-secrets]
+
+- name: Deploy HashiCorp Vault
+  ansible.builtin.include_role:
+    name: vault
+  tags: [apps, vault]
+
+- name: Deploy Harbor
+  ansible.builtin.include_role:
+    name: harbor
+  tags: [apps, harbor]
+
+- name: Deploy Jenkins
+  ansible.builtin.include_role:
+    name: jenkins
+  tags: [apps, jenkins]
+
+- name: Deploy AdGuard Home
+  ansible.builtin.include_role:
+    name: adguard
+  tags: [apps, adguard]
+
+- name: Deploy Dashy dashboard
+  ansible.builtin.include_role:
+    name: dashy
+  tags: [apps, dashy]
+
+- name: Deploy Home Assistant
+  ansible.builtin.include_role:
+    name: home_assistant
+  tags: [apps, home_assistant]
+
+- name: Deploy Homelab API
+  ansible.builtin.include_role:
+    name: infra_api
+  tags: [apps, infra_api]
+
+- name: Deploy Monitoring stack (Grafana, InfluxDB, Prometheus)
+  ansible.builtin.include_role:
+    name: monitoring
+  tags: [apps, monitoring]
+
+- name: Deploy OpenGrok
+  ansible.builtin.include_role:
+    name: opengrok
+  tags: [apps, opengrok]

@@ -1,0 +1,109 @@
+name: E2E Tests & Validation
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ansible-syntax-check:
+    name: Ansible Playbooks Syntax Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Run Ansible Syntax Checks
+        run: |
+          ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml --syntax-check
+          ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i ansible/inventory.yml ansible/playbooks/provision-cluster.yml --syntax-check
+          ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i ansible/inventory.yml ansible/playbooks/deploy-apps.yml --syntax-check
+          ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i ansible/inventory.yml ansible/playbooks/site.yml --syntax-check
+          for f in ansible/playbooks/apps/*.yml; do
+            echo "Checking $f"
+            ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i ansible/inventory.yml "$f" --syntax-check
+          done
+
+  lint-yaml:
+    name: Lint YAML Files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install yamllint
+        run: |
+          python -m pip install --upgrade pip
+          pip install yamllint
+
+      - name: Run yamllint
+        run: |
+          yamllint -c .yamllint k8s/ ansible/
+
+  secrets-check:
+    name: Security & Secrets Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for tracked secret files & raw private keys
+        run: |
+          # Check if ansible/env.cfg is accidentally tracked in git
+          if git ls-files --error-unmatch ansible/env.cfg >/dev/null 2>&1; then
+            echo "ERROR: ansible/env.cfg is tracked in git repository!"
+            exit 1
+          fi
+
+          # Check for committed RSA/EC private keys
+          if grep -r "BEGIN.*PRIVATE KEY" . --exclude-dir=.git; then
+            echo "ERROR: Private key found in repository!"
+            exit 1
+          fi
+          echo "No tracked secrets or unencrypted private keys found."
+
+  run-cluster-setup:
+    name: Run Cluster Setup Playbook
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Run Ansible Playbook
+        run: |
+          cd ansible/playbooks
+          ansible-playbook -i localhost provision-cluster.yml

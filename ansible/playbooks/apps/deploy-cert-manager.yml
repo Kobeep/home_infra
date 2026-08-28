@@ -1,0 +1,6 @@
+---
+- name: Deploy cert-manager & CA Trust
+  hosts: server
+  become: true
+  roles:
+    - role: cert_manager

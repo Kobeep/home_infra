@@ -1,0 +1,6 @@
+---
+- name: Deploy Ingress NGINX Controller
+  hosts: server
+  become: true
+  roles:
+    - role: ingress_nginx

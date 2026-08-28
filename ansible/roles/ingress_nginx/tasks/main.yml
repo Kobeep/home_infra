@@ -1,0 +1,29 @@
+---
+# Role: ingress_nginx
+# Installs and configures Ingress NGINX controller.
+
+- name: Render Ingress NGINX service patch template
+  ansible.builtin.template:
+    src: "{{ home_infra_local_path }}/k8s/ingress-nginx/service-patch.yaml.j2"
+    dest: "{{ home_infra_remote_path }}/k8s/ingress-nginx/service-patch.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Install Ingress NGINX Controller
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_ingress_nginx.sh {{ home_infra_remote_path }}/k8s/ingress-nginx/"
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Wait for Ingress NGINX deployment to appear
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_ingress_controller.sh 12 10"
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Wait for Ingress NGINX controller pod to be ready
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh ingress-nginx 'app.kubernetes.io/component=controller' 180s"
+  environment: "{{ kubectl_env }}"
+  changed_when: false

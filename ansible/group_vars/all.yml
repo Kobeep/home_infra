@@ -7,8 +7,12 @@ k3s_version: "v1.28.5+k3s1"
 
 server_ip: "{{ ansible_default_ipv4.address }}"
 
+# ── Environment for kubectl/helm calls ───────────────────────────────────────
+kubectl_env:
+  KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
+
 # ── Paths ─────────────────────────────────────────────────────────────────────
-home_infra_local_path: "{{ playbook_dir | dirname | dirname }}"
+home_infra_local_path: "{{ inventory_dir | dirname if (inventory_dir is defined and inventory_dir) else (playbook_dir.split('/ansible')[0]) }}"
 home_infra_remote_path: "/home/{{ ansible_user }}/home_infra"
 opengrok_repo_path: "/home/{{ ansible_user }}/home_infra"
 

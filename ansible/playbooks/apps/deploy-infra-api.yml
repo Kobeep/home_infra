@@ -1,0 +1,6 @@
+---
+- name: Deploy Homelab API
+  hosts: server
+  become: true
+  roles:
+    - role: infra_api

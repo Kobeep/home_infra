@@ -1,0 +1,22 @@
+---
+# Role: dashy
+# Deploys Dashy dashboard application manifests via Kustomize.
+
+- name: Render Dashy Jinja2 templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - src: "{{ home_infra_local_path }}/k8s/dashy/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/dashy/ingress.yaml"
+    - src: "{{ home_infra_local_path }}/k8s/dashy/configmap.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/dashy/configmap.yaml"
+
+- name: Deploy Dashy K8s manifests via Kustomize
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/apply_kustomize.sh {{ home_infra_remote_path }}/k8s/dashy"
+  environment: "{{ kubectl_env }}"
+  changed_when: true

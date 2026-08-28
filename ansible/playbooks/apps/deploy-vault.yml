@@ -1,0 +1,6 @@
+---
+- name: Deploy HashiCorp Vault
+  hosts: server
+  become: true
+  roles:
+    - role: vault

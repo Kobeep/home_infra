@@ -1,0 +1,6 @@
+---
+- name: Deploy AdGuard Home
+  hosts: server
+  become: true
+  roles:
+    - role: adguard

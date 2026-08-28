@@ -21,6 +21,15 @@ if [ -z "$names" ]; then
   exit 1
 fi
 
+# Wait for pod creation by Kubernetes controller manager
+for i in $(seq 1 30); do
+  pods=$(kubectl get pod -n "$NAMESPACE" -l "$POD_SELECTOR" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || true)
+  if [ -n "$pods" ]; then
+    break
+  fi
+  sleep 2
+done
+
 # Wait for controller pod ready
 if ! kubectl wait --namespace "$NAMESPACE" --for=condition=ready pod --selector="$POD_SELECTOR" --timeout=180s; then
   echo "INFO =>: **Ingress NGINX controller pod did not become ready within timeout**" >&2

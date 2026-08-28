@@ -1,0 +1,6 @@
+---
+- name: Deploy Home Assistant
+  hosts: server
+  become: true
+  roles:
+    - role: home_assistant
