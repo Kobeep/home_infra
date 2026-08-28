@@ -1,0 +1,6 @@
+---
+- name: Deploy OpenGrok
+  hosts: server
+  become: true
+  roles:
+    - role: opengrok

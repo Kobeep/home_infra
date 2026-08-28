@@ -1,0 +1,37 @@
+---
+# Role: vault
+# Renders HashiCorp Vault values template and installs Vault via Helm.
+
+- name: Render Vault Jinja2 template
+  ansible.builtin.template:
+    src: "{{ home_infra_local_path }}/k8s/vault/values.yaml.j2"
+    dest: "{{ home_infra_remote_path }}/k8s/vault/values.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Add HashiCorp Helm repository
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo add hashicorp https://helm.releases.hashicorp.com
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  failed_when: false
+
+- name: Update Helm repositories (post HashiCorp add)
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo update
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Install HashiCorp Vault via Helm
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install vault hashicorp/vault
+      --namespace vault
+      --create-namespace
+      -f {{ home_infra_remote_path }}/k8s/vault/values.yaml
+  environment: "{{ kubectl_env }}"
+  changed_when: true

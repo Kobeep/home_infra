@@ -1,0 +1,17 @@
+---
+# Role: home_assistant
+# Deploys Home Assistant application manifests via Kustomize.
+
+- name: Render Home Assistant ingress Jinja2 template
+  ansible.builtin.template:
+    src: "{{ home_infra_local_path }}/k8s/home-assistant/ingress.yaml.j2"
+    dest: "{{ home_infra_remote_path }}/k8s/home-assistant/ingress.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Deploy Home Assistant K8s manifests via Kustomize
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/apply_kustomize.sh {{ home_infra_remote_path }}/k8s/home-assistant"
+  environment: "{{ kubectl_env }}"
+  changed_when: true

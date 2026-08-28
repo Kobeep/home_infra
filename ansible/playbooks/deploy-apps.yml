@@ -1,0 +1,66 @@
+---
+# Home Lab - Applications & Services Deployment Playbook
+# Deploys platform services (Harbor, Vault, Jenkins) and workload applications to K3s cluster.
+
+- name: Deploy Applications & Platform Services
+  hosts: server
+  become: true
+
+  pre_tasks:
+    - name: Ensure local-path-retain StorageClass exists
+      become: false
+      ansible.builtin.command: kubectl apply -f {{ home_infra_remote_path }}/k8s/local-path-retain.yaml
+      environment: "{{ kubectl_env }}"
+      changed_when: false
+
+  roles:
+    - role: ghcr_secret
+      tags: [apps, secrets, ghcr]
+    - role: vault
+      tags: [apps, vault]
+    - role: harbor
+      tags: [apps, harbor]
+    - role: jenkins
+      tags: [apps, jenkins]
+    - role: adguard
+      tags: [apps, adguard]
+    - role: dashy
+      tags: [apps, dashy]
+    - role: home_assistant
+      tags: [apps, home_assistant]
+    - role: infra_api
+      tags: [apps, infra_api]
+    - role: monitoring
+      tags: [apps, monitoring]
+    - role: opengrok
+      tags: [apps, opengrok]
+
+  post_tasks:
+    - name: Display Application Access Information
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Application Deployment Complete!"
+          - "=========================================="
+          - ""
+          - "Server IP: {{ server_ip }}"
+          - ""
+          - "🌐 Access your services:"
+          - "  🏠 Dashy:          https://dashy.{{ server_ip }}.nip.io"
+          - "  🔧 Jenkins:        https://jenkins.{{ server_ip }}.nip.io"
+          - "  🏡 Home Assistant: https://ha.{{ server_ip }}.nip.io"
+          - "  📊 Grafana:        https://grafana.{{ server_ip }}.nip.io"
+          - "  📈 Prometheus:     https://prometheus.{{ server_ip }}.nip.io"
+          - "  🛡️  AdGuard:        https://adguard.{{ server_ip }}.nip.io"
+          - "  💾 InfluxDB:       https://influxdb.{{ server_ip }}.nip.io"
+          - "  🔐 Vault:          https://vault.{{ server_ip }}.nip.io"
+          - "  📦 Harbor:         https://harbor.{{ server_ip }}.nip.io"
+          - "  🔍 API:            https://api.{{ server_ip }}.nip.io"
+          - "  📚 OpenGrok:       https://opengrok.{{ server_ip }}.nip.io"
+          - ""
+          - "💡 Notes:"
+          - "  • All kubectl commands can be run as the '{{ ansible_user }}' user"
+          - "  • Vault must be manually initialized after first deploy:"
+          - "    kubectl exec -it vault-0 -n vault -- vault operator init"
+          - ""
+          - "=========================================="

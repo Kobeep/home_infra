@@ -1,36 +1,59 @@
-
 Home Infra — infrastructure repository
 =====================================
 
 This README provides a concise, practical guide to run and maintain the infrastructure managed by this repository.
 
 Key principles
-- Ansible orchestrates configuration, file copies and permissions.
-- Procedural shell actions are implemented as bash scripts in `ansible/scripts/` (idempotent where possible). Scripts emit errors and warnings in the format: "INFO =>: **...**".
-- Global variables live in `ansible/group_vars/all.yml`; each role provides sensible defaults in `ansible/roles/*/defaults/main.yml`.
+- **Decoupled Architecture**: K3s cluster provisioning and node setup (`provision-cluster.yml`) are completely separated from application and platform service deployments (`deploy-apps.yml`).
+- **Modular Roles**: Each platform service (`harbor`, `vault`, `jenkins`) and application workload (`adguard`, `dashy`, `home_assistant`, `infra_api`, `monitoring`, `opengrok`) is implemented as an independent Ansible role.
+- **Ansible Orchestration**: Ansible handles configuration, templating, permissions, and deployment execution.
+- Global variables live in `ansible/group_vars/all.yml`.
 
 Requirements
 - Controller: Python 3, Ansible (compatible version), curl, ripgrep (`rg`) recommended for scans.
 - Target hosts: standard tooling as required (curl, openssl, docker, kubectl/helm when applicable).
 
 Repository layout (selected)
-- `ansible/` — playbooks, inventory and `group_vars`
-- `ansible/roles/` — Ansible roles with defaults in `defaults/`
-- `ansible/scripts/` — bash scripts for procedural operations (callable from playbooks or run manually)
+- `ansible/` — playbooks, inventory, roles, and `group_vars`
+  - `playbooks/provision-cluster.yml` — K3s cluster installation & core infrastructure controllers
+  - `playbooks/deploy-apps.yml` — Application and platform service deployments
+  - `playbooks/full-setup.yml` / `site.yml` — Master entrypoint running cluster provisioning and app deployments
+  - `playbooks/apps/` — Targeted single-service deployment playbooks (`deploy-jenkins.yml`, `deploy-harbor.yml`, etc.)
+- `ansible/roles/` — Modular Ansible roles (`k3s`, `ingress_nginx`, `cert_manager`, `external_secrets`, `harbor`, `vault`, `jenkins`, etc.)
+- `ansible/scripts/` — bash scripts for procedural operations
 - `k8s/` — Kubernetes manifests, kustomize/Helm templates
 
-Quick start (dry-run)
-1) Search for inline shell/command/raw (should be none):
+Quick start (Ansible Execution Options)
+
+1) **Full Provisioning & Deployment** (Complete setup):
 ```bash
-rg --hidden -n "(^|\\s)(shell:|command:|raw:)" || true
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml
 ```
-2) Syntax check an important playbook, for example:
+
+2) **Provision K3s Cluster & Core Controllers Only**:
+```bash
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/provision-cluster.yml
+```
+
+3) **Deploy/Update Applications Only**:
+```bash
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/deploy-apps.yml
+```
+
+4) **Target a Specific Service**:
+```bash
+# Deploy only Jenkins
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/apps/deploy-jenkins.yml
+
+# Or using Ansible tags:
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/deploy-apps.yml --tags harbor
+```
+
+5) **Syntax Check**:
 ```bash
 ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml --syntax-check
-```
-3) Example check-run (no changes applied):
-```bash
-ansible-playbook -i ansible/inventory.yml ansible/playbooks/full-setup.yml --check --diff
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/provision-cluster.yml --syntax-check
+ansible-playbook -i ansible/inventory.yml ansible/playbooks/deploy-apps.yml --syntax-check
 ```
 
 Important scripts (selected)
@@ -44,16 +67,6 @@ Important scripts (selected)
 - `ansible/scripts/bootstrap_harbor.sh` — bootstrap Harbor project and user
 - `ansible/scripts/docker_compose_*.sh` — `build|pull|up|ps` wrappers for docker-compose
 
-Run scripts manually
-1) Make scripts executable:
-```bash
-chmod +x ansible/scripts/*.sh
-```
-2) Example test run (update helm repos):
-```bash
-bash ansible/scripts/helm_repo_update.sh stable https://charts.helm.sh/stable
-```
-
 Variables and secrets
 - Edit non-sensitive defaults in `ansible/group_vars/all.yml` (paths, hostnames, chart versions).
 - Keep secrets (tokens, passwords) out of the repository — use a secure store or an encrypted file such as `ansible/env.cfg` (excluded/ignored) or an external secret manager.
@@ -61,10 +74,3 @@ Variables and secrets
 Idempotency and testing
 - Start with `ansible-playbook --check` for critical playbooks.
 - For an idempotency check, run a playbook twice (without `--check`) — the second run should report `ok` for previously applied tasks (no `changed`).
-- I can add an automated idempotency script that performs two runs and reports any differences — tell me if you want it.
-
-Next steps and contribution
-- Keep procedural logic in `ansible/scripts/` and prefer Ansible modules for resource management (files, packages, services).
-- If you want, I will add an automated idempotency runner and a short CONTRIBUTING / USAGE section per playbook.
-
-If you want the idempotency runner created now, reply: "yes".

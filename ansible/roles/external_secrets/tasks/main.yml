@@ -1,0 +1,30 @@
+---
+# Role: external_secrets
+# Installs External Secrets Operator via Helm.
+
+- name: Add External Secrets Helm repository
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo add external-secrets https://charts.external-secrets.io
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  failed_when: false
+
+- name: Update Helm repositories (post ESO add)
+  become: false
+  ansible.builtin.command:
+    cmd: helm repo update
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Install External Secrets Operator via Helm
+  become: false
+  ansible.builtin.command:
+    cmd: >
+      helm upgrade --install external-secrets external-secrets/external-secrets
+      -n external-secrets
+      --create-namespace
+      --version {{ external_secrets_version }}
+      --set installCRDs=true
+  environment: "{{ kubectl_env }}"
+  changed_when: true

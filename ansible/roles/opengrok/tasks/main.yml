@@ -1,0 +1,22 @@
+---
+# Role: opengrok
+# Deploys OpenGrok application manifests via Kustomize.
+
+- name: Render OpenGrok Jinja2 templates
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - src: "{{ home_infra_local_path }}/k8s/opengrok/deployment.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/opengrok/deployment.yaml"
+    - src: "{{ home_infra_local_path }}/k8s/opengrok/ingress.yaml.j2"
+      dest: "{{ home_infra_remote_path }}/k8s/opengrok/ingress.yaml"
+
+- name: Deploy OpenGrok K8s manifests via Kustomize
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/apply_kustomize.sh {{ home_infra_remote_path }}/k8s/opengrok"
+  environment: "{{ kubectl_env }}"
+  changed_when: true

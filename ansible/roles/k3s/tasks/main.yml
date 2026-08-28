@@ -63,3 +63,10 @@
     state: present
     create: true
     mode: "0644"
+
+- name: Apply local-path-retain StorageClass
+  become: false
+  ansible.builtin.command: kubectl apply -f {{ home_infra_remote_path }}/k8s/local-path-retain.yaml
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+

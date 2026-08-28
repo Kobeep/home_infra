@@ -1,0 +1,34 @@
+---
+# Home Lab - K3s Cluster & Infrastructure Provisioning Playbook
+# Sets up base OS packages, installs K3s cluster, kubectl/helm binaries,
+# and deploys core infrastructure controllers (Ingress NGINX, cert-manager, External Secrets).
+
+- name: Provision K3s Cluster & Infrastructure Core
+  hosts: server
+  become: true
+
+  roles:
+    - role: common          # Base OS packages, directory setup, git repo sync, cron bootstrap
+      tags: [provision, common]
+    - role: k3s             # K3s installation, firewall config, kubeconfig setup
+      tags: [provision, k3s]
+    - role: kubectl_helm    # kubectl and helm CLI binaries installation
+      tags: [provision, cli]
+    - role: ingress_nginx   # Ingress NGINX controller deployment & ready wait
+      tags: [provision, ingress]
+    - role: cert_manager    # cert-manager, Root CA setup, system trust, containerd Harbor config
+      tags: [provision, cert-manager]
+    - role: external_secrets # External Secrets Operator deployment
+      tags: [provision, external-secrets]
+
+  post_tasks:
+    - name: Display Cluster Provisioning Summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "K3s Cluster Provisioning Complete!"
+          - "=========================================="
+          - "Server IP: {{ server_ip }}"
+          - "Kubeconfig location: /home/{{ ansible_user }}/.kube/config"
+          - "Core controllers (Ingress NGINX, cert-manager, External Secrets) ready."
+          - "=========================================="

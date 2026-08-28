@@ -1,0 +1,133 @@
+---
+# Role: cert_manager
+# Installs cert-manager, configures Root CA certificates, system trust, and K3s containerd registry trust.
+
+- name: Install cert-manager (add repo, apply CRDs, install via helm)
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/cert_manager_install.sh {{ cert_manager_version }}"
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+
+- name: Wait for cert-manager webhook pods to be ready
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_label_ready.sh cert-manager 'app.kubernetes.io/instance=cert-manager' 180s"
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+
+- name: Ensure CA directory exists on remote server
+  ansible.builtin.file:
+    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Check whether CA files exist on Ansible controller
+  become: false
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
+  loop:
+    - rootCA.crt
+    - rootCA.key
+  register: local_ca_files
+
+- name: Determine if controller CA files are complete
+  ansible.builtin.set_fact:
+    controller_ca_files_ready: >-
+      {{
+        (local_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
+      }}
+
+- name: Copy CA certificate and key from controller to server when available
+  ansible.builtin.copy:
+    src: "{{ home_infra_local_path }}/k8s/cert-manager/ca/{{ item }}"
+    dest: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  loop:
+    - rootCA.crt
+    - rootCA.key
+  when: controller_ca_files_ready
+
+- name: Check whether remote CA files already exist
+  ansible.builtin.stat:
+    path: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/{{ item }}"
+  loop:
+    - rootCA.crt
+    - rootCA.key
+  register: remote_ca_files
+  when: not controller_ca_files_ready
+
+- name: Determine if remote CA files are complete
+  ansible.builtin.set_fact:
+    remote_ca_files_ready: >-
+      {{
+        (remote_ca_files.results | selectattr('stat.exists', 'equalto', true) | list | length) == 2
+      }}
+  when: not controller_ca_files_ready
+
+- name: Generate local CA keypair on remote server when controller files are missing
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/generate_ca.sh {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.key {{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
+  when:
+    - not controller_ca_files_ready
+    - not remote_ca_files_ready
+
+- name: Warn when CA files are generated on remote server
+  ansible.builtin.debug:
+    msg:
+      - "CA files were not found on the Ansible controller; generated a new local CA on the remote server."
+      - "If you want stable TLS across fresh controllers, persist k8s/cert-manager/ca/rootCA.crt and rootCA.key in a secure secret store."
+  when:
+    - not controller_ca_files_ready
+    - not remote_ca_files_ready
+
+- name: Install homelab root CA in system trust store for container runtime
+  become: true
+  ansible.builtin.copy:
+    src: "{{ home_infra_remote_path }}/k8s/cert-manager/ca/rootCA.crt"
+    remote_src: true
+    dest: /usr/local/share/ca-certificates/homelab-root-ca.crt
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Update system CA certificates
+  become: true
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/update_ca_certificates.sh"
+  register: update_ca_result
+  changed_when: "'0 added, 0 removed; done.' not in update_ca_result.stdout"
+
+- name: Configure K3s containerd trust for Harbor registry
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/rancher/k3s/registries.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      mirrors:
+        "{{ harbor_host }}":
+          endpoint:
+            - "https://{{ harbor_host }}"
+      configs:
+        "{{ harbor_host }}":
+          tls:
+            ca_file: "/usr/local/share/ca-certificates/homelab-root-ca.crt"
+  register: k3s_registries_config
+
+- name: Restart K3s when registry trust config changed
+  become: true
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  when: k3s_registries_config.changed
+
+- name: Wait for K3s node to become Ready after restart
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/wait_for_nodes_ready.sh 180s"
+  environment: "{{ kubectl_env }}"
+  changed_when: false
+  when: k3s_registries_config.changed

@@ -1,0 +1,6 @@
+---
+- name: Deploy Dashy Dashboard
+  hosts: server
+  become: true
+  roles:
+    - role: dashy

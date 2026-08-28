@@ -1,0 +1,25 @@
+---
+# Role: ghcr_secret
+# Configures GHCR image pull secret in default namespace.
+
+- name: Check if env.cfg exists
+  ansible.builtin.stat:
+    path: "{{ home_infra_local_path }}/ansible/env.cfg"
+  delegate_to: localhost
+  become: false
+  register: env_cfg_file
+
+- name: Load encrypted env.cfg variables
+  ansible.builtin.include_vars:
+    file: "{{ home_infra_local_path }}/ansible/env.cfg"
+  no_log: true
+  when: env_cfg_file.stat.exists
+
+- name: Create ghcr-cred image pull secret in default namespace
+  become: false
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/create_image_pull_secret.sh ghcr-cred ghcr.io '{{ vault_github_username | default(\"\") }}' '{{ vault_github_token | default(\"\") }}' '{{ vault_github_email | default(\"\") }}' default"
+  environment: "{{ kubectl_env }}"
+  changed_when: true
+  when:
+    - vault_github_username is defined
+    - vault_github_token is defined

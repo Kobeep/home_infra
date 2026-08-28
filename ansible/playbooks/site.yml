@@ -1,5 +1,5 @@
 ---
-# Home Lab - Complete Infrastructure & Application Provisioning Master Playbook
+# Home Lab - Site Master Playbook
 
 - name: Provision K3s Cluster & Core Infrastructure
   ansible.builtin.import_playbook: provision-cluster.yml

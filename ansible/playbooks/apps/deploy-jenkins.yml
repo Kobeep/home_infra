@@ -1,0 +1,6 @@
+---
+- name: Deploy Jenkins CI/CD
+  hosts: server
+  become: true
+  roles:
+    - role: jenkins
