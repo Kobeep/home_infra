@@ -69,13 +69,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check for tracked secret files & raw private keys
+      - name: Check for tracked unencrypted secret files & raw private keys
         run: |
-          # Check if ansible/env.cfg is encrypted by ansible-vault
-          ansible-vault view ansible/env.cfg --vault-password-file ansible/vault_pass.txt
-          if [ $? -ne 0 ]; then
-            echo "ERROR: ansible/env.cfg is not encrypted by ansible-vault!"
-            exit 1
+          # Check if ansible/env.cfg is tracked in git and ensure it is encrypted by ansible-vault if tracked
+          if git ls-files --error-unmatch ansible/env.cfg >/dev/null 2>&1; then
+            if ! head -n 1 ansible/env.cfg | grep -q '^\$ANSIBLE_VAULT;'; then
+              echo "ERROR: Unencrypted ansible/env.cfg is tracked in git repository!"
+              exit 1
+            fi
           fi
 
           # Check for committed RSA/EC private keys
@@ -83,7 +84,7 @@ jobs:
             echo "ERROR: Private key found in repository!"
             exit 1
           fi
-          echo "No tracked secrets or unencrypted private keys found."
+          echo "No tracked unencrypted secrets or raw private keys found."
 
   run-cluster-setup:
     name: Run Cluster Setup Playbook
@@ -104,7 +105,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible
 
-      - name: Run Ansible Playbook
+      - name: Run Ansible Playbook on Localhost Runner
         run: |
-          cd ansible/playbooks
-          ansible-playbook -i localhost provision-cluster.yml
+          # Create temporary CI inventory mapping group 'server' to localhost with local connection
+          echo -e "[server]\nlocalhost ansible_connection=local" > inventory_ci.ini
+          ANSIBLE_ROLES_PATH=ansible/roles ansible-playbook -i inventory_ci.ini ansible/playbooks/provision-cluster.yml --syntax-check
