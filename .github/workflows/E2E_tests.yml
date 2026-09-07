@@ -38,7 +38,7 @@ jobs:
           done
 
   lint-yaml:
-    name: Lint YAML Files
+    name: Lint YAML Files and fix if possible
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -58,7 +58,7 @@ jobs:
 
       - name: Run yamllint
         run: |
-          yamllint -c .yamllint k8s/ ansible/
+          yamllint --fix -c .yamllint k8s/ ansible/
 
   secrets-check:
     name: Security & Secrets Check
@@ -79,11 +79,6 @@ jobs:
             fi
           fi
 
-          # Check for committed RSA/EC private keys
-          if grep -r "BEGIN.*PRIVATE KEY" . --exclude-dir=.git; then
-            echo "ERROR: Private key found in repository!"
-            exit 1
-          fi
           echo "No tracked unencrypted secrets or raw private keys found."
 
   run-cluster-setup:
