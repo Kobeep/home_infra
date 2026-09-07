@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,23 +16,23 @@ spec:
     spec:
       hostNetwork: true
       containers:
-      - name: home-assistant
-        image: homeassistant/home-assistant:latest
-        ports:
-        - containerPort: 8123
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "1000m"
-            memory: "1024Mi"
-        volumeMounts:
-        - name: config
-          mountPath: /config
-        securityContext:
-          privileged: true
+        - name: home-assistant
+          image: homeassistant/home-assistant:latest
+          ports:
+            - containerPort: 8123
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          securityContext:
+            privileged: true
       volumes:
-      - name: config
-        persistentVolumeClaim:
-          claimName: home-assistant-data
+        - name: config
+          persistentVolumeClaim:
+            claimName: home-assistant-data

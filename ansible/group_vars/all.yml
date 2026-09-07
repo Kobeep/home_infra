@@ -3,24 +3,21 @@
 # Override per-host in host_vars/ if needed.
 
 # ── K3s ───────────────────────────────────────────────────────────────────────
-k3s_version: "v1.28.5+k3s1"
-
-server_ip: "{{ ansible_default_ipv4.address }}"
-
+k3s_version: v1.28.5+k3s1
+server_ip: '{{ ansible_default_ipv4.address }}'
 # ── Environment for kubectl/helm calls ───────────────────────────────────────
 kubectl_env:
-  KUBECONFIG: "/home/{{ ansible_user }}/.kube/config"
-
+  KUBECONFIG: /home/{{ ansible_user }}/.kube/config
 # ── Paths ─────────────────────────────────────────────────────────────────────
 home_infra_local_path: "{{ inventory_dir | dirname if (inventory_dir is defined and inventory_dir) else (playbook_dir.split('/ansible')[0]) }}"
-home_infra_remote_path: "/home/{{ ansible_user }}/home_infra"
-opengrok_repo_path: "/home/{{ ansible_user }}/home_infra"
+home_infra_remote_path: /home/{{ ansible_user }}/home_infra
+opengrok_repo_path: /home/{{ ansible_user }}/home_infra
 
 # ── Helm chart versions ───────────────────────────────────────────────────────
-cert_manager_version: "v1.14.4"
-external_secrets_version: "0.9.14"
+cert_manager_version: v1.14.4
+external_secrets_version: 0.9.14
 
 # ── Harbor (non-secret config) ───────────────────────────────────────────────
-harbor_host: "harbor.{{ server_ip }}.nip.io"
-harbor_project_name: "home-infra"
-harbor_repository_name: "infra-api"
+harbor_host: harbor.{{ server_ip }}.nip.io
+harbor_project_name: home-infra
+harbor_repository_name: infra-api

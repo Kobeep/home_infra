@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,60 +19,60 @@ spec:
         app: opengrok
     spec:
       initContainers:
-      - name: clone-home-infra
-        image: alpine/git:2.47.2
-        command:
-        - /bin/sh
-        - -c
-        - |
-          set -eu
-          mkdir -p /src
-          if [ ! -d /src/home_infra/.git ]; then
-            git clone --depth 1 --branch main https://github.com/Kobeep/home_infra.git /src/home_infra
-          else
-            git -C /src/home_infra fetch --all --tags --prune
-            git -C /src/home_infra reset --hard origin/main
-          fi
-        volumeMounts:
-        - name: src-data
-          mountPath: /src
+        - name: clone-home-infra
+          image: alpine/git:2.47.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              mkdir -p /src
+              if [ ! -d /src/home_infra/.git ]; then
+                git clone --depth 1 --branch main https://github.com/Kobeep/home_infra.git /src/home_infra
+              else
+                git -C /src/home_infra fetch --all --tags --prune
+                git -C /src/home_infra reset --hard origin/main
+              fi
+          volumeMounts:
+            - name: src-data
+              mountPath: /src
       containers:
-      - name: repo-sync
-        image: alpine/git:2.47.2
-        command:
-        - /bin/sh
-        - -c
-        - |
-          set -eu
-          while true; do
-            if [ -d /src/home_infra/.git ]; then
-              git -C /src/home_infra fetch --all --tags --prune || true
-              git -C /src/home_infra reset --hard origin/main || true
-            fi
-            sleep 300
-          done
-        volumeMounts:
-        - name: src-data
-          mountPath: /src
-      - name: opengrok
-        image: opengrok/docker:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8080
-        env:
-        - name: SYNC_PERIOD_MINUTES
-          value: "10"
-        - name: REINDEX
-          value: "1"
-        volumeMounts:
-        - name: src-data
-          mountPath: /opengrok/src
-        - name: opengrok-data
-          mountPath: /opengrok/data
+        - name: repo-sync
+          image: alpine/git:2.47.2
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              while true; do
+                if [ -d /src/home_infra/.git ]; then
+                  git -C /src/home_infra fetch --all --tags --prune || true
+                  git -C /src/home_infra reset --hard origin/main || true
+                fi
+                sleep 300
+              done
+          volumeMounts:
+            - name: src-data
+              mountPath: /src
+        - name: opengrok
+          image: opengrok/docker:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SYNC_PERIOD_MINUTES
+              value: '10'
+            - name: REINDEX
+              value: '1'
+          volumeMounts:
+            - name: src-data
+              mountPath: /opengrok/src
+            - name: opengrok-data
+              mountPath: /opengrok/data
       terminationGracePeriodSeconds: 30
       volumes:
-      - name: opengrok-data
-        persistentVolumeClaim:
-          claimName: opengrok-data
-      - name: src-data
-        emptyDir: {}
+        - name: opengrok-data
+          persistentVolumeClaim:
+            claimName: opengrok-data
+        - name: src-data
+          emptyDir: {}

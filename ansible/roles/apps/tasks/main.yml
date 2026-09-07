@@ -1,67 +1,54 @@
 ---
 # Meta-role: apps
 # Triggers individual service and application roles for backward compatibility.
-
 - name: Setup GHCR image pull secret
   ansible.builtin.include_role:
     name: ghcr_secret
   tags: [apps, secrets, ghcr]
-
 - name: Deploy Ingress NGINX controller
   ansible.builtin.include_role:
     name: ingress_nginx
   tags: [apps, ingress]
-
 - name: Deploy cert-manager
   ansible.builtin.include_role:
     name: cert_manager
   tags: [apps, cert-manager]
-
 - name: Deploy External Secrets Operator
   ansible.builtin.include_role:
     name: external_secrets
   tags: [apps, external-secrets]
-
 - name: Deploy HashiCorp Vault
   ansible.builtin.include_role:
     name: vault
   tags: [apps, vault]
-
 - name: Deploy Harbor
   ansible.builtin.include_role:
     name: harbor
   tags: [apps, harbor]
-
 - name: Deploy Jenkins
   ansible.builtin.include_role:
     name: jenkins
   tags: [apps, jenkins]
-
 - name: Deploy AdGuard Home
   ansible.builtin.include_role:
     name: adguard
   tags: [apps, adguard]
-
 - name: Deploy Dashy dashboard
   ansible.builtin.include_role:
     name: dashy
   tags: [apps, dashy]
-
 - name: Deploy Home Assistant
   ansible.builtin.include_role:
     name: home_assistant
   tags: [apps, home_assistant]
-
 - name: Deploy Homelab API
   ansible.builtin.include_role:
     name: infra_api
   tags: [apps, infra_api]
-
 - name: Deploy Monitoring stack (Grafana, InfluxDB, Prometheus)
   ansible.builtin.include_role:
     name: monitoring
   tags: [apps, monitoring]
-
 - name: Deploy OpenGrok
   ansible.builtin.include_role:
     name: opengrok

@@ -1,16 +1,17 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- local-path-retain.yaml
-- adguard
-- dashy
-- grafana
-- home-assistant
-- influxdb
-- jenkins
-- prometheus
-- cert-manager
-- opengrok
-- infra-api
-- vault/namespace.yaml
-- external-secrets-namespace.yaml
+  - local-path-retain.yaml
+  - adguard
+  - dashy
+  - grafana
+  - home-assistant
+  - influxdb
+  - jenkins
+  - prometheus
+  - cert-manager
+  - opengrok
+  - infra-api
+  - vault/namespace.yaml
+  - external-secrets-namespace.yaml

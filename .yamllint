@@ -26,4 +26,5 @@ ignore: |
   .github/
   .git/
   venv/
+  k8s/harbor/
   *.md

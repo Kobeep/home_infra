@@ -1,72 +1,62 @@
 ---
 # Role: k3s
 # Installs and configures K3s with the server user having full kubectl access.
-
 - name: Check if K3s binary is already installed
   ansible.builtin.stat:
     path: /usr/local/bin/k3s
   register: k3s_binary
-
 - name: Install K3s
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_k3s.sh '{{ k3s_version }}' '{{ server_ip }}' '--write-kubeconfig-mode 644 --disable traefik'"
+  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/install_k3s.sh\
+    \ '{{ k3s_version }}' '{{ server_ip }}' '--write-kubeconfig-mode 644 --disable\
+    \ traefik'"
   when: not k3s_binary.stat.exists
   changed_when: true
-
 - name: Wait for K3s API server to be ready
   ansible.builtin.wait_for:
     port: 6443
     delay: 5
     timeout: 120
-
 - name: Allow K3s API port through firewall
   community.general.ufw:
     rule: allow
-    port: "6443"
+    port: '6443'
     proto: tcp
-    comment: "K3S API Server"
+    comment: K3S API Server
   when: ansible_facts.services['ufw.service'] is defined
   ignore_errors: true
-
 - name: Allow HTTP/HTTPS ports for Ingress
   community.general.ufw:
     rule: allow
-    port: "{{ item }}"
+    port: '{{ item }}'
     proto: tcp
-    comment: "Ingress NGINX"
-  loop:
-    - "80"
-    - "443"
+    comment: Ingress NGINX
+  loop: ['80', '443']
   when: ansible_facts.services['ufw.service'] is defined
   ignore_errors: true
-
 - name: Create .kube directory for server user
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/.kube"
+    path: /home/{{ ansible_user }}/.kube
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0750"
-
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0750'
 - name: Copy kubeconfig to server user home
   ansible.builtin.copy:
     src: /etc/rancher/k3s/k3s.yaml
-    dest: "/home/{{ ansible_user }}/.kube/config"
+    dest: /home/{{ ansible_user }}/.kube/config
     remote_src: true
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0600"
-
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0600'
 - name: Set KUBECONFIG in server user .bashrc
   ansible.builtin.lineinfile:
-    path: "/home/{{ ansible_user }}/.bashrc"
-    line: 'export KUBECONFIG="/home/{{ ansible_user }}/.kube/config"'
+    path: /home/{{ ansible_user }}/.bashrc
+    line: export KUBECONFIG="/home/{{ ansible_user }}/.kube/config"
     state: present
     create: true
-    mode: "0644"
-
+    mode: '0644'
 - name: Apply local-path-retain StorageClass
   become: false
   ansible.builtin.command: kubectl apply -f {{ home_infra_remote_path }}/k8s/local-path-retain.yaml
-  environment: "{{ kubectl_env }}"
+  environment: '{{ kubectl_env }}'
   changed_when: true
-

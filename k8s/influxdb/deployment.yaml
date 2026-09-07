@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,32 +15,32 @@ spec:
         app: influxdb
     spec:
       containers:
-      - name: influxdb
-        image: influxdb:2.7
-        ports:
-        - containerPort: 8086
-        resources:
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "1000m"
-            memory: "1024Mi"
-        volumeMounts:
-        - name: storage
-          mountPath: /var/lib/influxdb2
-        env:
-        - name: DOCKER_INFLUXDB_INIT_MODE
-          value: "setup"
-        - name: DOCKER_INFLUXDB_INIT_USERNAME
-          value: "admin"
-        - name: DOCKER_INFLUXDB_INIT_PASSWORD
-          value: "adminpassword"
-        - name: DOCKER_INFLUXDB_INIT_ORG
-          value: "homelab"
-        - name: DOCKER_INFLUXDB_INIT_BUCKET
-          value: "metrics"
+        - name: influxdb
+          image: influxdb:2.7
+          ports:
+            - containerPort: 8086
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/influxdb2
+          env:
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: setup
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              value: admin
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              value: adminpassword
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: homelab
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: metrics
       volumes:
-      - name: storage
-        persistentVolumeClaim:
-          claimName: influxdb-data
+        - name: storage
+          persistentVolumeClaim:
+            claimName: influxdb-data

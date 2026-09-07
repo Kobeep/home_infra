@@ -1,3 +1,4 @@
+---
 # host_vars for 'fedora' (group: pc, ip: 192.168.1.31)
 # These override ansible/group_vars/pc.yml for this host only.
 # Uncomment and set whatever differs for this specific machine:

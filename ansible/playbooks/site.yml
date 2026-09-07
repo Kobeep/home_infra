@@ -1,8 +1,6 @@
 ---
 # Home Lab - Site Master Playbook
-
 - name: Provision K3s Cluster & Core Infrastructure
   ansible.builtin.import_playbook: provision-cluster.yml
-
 - name: Deploy Applications & Platform Services
   ansible.builtin.import_playbook: deploy-apps.yml
