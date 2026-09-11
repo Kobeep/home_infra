@@ -11,7 +11,8 @@ import lib.Utils
 import bin.monitor
 
 def main():
-  lib.Utils.setup_cronjobs()
+  if not lib.Utils.setup_cronjobs():
+    raise SystemExit(1)
   bin.monitor.main()
 
 if __name__ == "__main__":

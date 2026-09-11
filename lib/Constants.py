@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from pathlib import Path
 
 # Constants
@@ -9,6 +10,7 @@ retention_days = 30
 domain = "kobecloud.pl"
 project_root = Path(__file__).resolve().parents[1]
 git_local_path = str(project_root)
+git_sync_path = Path(os.environ.get("HOME_INFRA_SYNC_PATH", "/var/services/home_infra"))
 bin_path = project_root / "bin"
 lib_path = project_root / "lib"
 log_path = Path("/var/services/logs")

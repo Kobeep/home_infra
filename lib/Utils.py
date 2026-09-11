@@ -130,7 +130,13 @@ def setup_cronjobs():
     for cronjob in list_of_cronjobs:
         try:
             current_crontab = subprocess.run(['crontab', '-l'], check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            existing_crontab = current_crontab.stdout if current_crontab.returncode == 0 else ""
+            if current_crontab.returncode == 0:
+                existing_crontab = current_crontab.stdout
+            elif current_crontab.returncode == 1 and "no crontab for" in current_crontab.stderr.lower():
+                existing_crontab = ""
+            else:
+                log_message(f"Info =>: Failed to read current crontab: {current_crontab.stderr.strip()}")
+                return False
 
             if cronjob in existing_crontab:
                 log_message(f"Info =>: Cronjob '{cronjob}' is already present.")
@@ -144,6 +150,8 @@ def setup_cronjobs():
             log_message(f"Info =>: Cronjob '{cronjob}' has been set up successfully.")
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to set up cronjob '{cronjob}': {e}")
+            return False
+    return True
 
 def check_github_profile():
     try:
@@ -165,21 +173,25 @@ def check_github_profile():
         return False
 
 def sync_git_repo():
-    git_local_path = lib.Constants.git_local_path
+    git_sync_path = lib.Constants.git_sync_path
     git_repo_url = lib.Constants.git_repo_url
 
-    if not os.path.exists(git_local_path):
+    if not os.path.exists(git_sync_path):
         try:
-            subprocess.run(['git', 'clone', git_repo_url, git_local_path], check=True)
-            log_message(f"Info =>: Git repository cloned to '{git_local_path}'.")
+            subprocess.run(['git', 'clone', '--branch', 'main', '--single-branch', git_repo_url, str(git_sync_path)], check=True)
+            log_message(f"Info =>: Git repository cloned to '{git_sync_path}'.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to clone Git repository: {e}")
+            return False
     else:
         try:
-            subprocess.run(['git', '-C', git_local_path, 'pull'], check=True)
-            log_message(f"Info =>: Git repository at '{git_local_path}' has been updated.")
+            subprocess.run(['git', '-C', str(git_sync_path), 'pull', '--ff-only', 'origin', 'main'], check=True)
+            log_message(f"Info =>: Git repository at '{git_sync_path}' has been updated.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to update Git repository: {e}")
+            return False
 
 def rsync_git_repo():
     git_local_path = lib.Constants.git_local_path
@@ -262,17 +274,23 @@ def get_inode_usage():
 def get_io_usage():
     try:
         result = subprocess.run(['iostat', '-dx'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output = result.stdout.decode('utf-8')
-        for line in reversed(output.splitlines()):
+        lines = result.stdout.decode('utf-8').splitlines()
+        header_index = next((index for index, line in enumerate(lines) if '%util' in line.split()), None)
+        if header_index is None:
+            raise ValueError("iostat output does not contain a %util column")
+        util_index = lines[header_index].split().index('%util')
+        utilization_values = []
+        for line in lines[header_index + 1:]:
             parts = line.split()
-            if not parts:
+            if len(parts) <= util_index:
                 continue
             try:
-                io_usage = float(parts[-1].replace(',', '.'))
-                return io_usage
+                utilization_values.append(float(parts[util_index].replace(',', '.')))
             except ValueError:
                 continue
-        return 0.0
+        if utilization_values:
+            return max(utilization_values)
+        raise ValueError("iostat output contains no device utilization values")
     except Exception as e:
         log_message(f"Info =>: Failed to get IO usage: {e}")
-        return 0.0
+        return None
