@@ -25,6 +25,13 @@ def main():
     args = parser.parse_args()
 
     if args.action == "add":
+        if not lib.Utils.add_user(args.username):
+            raise SystemExit(1)
+        if args.password:
+            try:
+                run_privileged_command(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
+            except subprocess.CalledProcessError:
+                raise SystemExit(1)
         lib.Utils.add_user(args.username)
         password = getpass.getpass("Enter password for the new user: ")
         password_confirmation = getpass.getpass("Confirm password: ")
@@ -32,12 +39,18 @@ def main():
             parser.error("Passwords do not match")
         run_privileged_command(["chpasswd"], input=f"{args.username}:{password}", text=True, check=True)
     elif args.action == "remove":
-        lib.Utils.remove_user(args.username)
+        if not lib.Utils.remove_user(args.username):
+            raise SystemExit(1)
     elif args.action == "grant_sudo":
-        lib.Utils.grant_sudo_privileges(args.username)
+        if not lib.Utils.grant_sudo_privileges(args.username):
+            raise SystemExit(1)
     elif args.action == "add_to_group":
+        if not lib.Utils.add_to_group(args.username, args.groupname):
+            raise SystemExit(1)
+    else:
+        print("INFO ==> Invalid action specified.")
+        exit(1)
         groupname = args.groupname or lib.Constants.proposed_groupname
         lib.Utils.add_to_group(args.username, groupname)
-
 if __name__ == "__main__":
     main()

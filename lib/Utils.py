@@ -54,12 +54,15 @@ def add_user(username):
     try:
         subprocess.run(['id', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         log_message(f"Info =>: User '{username}' already exists.")
+        return True
     except subprocess.CalledProcessError:
         try:
             run_privileged_command(['useradd', '-m', username], check=True)
             log_message(f"Info =>: User '{username}' has been added successfully.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}': {e}")
+            return False
 
 def remove_user(username):
     try:
@@ -67,10 +70,13 @@ def remove_user(username):
         try:
             run_privileged_command(['userdel', username], check=True)
             log_message(f"Info =>: User '{username}' has been removed successfully.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to remove user '{username}': {e}")
+            return False
     except subprocess.CalledProcessError:
         log_message(f"Info =>: User '{username}' does not exist.")
+        return False
 
 def grant_sudo_privileges(username):
     try:
@@ -78,10 +84,13 @@ def grant_sudo_privileges(username):
         try:
             run_privileged_command(['usermod', '-aG', 'sudo', username], check=True)
             log_message(f"Info =>: Sudo privileges granted to user '{username}'.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to grant sudo privileges to user '{username}': {e}")
+            return False
     except subprocess.CalledProcessError:
         log_message(f"Info =>: User '{username}' does not exist.")
+        return False
 
 def add_to_group(username, groupname):
     try:
@@ -89,10 +98,13 @@ def add_to_group(username, groupname):
         try:
             run_privileged_command(['usermod', '-aG', groupname, username], check=True)
             log_message(f"Info =>: User '{username}' has been added to group '{groupname}'.")
+            return True
         except subprocess.CalledProcessError as e:
             log_message(f"Info =>: Failed to add user '{username}' to group '{groupname}': {e}")
+            return False
     except subprocess.CalledProcessError:
         log_message(f"Info =>: User '{username}' does not exist.")
+        return False
 
 def list_packages_to_update():
     try:
@@ -108,8 +120,10 @@ def update_os():
         run_privileged_command(['apt-get', 'update'], check=True)
         run_privileged_command(['apt-get', 'upgrade', '-y'], check=True)
         log_message(f"Info =>: Operating system packages have been updated successfully.")
+        return True
     except subprocess.CalledProcessError as e:
         log_message(f"Info =>: Failed to update operating system packages: {e}")
+        return False
 
 def setup_cronjobs():
     list_of_cronjobs = lib.Constants.list_of_cronjobs_to_apply
