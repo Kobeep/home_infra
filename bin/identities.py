@@ -34,15 +34,22 @@ def main():
         exit(1)
 
     if args.action == "add":
-        lib.Utils.add_user(args.username)
+        if not lib.Utils.add_user(args.username):
+            raise SystemExit(1)
         if args.password:
-            run_privileged_command(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
+            try:
+                run_privileged_command(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
+            except subprocess.CalledProcessError:
+                raise SystemExit(1)
     elif args.action == "remove":
-        lib.Utils.remove_user(args.username)
+        if not lib.Utils.remove_user(args.username):
+            raise SystemExit(1)
     elif args.action == "grant_sudo":
-        lib.Utils.grant_sudo_privileges(args.username)
+        if not lib.Utils.grant_sudo_privileges(args.username):
+            raise SystemExit(1)
     elif args.action == "add_to_group":
-        lib.Utils.add_to_group(args.username, args.groupname)
+        if not lib.Utils.add_to_group(args.username, args.groupname):
+            raise SystemExit(1)
     else:
         print("INFO ==> Invalid action specified.")
         exit(1)

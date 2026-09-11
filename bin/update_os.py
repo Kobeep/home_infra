@@ -9,7 +9,8 @@ if str(project_root) not in sys.path:
 import lib.Utils
 
 def main():
-    lib.Utils.update_os()
+    if not lib.Utils.update_os():
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()
