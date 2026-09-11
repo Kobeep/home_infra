@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import getpass
+import subprocess
 import sys
 
 project_root = Path(__file__).resolve().parent.parent
@@ -25,19 +26,21 @@ def main():
     args = parser.parse_args()
 
     if args.action == "add":
-        if not lib.Utils.add_user(args.username):
-            raise SystemExit(1)
-        if args.password:
-            try:
-                run_privileged_command(['chpasswd'], input=f"{args.username}:{args.password}", text=True, check=True)
-            except subprocess.CalledProcessError:
-                raise SystemExit(1)
-        lib.Utils.add_user(args.username)
         password = getpass.getpass("Enter password for the new user: ")
         password_confirmation = getpass.getpass("Confirm password: ")
         if password != password_confirmation:
             parser.error("Passwords do not match")
-        run_privileged_command(["chpasswd"], input=f"{args.username}:{password}", text=True, check=True)
+        if not lib.Utils.add_user(args.username):
+            raise SystemExit(1)
+        try:
+            run_privileged_command(
+                ["chpasswd"],
+                input=f"{args.username}:{password}",
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as error:
+            raise SystemExit(f"ERROR: Failed to set password: {error}") from error
     elif args.action == "remove":
         if not lib.Utils.remove_user(args.username):
             raise SystemExit(1)
@@ -45,12 +48,9 @@ def main():
         if not lib.Utils.grant_sudo_privileges(args.username):
             raise SystemExit(1)
     elif args.action == "add_to_group":
-        if not lib.Utils.add_to_group(args.username, args.groupname):
-            raise SystemExit(1)
-    else:
-        print("INFO ==> Invalid action specified.")
-        exit(1)
         groupname = args.groupname or lib.Constants.proposed_groupname
-        lib.Utils.add_to_group(args.username, groupname)
+        if not lib.Utils.add_to_group(args.username, groupname):
+            raise SystemExit(1)
+
 if __name__ == "__main__":
     main()
