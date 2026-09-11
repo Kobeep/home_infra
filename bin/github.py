@@ -10,7 +10,8 @@ import lib.Utils
 
 def main():
     lib.Utils.check_github_profile()
-    lib.Utils.sync_git_repo()
+    if not lib.Utils.sync_git_repo():
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()
