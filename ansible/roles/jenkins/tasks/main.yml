@@ -36,10 +36,9 @@
   when: env_cfg_file.stat.exists
 - name: Patch jenkins-secrets with Harbor routing config (non-secret)
   become: false
-  ansible.builtin.script: "{{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh\
-    \ '{{★{\"stringData\":★{\"harbor-project-name\":★harbor_project_name,★\"harbor-host\"\
-    :★harbor_host,★\"harbor-repository-name\":★harbor_repository_name★}} | to_json\
-    \ }}'"
+  ansible.builtin.script: >-
+    {{ home_infra_local_path }}/ansible/scripts/patch_jenkins_secrets.sh
+    '{{ {'stringData': {'harbor-project-name': harbor_project_name, 'harbor-host': harbor_host, 'harbor-repository-name': harbor_repository_name}} | to_json }}'
   environment: '{{ kubectl_env }}'
   changed_when: true
 - name: Detect whether Harbor owner credentials are configured
