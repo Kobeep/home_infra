@@ -11,6 +11,8 @@
   loop:
     - src: '{{ home_infra_local_path }}/k8s/grafana/ingress.yaml.j2'
       dest: '{{ home_infra_remote_path }}/k8s/grafana/ingress.yaml'
+    - src: '{{ home_infra_local_path }}/k8s/grafana/configmap.yaml.j2'
+      dest: '{{ home_infra_remote_path }}/k8s/grafana/configmap.yaml'
     - src: '{{ home_infra_local_path }}/k8s/influxdb/ingress.yaml.j2'
       dest: '{{ home_infra_remote_path }}/k8s/influxdb/ingress.yaml'
     - src: '{{ home_infra_local_path }}/k8s/prometheus/ingress.yaml.j2'

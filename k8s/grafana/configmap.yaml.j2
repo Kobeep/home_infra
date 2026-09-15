@@ -7,8 +7,8 @@ metadata:
 data:
   grafana.ini: |
     [security]
-    admin_user = Kobeep
-    admin_password = admin
+    admin_user = {{ ansible_user | default('Kobeep') }}
+    admin_password = {{ grafana_admin_password | default('admin') }}
     disable_initial_admin_creation = false
     [users]
     allow_sign_up = false
