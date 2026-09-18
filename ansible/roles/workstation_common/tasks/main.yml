@@ -1,0 +1,9 @@
+---
+- name: Install shared tools
+  ansible.builtin.package:
+    name: "{{ workstation_common_packages }}"
+    state: present
+
+- name: Ensure workstation owner metadata is present
+  ansible.builtin.debug:
+    msg: "Local workstation bootstrapping for Kobeep"

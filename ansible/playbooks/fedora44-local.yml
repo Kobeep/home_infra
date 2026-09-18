@@ -1,0 +1,33 @@
+---
+- name: Bootstrap local workstation
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+  vars:
+    workstation_owner: "Kobeep"
+    workstation_role_map:
+      Fedora: fedora_workstation
+      RedHat: fedora_workstation
+      CentOS: fedora_workstation
+      Rocky: fedora_workstation
+      AlmaLinux: fedora_workstation
+      Ubuntu: ubuntu_workstation
+      Debian: ubuntu_workstation
+      Darwin: macos_workstation
+      MacOSX: macos_workstation
+      macOS: macos_workstation
+  pre_tasks:
+    - name: Select workstation role
+      ansible.builtin.set_fact:
+        workstation_role: >-
+          {{ 'macos_workstation' if ansible_system == 'Darwin'
+             else workstation_role_map.get(ansible_distribution,
+               workstation_role_map.get(ansible_facts['os_family'], 'unsupported_workstation')) }}
+    - name: Fail on unsupported OS
+      ansible.builtin.fail:
+        msg: "Unsupported OS detected: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      when: workstation_role == 'unsupported_workstation'
+  roles:
+    - role: workstation_common
+    - role: "{{ workstation_role }}"

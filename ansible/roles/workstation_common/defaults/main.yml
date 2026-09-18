@@ -1,0 +1,15 @@
+---
+workstation_owner: "Kobeep"
+workstation_common_packages:
+  - git
+  - curl
+  - wget
+  - jq
+  - unzip
+  - rsync
+  - ripgrep
+  - htop
+  - tmux
+  - zsh
+  - python3
+  - python3-pip

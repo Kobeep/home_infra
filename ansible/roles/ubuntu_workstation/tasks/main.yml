@@ -1,0 +1,18 @@
+---
+- name: Ensure Ubuntu workstation basics are installed
+  ansible.builtin.apt:
+    name:
+      - ansible
+      - awscli
+      - azure-cli
+      - docker.io
+      - kubectl
+      - helm
+      - jq
+      - yq
+    state: present
+    update_cache: true
+
+- name: Print Ubuntu role selection
+  ansible.builtin.debug:
+    msg: "Ubuntu workstation role selected"

@@ -1,0 +1,32 @@
+---
+workstation_owner: "Kobeep"
+
+fedora_workstation_user: "{{ lookup('env', 'USER') | default(ansible_user_id, true) }}"
+
+fedora_workstation_base_packages:
+  - git
+  - curl
+  - wget
+  - ca-certificates
+  - gnupg
+  - unzip
+  - tar
+  - rsync
+  - jq
+  - ripgrep
+  - htop
+  - tmux
+  - python3
+  - python3-pip
+  - make
+  - gcc
+  - openssl
+  - zsh
+  - podman
+
+fedora_workstation_terraform_version: "1.9.8"
+fedora_workstation_helm_version: "v3.16.2"
+fedora_workstation_kubectl_version: "v1.31.1"
+fedora_workstation_k9s_version: "v0.32.5"
+fedora_workstation_stern_version: "1.30.0"
+fedora_workstation_download_dir: "/tmp/fedora-workstation"

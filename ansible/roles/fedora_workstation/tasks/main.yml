@@ -1,0 +1,164 @@
+---
+- name: Refresh system packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+
+- name: Install Fedora workstation packages
+  ansible.builtin.dnf:
+    name: "{{ fedora_workstation_base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Add HashiCorp repository
+  ansible.builtin.get_url:
+    url: https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
+    dest: /etc/yum.repos.d/hashicorp.repo
+    mode: '0644'
+    force: true
+
+- name: Install cloud and infrastructure tooling
+  ansible.builtin.dnf:
+    name:
+      - ansible
+      - awscli
+      - terraform
+      - azure-cli
+      - google-cloud-cli
+      - podman-compose
+    state: present
+    update_cache: true
+
+- name: Add Docker repository
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/fedora/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: '0644'
+    force: true
+
+- name: Install Docker tooling
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Ensure Docker daemon starts
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ fedora_workstation_user }}"
+    groups: docker
+    append: true
+
+- name: Create download directory
+  ansible.builtin.file:
+    path: "{{ fedora_workstation_download_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if kubectl is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/kubectl
+  register: kubectl_stat
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ fedora_workstation_kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+  when: not kubectl_stat.stat.exists
+
+- name: Check if Helm is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/helm
+  register: helm_stat
+
+- name: Install Helm
+  ansible.builtin.unarchive:
+    src: "https://get.helm.sh/helm-{{ fedora_workstation_helm_version }}-linux-amd64.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/linux-amd64/helm
+  when: not helm_stat.stat.exists
+
+- name: Copy Helm binary
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: true
+  when: not helm_stat.stat.exists
+
+- name: Check if k9s is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/k9s
+  register: k9s_stat
+
+- name: Install k9s
+  ansible.builtin.unarchive:
+    src: "https://github.com/derailed/k9s/releases/download/{{ fedora_workstation_k9s_version }}/k9s_Linux_amd64.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/k9s
+  when: not k9s_stat.stat.exists
+
+- name: Copy k9s binary
+  ansible.builtin.copy:
+    src: /tmp/k9s
+    dest: /usr/local/bin/k9s
+    mode: '0755'
+    remote_src: true
+  when: not k9s_stat.stat.exists
+
+- name: Check if stern is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/stern
+  register: stern_stat
+
+- name: Install stern
+  ansible.builtin.unarchive:
+    src: "https://github.com/stern/stern/releases/download/{{ fedora_workstation_stern_version }}/stern_{{ fedora_workstation_stern_version }}_linux_amd64.tar.gz"
+    dest: /tmp
+    remote_src: true
+    creates: /tmp/stern
+  when: not stern_stat.stat.exists
+
+- name: Copy stern binary
+  ansible.builtin.copy:
+    src: /tmp/stern
+    dest: /usr/local/bin/stern
+    mode: '0755'
+    remote_src: true
+  when: not stern_stat.stat.exists
+
+- name: Link bat compatibility binary
+  ansible.builtin.file:
+    src: /usr/bin/batcat
+    dest: /usr/local/bin/bat
+    state: link
+    force: true
+  when: ansible_facts['distribution'] == 'Fedora' and ansible_facts['distribution_major_version'] is defined
+  failed_when: false
+
+- name: Link fd compatibility binary
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd
+    state: link
+    force: true
+  when: ansible_facts['distribution'] == 'Fedora' and ansible_facts['distribution_major_version'] is defined
+  failed_when: false
+
+- name: Show final bootstrap status
+  ansible.builtin.debug:
+    msg: "Fedora workstation bootstrap complete for Kobeep. Tools ready: kubectl, helm, k9s, stern, terraform, AWS, Azure, Docker."
