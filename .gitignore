@@ -4,6 +4,7 @@ old-inventories/
 inventory.yml.bak*
 inventory.yml
 ansible/.host_state.tsv
+dev-local
 # Temporary files
 *.tmp
 *.swp
