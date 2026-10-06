@@ -1,0 +1,35 @@
+load("@aspect_rules_buildx//buildx:defs.bzl", "buildx_build")
+load("@rules_oci//oci:defs.bzl", "oci_load")
+
+package(default_visibility = ["//visibility:public"])
+
+buildx_build(
+    name = "build_image",
+    dockerfile = "Dockerfile",
+    path = ".",
+    platforms = ["linux/amd64"],
+    srcs = ["setup-qwen-local.sh"],
+    buildx_flags = ["--tag=llama-qwen:latest"],
+    out_dirs = ["qwen-image"],
+    output_type = "oci",
+    tags = ["local"],
+)
+
+oci_load(
+    name = "load_image",
+    image = ":build_image",
+    repo_tags = ["llama-qwen:latest"],
+)
+
+filegroup(
+    name = "image_tarball",
+    srcs = [":load_image"],
+    output_group = "tarball",
+)
+
+sh_binary(
+    name = "run",
+    srcs = ["run-container.sh"],
+    args = ["$(location :image_tarball)"],
+    data = [":image_tarball"],
+)

@@ -27,12 +27,16 @@
 #   QUANT          quant pattern                    (default: Q4_K_M)
 #   CTX            context size in tokens           (default: chosen from VRAM)
 #   HOST / PORT    bind address / port              (default: 127.0.0.1 / 8080)
-#   LLAMA_REF      git branch/tag/commit            (default: master)
-#   LLAMA_API_KEY  if set, server requires this key
-#   EXTRA_ARGS     extra llama-server arguments (e.g. sampling flags)
+#   LLAMA_REF      git branch/tag/commit            (default: master; pin a commit for reproducibility)
+#   LLAMA_API_KEY  strong key (at least 32 characters) for API authentication
+#   EXTRA_ARGS     whitespace-separated extra llama-server arguments
+#   BUILD_JOBS     parallel build jobs (default: at most 4)
 #   FORCE_REBUILD  1 = rebuild even if up to date
-#   ASSUME_YES     1 = skip confirmation prompts
+#   ASSUME_YES     1 = accept confirmation prompts (including non-interactive)
 #   HF_TOKEN       Hugging Face token (picked up automatically if needed)
+#   Security: use a strong API key for non-loopback HOST values. The key is
+#   kept out of systemd unit files, but llama-server needs it as a CLI argument
+#   and it may be visible to other local users with process-inspection access.
 # =============================================================================
 
 set -Eeuo pipefail
@@ -51,6 +55,7 @@ LLAMA_API_KEY="${LLAMA_API_KEY:-}"
 EXTRA_ARGS="${EXTRA_ARGS:-}"
 FORCE_REBUILD="${FORCE_REBUILD:-0}"
 ASSUME_YES="${ASSUME_YES:-0}"
+BUILD_JOBS="${BUILD_JOBS:-}"
 
 LLAMA_REPO_URL="https://github.com/ggml-org/llama.cpp"
 SRC_DIR="$INSTALL_DIR/llama.cpp"
@@ -59,6 +64,7 @@ BUILD_DIR=""            # set after backend resolution
 SERVER_BIN=""
 SERVICE_NAME="llama-qwen"
 MIN_DISK_GB=40          # model (~16GB) + build + headroom
+MIN_BUILD_DISK_GB=15    # source checkout and compiled artifacts
 MIN_VRAM_MIB=20000      # 27B Q4 needs ~16GB + KV cache
 
 # ------------------------------- logging -------------------------------------
@@ -72,7 +78,7 @@ ok()   { printf '%s[ OK ]%s %s\n' "$C_GRN" "$C_RST" "$*"; }
 warn() { printf '%s[WARN]%s %s\n' "$C_YLW" "$C_RST" "$*" >&2; }
 die()  { printf '%s[FAIL]%s %s\n' "$C_RED" "$C_RST" "$*" >&2; exit 1; }
 
-trap 'die "Unexpected error at line $LINENO: $BASH_COMMAND"' ERR
+trap 'die "Unexpected error at line $LINENO (command details suppressed)."' ERR
 trap 'printf "\n"; warn "Interrupted."; exit 130' INT TERM
 
 # ------------------------------- helpers -------------------------------------
@@ -80,20 +86,109 @@ have() { command -v "$1" >/dev/null 2>&1; }
 
 need_cmd() { have "$1" || die "Required command not found: $1"; }
 
+format_host() {
+  if [[ "$1" == *:* ]]; then
+    printf '[%s]' "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 confirm() {
   [[ "$ASSUME_YES" == "1" ]] && return 0
-  [[ -t 0 ]] || return 0   # non-interactive: proceed
+  if [[ ! -t 0 ]]; then
+    warn "Cannot confirm in non-interactive mode; set ASSUME_YES=1 to explicitly proceed."
+    return 1
+  fi
   local reply
   read -r -p "$1 [y/N] " reply
   [[ "$reply" =~ ^[Yy]$ ]]
 }
 
-SUDO=""
+validate_config() {
+  local port_num ctx_num cpu_count arg
+
+  case "$BACKEND" in
+    auto|vulkan|rocm) ;;
+    *) die "Invalid BACKEND='$BACKEND' (use auto|vulkan|rocm)." ;;
+  esac
+  if [[ "$BACKEND" == "rocm" ]]; then
+    local targets="${AMDGPU_TARGETS:-gfx1100}"
+    [[ "$targets" =~ ^gfx[0-9a-f]+(\;gfx[0-9a-f]+)*$ ]] \
+      || die "AMDGPU_TARGETS must be a semicolon-separated list of gfx targets (for example gfx1100)."
+  fi
+
+  [[ "$PORT" =~ ^[0-9]{1,5}$ ]] || die "PORT must be an integer from 1 to 65535."
+  port_num=$((10#$PORT))
+  ((port_num >= 1 && port_num <= 65535)) || die "PORT must be an integer from 1 to 65535."
+  PORT="$port_num"
+
+  if [[ -n "$CTX" ]]; then
+    [[ "$CTX" =~ ^[0-9]{1,9}$ ]] || die "CTX must be a positive integer (maximum 9 digits)."
+    ctx_num=$((10#$CTX))
+    ((ctx_num > 0)) || die "CTX must be greater than zero."
+    CTX="$ctx_num"
+  fi
+
+  [[ "$HOST" =~ ^[A-Za-z0-9._:-]+$ ]] || die "HOST contains unsupported characters."
+  [[ "$QUANT" =~ ^[A-Za-z0-9_-]+$ ]] || die "QUANT may contain only letters, digits, '_' and '-'."
+  [[ "$LLAMA_REF" =~ ^[A-Za-z0-9._/-]+$ && "$LLAMA_REF" != -* ]] \
+    || die "LLAMA_REF contains unsupported characters."
+  [[ "$MODEL_REPO" == "" || "$MODEL_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] \
+    || die "MODEL_REPO must have the form organization/repository."
+
+  if [[ -n "$LLAMA_API_KEY" ]]; then
+    [[ "$LLAMA_API_KEY" =~ ^[A-Za-z0-9._~-]{32,256}$ ]] \
+      || die "LLAMA_API_KEY must be 32-256 characters using only letters, digits, '.', '_', '~' or '-'."
+  fi
+  if [[ "$HOST" != "127.0.0.1" && "$HOST" != "localhost" && "$HOST" != "::1" \
+        && -z "$LLAMA_API_KEY" ]]; then
+    die "Refusing non-loopback HOST='$HOST' without LLAMA_API_KEY."
+  fi
+
+  if [[ -n "$BUILD_JOBS" ]]; then
+    [[ "$BUILD_JOBS" =~ ^[0-9]{1,3}$ ]] || die "BUILD_JOBS must be an integer from 1 to 256."
+    ((10#$BUILD_JOBS >= 1 && 10#$BUILD_JOBS <= 256)) \
+      || die "BUILD_JOBS must be an integer from 1 to 256."
+    BUILD_JOBS=$((10#$BUILD_JOBS))
+  else
+    cpu_count="$(nproc)"
+    ((cpu_count > 0)) || die "Could not determine the number of available CPUs."
+    if ((cpu_count > 4)); then BUILD_JOBS=4; else BUILD_JOBS="$cpu_count"; fi
+  fi
+
+  [[ "$EXTRA_ARGS" != *$'\n'* && "$EXTRA_ARGS" != *$'\r'* ]] \
+    || die "EXTRA_ARGS must be a single line."
+  [[ "$ASSUME_YES" == "0" || "$ASSUME_YES" == "1" ]] \
+    || die "ASSUME_YES must be 0 or 1."
+  [[ "$FORCE_REBUILD" == "0" || "$FORCE_REBUILD" == "1" ]] \
+    || die "FORCE_REBUILD must be 0 or 1."
+  local -a extra_args=()
+  if [[ -n "$EXTRA_ARGS" ]]; then
+    read -r -a extra_args <<<"$EXTRA_ARGS"
+  fi
+  for arg in "${extra_args[@]}"; do
+    case "$arg" in
+      -m|--model|--model=*|--host|--host=*|--port|--port=*|\
+      --api-key|--api-key=*|--api-key-file|--api-key-file=*)
+        die "EXTRA_ARGS may not override model, bind, port, or API-key settings ($arg)."
+        ;;
+    esac
+  done
+}
+
 ensure_sudo() {
-  if [[ $EUID -eq 0 ]]; then SUDO=""; return 0; fi
+  [[ $EUID -eq 0 ]] && return 0
   need_cmd sudo
-  SUDO="sudo"
   sudo -v || die "sudo authentication failed"
+}
+
+run_privileged() {
+  if [[ $EUID -eq 0 ]]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
 }
 
 pkg_installed() { rpm -q --whatprovides "$1" >/dev/null 2>&1; }
@@ -109,7 +204,7 @@ install_pkgs() {   # required packages: failure is fatal
   fi
   info "Installing: ${missing[*]}"
   ensure_sudo
-  $SUDO dnf install -y --setopt=install_weak_deps=False "${missing[@]}" \
+  run_privileged dnf install -y --setopt=install_weak_deps=False "${missing[@]}" \
     || die "dnf failed to install: ${missing[*]}"
 }
 
@@ -118,7 +213,7 @@ try_install_pkgs() {   # optional packages: failure is a warning
   for p in "$@"; do
     if pkg_installed "$p"; then continue; fi
     ensure_sudo
-    if $SUDO dnf install -y --setopt=install_weak_deps=False "$p" >/dev/null 2>&1; then
+    if run_privileged dnf install -y --setopt=install_weak_deps=False "$p" >/dev/null 2>&1; then
       ok "Installed optional package: $p"
     else
       warn "Optional package not available: $p (continuing)"
@@ -165,9 +260,8 @@ preflight() {
   need_cmd rpm
 
   # Network
-  if ! curl -fsS --max-time 8 -o /dev/null https://huggingface.co 2>/dev/null \
-     && ! have curl; then
-    warn "curl missing or huggingface.co unreachable (curl will be installed in deps step)."
+  if ! have curl; then
+    warn "curl missing (it will be installed in the deps step)."
   elif ! curl -fsS --max-time 8 -o /dev/null https://huggingface.co 2>/dev/null; then
     warn "Cannot reach huggingface.co right now - download step may fail."
   else
@@ -175,15 +269,24 @@ preflight() {
   fi
 
   # Resources
-  local free_gb ram_gb
+  local free_gb build_free_gb ram_gb
   free_gb="$(disk_free_gb "$MODEL_DIR")"
   if ((free_gb < MIN_DISK_GB)); then
     die "Only ${free_gb} GB free near $MODEL_DIR; need >= ${MIN_DISK_GB} GB."
   fi
   ok "Disk: ${free_gb} GB free"
+  build_free_gb="$(disk_free_gb "$INSTALL_DIR")"
+  if ((build_free_gb < MIN_BUILD_DISK_GB)); then
+    die "Only ${build_free_gb} GB free near $INSTALL_DIR; need >= ${MIN_BUILD_DISK_GB} GB for the build."
+  fi
+  ok "Build disk: ${build_free_gb} GB free"
 
   ram_gb=$(awk '/MemTotal/ {printf "%d", $2/1024/1024}' /proc/meminfo)
-  ((ram_gb >= 16)) && ok "RAM: ${ram_gb} GB" || warn "RAM: ${ram_gb} GB (build may be slow / swap)"
+  if ((ram_gb >= 16)); then
+    ok "RAM: ${ram_gb} GB"
+  else
+    warn "RAM: ${ram_gb} GB (build may be slow / swap)"
+  fi
 
   # GPU
   if have lspci; then
@@ -208,19 +311,30 @@ preflight() {
     warn "Could not read VRAM from sysfs (driver not loaded?)."
   fi
 
-  # Device access
-  local g missing_groups=()
-  for g in video render; do
-    id -nG | tr ' ' '\n' | grep -qx "$g" || missing_groups+=("$g")
+  # Check effective device access, not group names (container group names can
+  # differ from the numeric supplemental GIDs passed by the container runtime).
+  local dev found_render=0 accessible_render=0
+  for dev in /dev/dri/renderD*; do
+    [[ -e "$dev" ]] || continue
+    found_render=1
+    if [[ -r "$dev" && -w "$dev" ]]; then
+      accessible_render=1
+      break
+    fi
   done
-  if ((${#missing_groups[@]})); then
-    warn "User '$USER' not in group(s): ${missing_groups[*]} -> GPU access may fail."
-    warn "Fix: sudo usermod -aG video,render $USER  (then log out/in)"
+  if ((accessible_render)); then
+    ok "GPU render device is readable and writable."
+  elif ((found_render)); then
+    warn "Render device exists but is not readable and writable by this process."
+    if [[ -e /.dockerenv || -e /run/.containerenv || -n "${container:-}" ]]; then
+      warn "Container: pass the render device and its numeric group ID to the runtime."
+    else
+      local current_user
+      current_user="$(id -un 2>/dev/null || printf 'UID %s' "$(id -u)")"
+      warn "Host: add '$current_user' to the device's owning group, then log out and back in."
+    fi
   else
-    ok "Groups: video, render"
-  fi
-  if [[ -e /dev/dri/renderD128 && ! -r /dev/dri/renderD128 ]]; then
-    warn "/dev/dri/renderD128 not readable by current user."
+    warn "No /dev/dri/renderD* device found; GPU acceleration may not work."
   fi
 }
 
@@ -231,7 +345,7 @@ resolve_backend() {
     vulkan|rocm) ;;
     *) die "Invalid BACKEND='$BACKEND' (use auto|vulkan|rocm)." ;;
   esac
-  BUILD_DIR="$SRC_DIR/build-$BACKEND"
+  BUILD_DIR="$INSTALL_DIR/build-$BACKEND"
   SERVER_BIN="$BUILD_DIR/bin/llama-server"
   info "Backend: $BACKEND"
 }
@@ -274,9 +388,13 @@ verify_gpu_runtime() {
       ;;
     rocm)
       if have rocminfo; then
-        rocminfo 2>/dev/null | grep -q 'gfx' \
-          && ok "ROCm sees: $(rocminfo | grep -o 'gfx[0-9a-f]*' | sort -u | tr '\n' ' ')" \
-          || warn "rocminfo found no gfx agents."
+        local gfx
+        gfx="$(rocminfo 2>/dev/null | grep -o 'gfx[0-9a-f]*' | sort -u || true)"
+        if [[ -n "$gfx" ]]; then
+          ok "ROCm sees: $(tr '\n' ' ' <<<"$gfx")"
+        else
+          warn "rocminfo found no gfx agents."
+        fi
       else
         warn "rocminfo not installed; cannot verify ROCm runtime."
       fi
@@ -293,26 +411,49 @@ verify_gpu_runtime() {
 build_llama() {
   resolve_backend
   mkdir -p "$INSTALL_DIR"
+  local build_free_gb
+  build_free_gb="$(disk_free_gb "$INSTALL_DIR")"
+  ((build_free_gb >= MIN_BUILD_DISK_GB)) \
+    || die "Only ${build_free_gb} GB free near $INSTALL_DIR; need >= ${MIN_BUILD_DISK_GB} GB for the build."
 
   if [[ -d "$SRC_DIR/.git" ]]; then
+    local remote_url
+    remote_url="$(git -C "$SRC_DIR" remote get-url origin)" \
+      || die "Existing llama.cpp checkout has no usable 'origin' remote."
+    case "$remote_url" in
+      https://github.com/ggml-org/llama.cpp|https://github.com/ggml-org/llama.cpp.git) ;;
+      *) die "Refusing an unexpected llama.cpp origin URL." ;;
+    esac
+    [[ -z "$(git -C "$SRC_DIR" status --porcelain --untracked-files=normal -- . ':(exclude)build-*')" ]] \
+      || die "llama.cpp checkout has local changes; commit or remove them before updating/building."
     info "Updating llama.cpp ($LLAMA_REF)..."
     git -C "$SRC_DIR" fetch --tags --prune origin >/dev/null 2>&1 \
       || warn "git fetch failed (offline?) - building from existing checkout."
   else
+    [[ ! -e "$SRC_DIR" ]] || die "$SRC_DIR exists but is not a llama.cpp Git checkout."
     info "Cloning llama.cpp..."
     git clone "$LLAMA_REPO_URL" "$SRC_DIR"
   fi
 
+  git -C "$SRC_DIR" check-ref-format --allow-onelevel "$LLAMA_REF" \
+    || die "LLAMA_REF is not a valid Git ref."
+  if ! git -C "$SRC_DIR" rev-parse --verify --quiet "$LLAMA_REF^{commit}" >/dev/null \
+      && ! git -C "$SRC_DIR" show-ref --verify --quiet "refs/remotes/origin/$LLAMA_REF"; then
+    die "LLAMA_REF does not resolve to a commit in the checkout or its origin."
+  fi
   git -C "$SRC_DIR" checkout -q "$LLAMA_REF" || die "Cannot checkout '$LLAMA_REF'."
   if git -C "$SRC_DIR" show-ref --verify --quiet "refs/remotes/origin/$LLAMA_REF"; then
     git -C "$SRC_DIR" merge --ff-only -q "origin/$LLAMA_REF" \
       || warn "Could not fast-forward '$LLAMA_REF'."
   fi
 
-  local commit stamp_file stamp
+  local commit stamp_file stamp stamp_tmp build_target=""
   commit="$(git -C "$SRC_DIR" rev-parse HEAD)"
   stamp_file="$BUILD_DIR/.build-stamp"
-  stamp="$commit $BACKEND"
+  if [[ "$BACKEND" == "rocm" ]]; then
+    build_target="${AMDGPU_TARGETS:-gfx1100}"
+  fi
+  stamp="$commit $BACKEND $build_target"
 
   if [[ "$FORCE_REBUILD" != "1" && -x "$SERVER_BIN" && -f "$stamp_file" \
         && "$(<"$stamp_file")" == "$stamp" ]]; then
@@ -322,7 +463,9 @@ build_llama() {
 
   local cmake_args=(-S "$SRC_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
                     -DLLAMA_CURL=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF)
-  have ccache && cmake_args+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+  if have ccache; then
+    cmake_args+=(-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache)
+  fi
 
   info "Configuring (${commit:0:9}, $BACKEND)..."
   case "$BACKEND" in
@@ -336,10 +479,12 @@ build_llama() {
       ;;
   esac
 
-  info "Building with $(nproc) jobs (this takes a few minutes)..."
-  cmake --build "$BUILD_DIR" --config Release -j"$(nproc)" --target llama-server llama-cli
+  info "Building with $BUILD_JOBS jobs (this takes a few minutes)..."
+  cmake --build "$BUILD_DIR" --config Release -j"$BUILD_JOBS" --target llama-server llama-cli
   [[ -x "$SERVER_BIN" ]] || die "Build finished but $SERVER_BIN is missing."
-  printf '%s' "$stamp" >"$stamp_file"
+  stamp_tmp="$(mktemp "$BUILD_DIR/.build-stamp.XXXXXX")"
+  printf '%s' "$stamp" >"$stamp_tmp"
+  mv -f -- "$stamp_tmp" "$stamp_file"
   ok "Built: $SERVER_BIN"
 }
 
@@ -351,7 +496,7 @@ ensure_venv() {
   fi
   if ! "$VENV_DIR/bin/python" -c 'import huggingface_hub' >/dev/null 2>&1; then
     info "Installing huggingface_hub..."
-    "$VENV_DIR/bin/pip" install -q -U pip huggingface_hub \
+    "$VENV_DIR/bin/pip" install -q huggingface_hub \
       || die "pip install huggingface_hub failed."
   fi
 }
@@ -398,11 +543,20 @@ find_model_file() {
     | sort | head -n1
 }
 
+validate_model_file() {
+  local model="$1" size
+  [[ -f "$model" && -r "$model" ]] || die "Model file is not a readable regular file: $model"
+  size="$(stat -c %s -- "$model")"
+  ((size >= 1073741824)) || die "Model file is too small to be valid (under 1 GiB): $model"
+  [[ "$(head -c 4 -- "$model")" == "GGUF" ]] || die "Model file does not have GGUF magic bytes: $model"
+}
+
 download_model() {
   mkdir -p "$MODEL_DIR"
   local existing
   existing="$(find_model_file)"
   if [[ -n "$existing" ]]; then
+    validate_model_file "$existing"
     ok "Model already present: $existing"
     return 0
   fi
@@ -437,9 +591,7 @@ PY
   existing="$(find_model_file)"
   [[ -n "$existing" ]] || die "No *${QUANT}*.gguf found after download. Try a different QUANT (e.g. Q4_K_M, Q5_K_M, UD-Q4_K_XL)."
 
-  local size_gb
-  size_gb=$(( $(stat -c %s "$existing") / 1024 / 1024 / 1024 ))
-  ((size_gb >= 1)) || die "Downloaded file looks too small ($existing)."
+  validate_model_file "$existing"
   ok "Model ready: $existing"
 }
 
@@ -461,18 +613,21 @@ choose_ctx() {
 }
 
 build_server_args() {
+  local check_port="${1:-yes}"
   resolve_backend
   [[ -x "$SERVER_BIN" ]] || die "llama-server not built yet. Run: $0 build"
 
   local model
   model="$(find_model_file)"
   [[ -n "$model" ]] || die "No model found in $MODEL_DIR. Run: $0 download"
+  validate_model_file "$model"
 
   choose_ctx
 
   # Port must be free
-  if have ss && ss -H -ltn "sport = :$PORT" | grep -q .; then
-    die "Port $PORT is already in use. Set PORT=... or stop the other process (or: systemctl --user stop $SERVICE_NAME)."
+  if [[ "$check_port" == "yes" ]] && have ss \
+      && ss -H -ltn "sport = :$PORT" | grep -q .; then
+    die "Port $PORT is already in use. Set PORT=... or stop the other process."
   fi
 
   # Flash-attn flag syntax differs between llama.cpp versions
@@ -490,24 +645,30 @@ build_server_args() {
     --jinja
     --host "$HOST" --port "$PORT"
   )
-  [[ -n "$LLAMA_API_KEY" ]] && SERVER_ARGS+=(--api-key "$LLAMA_API_KEY")
   if [[ -n "$EXTRA_ARGS" ]]; then
-    # shellcheck disable=SC2206
-    SERVER_ARGS+=($EXTRA_ARGS)
+    local -a extra_args=()
+    read -r -a extra_args <<<"$EXTRA_ARGS"
+    SERVER_ARGS+=("${extra_args[@]}")
   fi
 
-  if [[ "$HOST" != "127.0.0.1" && "$HOST" != "localhost" && -z "$LLAMA_API_KEY" ]]; then
-    warn "Server bound to $HOST without LLAMA_API_KEY - anyone on the network can use it."
-  fi
 }
 
 wait_healthy() {
   local timeout="${1:-300}" i=0
+  local endpoint
+  endpoint="http://$(format_host "$HOST"):$PORT/health"
   local auth=()
   [[ -n "$LLAMA_API_KEY" ]] && auth=(-H "Authorization: Bearer $LLAMA_API_KEY")
+  # Feed credentials through curl's stdin config, not its process arguments.
   info "Waiting for server health (up to ${timeout}s)..."
   while ((i < timeout)); do
-    if curl -fsS "${auth[@]}" "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+    if [[ -n "$LLAMA_API_KEY" ]]; then
+      if printf 'header = "%s"\n' "${auth[1]}" \
+          | curl --config - --noproxy '*' -fsS --max-time 3 "$endpoint" >/dev/null 2>&1; then
+        ok "Server is healthy."
+        return 0
+      fi
+    elif curl --noproxy '*' -fsS --max-time 3 "$endpoint" >/dev/null 2>&1; then
       ok "Server is healthy."
       return 0
     fi
@@ -517,16 +678,18 @@ wait_healthy() {
 }
 
 print_client_hint() {
+  local base_url
+  base_url="http://$(format_host "$HOST"):$PORT"
   cat <<EOF
 
 ------------------------------------------------------------------
- Server:   http://${HOST}:${PORT}/v1
- Model ID: run  curl -s http://127.0.0.1:${PORT}/v1/models | jq -r '.data[0].id'
- API key:  ${LLAMA_API_KEY:-<anything, e.g. "local">}
+ Server:   ${base_url}/v1
+ Model ID: run  curl -s ${base_url}/v1/models | jq -r '.data[0].id'
+ API key:  $([[ -n "$LLAMA_API_KEY" ]] && printf 'configured (use your configured key)' || printf 'not required')
 
  VS Code (Cline / Roo Code):
    Provider     -> OpenAI Compatible
-   Base URL     -> http://127.0.0.1:${PORT}/v1
+   Base URL     -> ${base_url}/v1
    Context size -> ${CTX}
 ------------------------------------------------------------------
 EOF
@@ -536,25 +699,49 @@ run_server() {
   build_server_args
   print_client_hint
   info "Starting llama-server (Ctrl+C to stop)..."
+  [[ -n "$LLAMA_API_KEY" ]] && SERVER_ARGS+=(--api-key "$LLAMA_API_KEY")
   exec "${SERVER_ARGS[@]}"
 }
 
 # ------------------------------- systemd -------------------------------------
+systemd_quote_arg() {
+  local value="$1"
+  [[ "$value" != *$'\n'* && "$value" != *$'\r'* ]] \
+    || die "A server argument contains a newline and cannot be written to a systemd unit."
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//%/%%}"
+  value="${value//\$/\$\$}"
+  printf '"%s"' "$value"
+}
+
 install_service() {
   have systemctl || die "systemctl not available."
-  build_server_args
+  build_server_args no
 
   local unit_dir="$HOME/.config/systemd/user"
   local unit="$unit_dir/$SERVICE_NAME.service"
+  local env_file="$unit_dir/$SERVICE_NAME.env"
+  local unit_tmp env_tmp exec_line="" a was_active=0
+  local -a service_args=("${SERVER_ARGS[@]}")
   mkdir -p "$unit_dir"
 
-  local exec_line="" a
-  for a in "${SERVER_ARGS[@]}"; do
-    a="${a//\\/\\\\}"; a="${a//\"/\\\"}"
-    exec_line+="\"$a\" "
+  for a in "${service_args[@]}"; do
+    exec_line+="$(systemd_quote_arg "$a") "
   done
+  if [[ -n "$LLAMA_API_KEY" ]]; then
+    exec_line+="\"--api-key\" \${LLAMA_API_KEY}"
+    env_tmp="$(mktemp "$unit_dir/$SERVICE_NAME.env.XXXXXX")"
+    printf 'LLAMA_API_KEY=%s\n' "$LLAMA_API_KEY" >"$env_tmp"
+    chmod 600 "$env_tmp"
+    mv -f -- "$env_tmp" "$env_file"
+  else
+    rm -f -- "$env_file"
+  fi
 
-  cat >"$unit" <<EOF
+  unit_tmp="$(mktemp "$unit_dir/$SERVICE_NAME.service.XXXXXX")"
+  {
+    cat <<EOF
 [Unit]
 Description=llama.cpp server (Qwen3.8-27B)
 After=network-online.target
@@ -562,6 +749,11 @@ After=network-online.target
 [Service]
 Type=simple
 ExecStart=${exec_line}
+EOF
+    if [[ -n "$LLAMA_API_KEY" ]]; then
+      printf 'EnvironmentFile=%s\n' "%h/.config/systemd/user/$SERVICE_NAME.env"
+    fi
+    cat <<EOF
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=600
@@ -569,14 +761,25 @@ TimeoutStartSec=600
 [Install]
 WantedBy=default.target
 EOF
+  } >"$unit_tmp"
+  chmod 600 "$unit_tmp"
+  mv -f -- "$unit_tmp" "$unit"
   ok "Wrote $unit"
 
+  if systemctl --user is-active --quiet "$SERVICE_NAME.service"; then
+    was_active=1
+  fi
   systemctl --user daemon-reload
   systemctl --user enable --now "$SERVICE_NAME.service"
+  if ((was_active)); then
+    systemctl --user restart "$SERVICE_NAME.service"
+  fi
 
   if confirm "Enable linger so the service starts at boot without login?"; then
     ensure_sudo
-    $SUDO loginctl enable-linger "$USER" && ok "Linger enabled."
+    local current_user
+    current_user="$(id -un 2>/dev/null || printf 'UID %s' "$(id -u)")"
+    run_privileged loginctl enable-linger "$current_user" && ok "Linger enabled."
   fi
 
   if wait_healthy 300; then
@@ -593,8 +796,8 @@ show_status() {
   else
     info "systemd service not installed."
   fi
-  if curl -fsS --max-time 3 "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
-    ok "API healthy at http://127.0.0.1:$PORT"
+  if wait_healthy 2; then
+    ok "API healthy at http://$(format_host "$HOST"):$PORT"
   else
     warn "API not responding on port $PORT."
   fi
@@ -607,10 +810,19 @@ usage() { sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//'; }
 main() {
   local cmd="${1:-all}"
 
+  case "$cmd" in
+    all|doctor|deps|build|download|run|service|status) ;;
+    help|-h|--help) usage; return 0 ;;
+    *) usage; die "Unknown command: $cmd" ;;
+  esac
+
+  validate_config
+
   # single-instance lock for mutating commands
   case "$cmd" in
     all|deps|build|download|service)
       mkdir -p "$INSTALL_DIR"
+      need_cmd flock
       exec 9>"$INSTALL_DIR/.lock"
       flock -n 9 || die "Another instance of this script is running."
       ;;
@@ -626,7 +838,6 @@ main() {
     service)  install_service ;;
     status)   show_status ;;
     help|-h|--help) usage ;;
-    *) usage; die "Unknown command: $cmd" ;;
   esac
 }
 

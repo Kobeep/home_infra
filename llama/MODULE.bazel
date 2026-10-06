@@ -1,0 +1,14 @@
+module(name = "qwen-local-image")
+
+bazel_dep(name = "aspect_rules_buildx", version = "0.0.0")
+bazel_dep(name = "rules_oci", version = "2.0.0")
+
+git_override(
+    module_name = "aspect_rules_buildx",
+    commit = "443a6e901b3dce0416fd7015e7031b47b8c7aa6f",
+    remote = "https://github.com/aspect-build/rules_buildx.git",
+)
+
+buildx = use_extension("@aspect_rules_buildx//buildx:extensions.bzl", "buildx")
+buildx.toolchains()
+use_repo(buildx, "buildx_configuration", "buildx_toolchains")
